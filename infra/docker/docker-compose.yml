@@ -3,10 +3,9 @@ services:
     build:
       context: ../../apps/api
       dockerfile: ../../infra/docker/Dockerfile.api
+    env_file:
+      - ../../.env
     environment:
-      ATS_STUB_MODE: ${ATS_STUB_MODE:-0}
-      ATS_AI_OPENAI_API_KEY: ${ATS_AI_OPENAI_API_KEY:-}
-      ATS_AI_DEFAULT_MODEL: ${ATS_AI_DEFAULT_MODEL:-gpt-4o-mini}
       ATS_DB_URL: postgresql+asyncpg://ats:ats@postgres:5432/ats
       ATS_REDIS_URL: redis://redis:6379/0
     ports:
