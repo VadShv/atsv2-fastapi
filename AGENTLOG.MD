@@ -23,7 +23,7 @@
 | JUGO-021 | E-02 | Сессии — refresh + rate limit + CSRF | ✅ DONE | #8 (closed) |
 | JUGO-022 | E-02 | Permission-чекер deny-by-default | ✅ DONE | — |
 | JUGO-023 | E-02 | 2FA (TOTP) для админ-ролей | ✅ DONE | #9 (closed) |
-| JUGO-025 | E-02 | API-ключи со скоупами | ⬜ TODO | #10 |
+| JUGO-025 | E-02 | API-ключи со скоупами | ✅ DONE | #10 (closed) |
 | JUGO-026 | E-02 | OIDC/SSO — абстракция identity-провайдера | ⬜ TODO | #11 |
 | JUGO-030 | E-03 | OpenTelemetry — трейсы, trace_id, Jaeger | ✅ DONE | #1 (closed) |
 | JUGO-031 | E-03 | Prometheus-метрики — RPS, латентности, очереди | ✅ DONE | #2 (closed) |
@@ -42,7 +42,7 @@
 
 **Этап 1 — Наблюдаемость (E-03):** ✅ 5/5 ЗАВЕРШЁН
 **Этап 2 — Файлы и сиды (E-01):** ✅ 2/2 ЗАВЕРШЁН
-**Этап 3 — Безопасность (E-02):** JUGO-021 ✅ → JUGO-023 ✅ → JUGO-025 → JUGO-026
+**Этап 3 — Безопасность (E-02):** JUGO-021 ✅ → JUGO-023 ✅ → JUGO-025 ✅ → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
 
 ### Прогресс
@@ -51,9 +51,9 @@
 |------|-------|--------|--------|
 | 1. Наблюдаемость (E-03) | 5 | 5/5 ✅ | 270 |
 | 2. Файлы и сиды (E-01) | 2 | 2/2 ✅ | 353 |
-| 3. Безопасность (E-02) | 4 | 2/4 | 409 |
+| 3. Безопасность (E-02) | 4 | 3/4 | 432 |
 | 4. CI | 1 | 0/1 | — |
-| **Итого** | **12** | **9/12** | **409** |
+| **Итого** | **12** | **10/12** | **432** |
 
 ### Этап 1 — Детализация
 
@@ -80,6 +80,7 @@
 |--------|--------|--------|
 | JUGO-021 (Сессии — refresh + rate limit + CSRF) | +19 | `38d38b2` |
 | JUGO-023 (2FA TOTP) | +37 | `3ca59dc` |
+| JUGO-025 (API-ключи) | +23 | `1577581` |
 | JUGO-025 (API-ключи) | — | — |
 | JUGO-026 (OIDC/SSO) | — | — |
 
@@ -180,6 +181,19 @@
   - `apps/api/tests/test_sessions.py` — 19 тестов (rate limit, lockout, refresh, CSRF, cookies)
 - Тесты: 372 passed (+19)
 - Issue #8 закрыт
+
+### [2026-08-29] JUGO-025 — API-ключи со скоупами — ✅ DONE
+- Коммит: `1577581` | Тесты: 432 (+23) | Issue #10 закрыт
+- Файлы:
+  - `apps/api/src/ats/modules/identity/domain/api_key.py` — `ApiKey` model + `generate_api_key` (jugo_live_ prefix), `hash_api_key` (SHA-256), `is_api_key`, `ApiKeyCreateResult`, `ApiKeyInfo`
+  - `apps/api/src/ats/modules/identity/ports/api_key.py` — `ApiKeyStore` Protocol (create, get_by_hash, get_by_id, list, revoke, update_last_used)
+  - `apps/api/src/ats/modules/identity/infra/in_memory_api_key.py` — `InMemoryApiKeyStore` (dev/тесты)
+  - `apps/api/src/ats/modules/identity/infra/runtime.py` — `get_api_key_store()` singleton + reset
+  - `apps/api/src/ats/modules/identity/api/deps.py` — auth по API-ключу: если Bearer token начинается с `jugo_live_`, валидация через ApiKeyStore (хэш → lookup), User получает role=api_client с permissions из scopes
+  - `apps/api/src/ats/modules/identity/api/router.py` — CRUD: POST /api-keys (raw_key один раз), GET /api-keys (без raw_key/hash), DELETE /api-keys/{id} (revoke)
+  - `apps/api/tests/test_api_keys.py` — 23 теста (генерация, хэш, скоупы, CRUD, auth)
+- Тесты: 432 passed (+23)
+- Issue #10 закрыт
 
 ### [2026-08-29] JUGO-023 — 2FA (TOTP) для админ-ролей — ✅ DONE
 - Коммит: `3ca59dc` | Тесты: 409 (+37) | Issue #9 закрыт
