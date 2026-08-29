@@ -21,7 +21,7 @@ from typing import Any
 
 from ats.infra.workers.builtin_tasks import EventConsumerTask, OutboxRelayTask
 from ats.infra.workers.redis_client import get_redis
-from ats.infra.workers.settings import settings as redis_settings
+from ats.infra.workers.settings import settings as redis_cfg
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ async def event_consumer(ctx: dict[str, Any], **params: Any) -> dict[str, Any]:
     return await _consumer_task(ctx, **params)
 
 
-def _arq_redis_settings() -> Any:
+def _build_arq_redis_settings() -> Any:
     """Создать ArqRedisSettings из URL (SECURE FIRST: из env).
 
     Ленивый импорт arq: в dev/stub arq не установлен → возвращаем None.
@@ -48,10 +48,14 @@ def _arq_redis_settings() -> Any:
     try:
         from arq.connections import RedisSettings as ArqRedisSettings
 
-        return ArqRedisSettings.from_dsn(redis_settings.url)
+        return ArqRedisSettings.from_dsn(redis_cfg.url)
     except ImportError:
         logger.debug("arq not installed — redis_settings=None (stub)")
         return None
+
+
+# Вычисляем один раз при импорте модуля (настройки статичны из env)
+_ARQ_REDIS_SETTINGS: Any = _build_arq_redis_settings()
 
 
 async def on_startup(ctx: dict[str, Any]) -> None:
@@ -81,35 +85,36 @@ class _WorkerSettingsBase:
     on_startup = staticmethod(on_startup)
     on_shutdown = staticmethod(on_shutdown)
     on_job_failure = staticmethod(handle_exception)
+    redis_settings = _ARQ_REDIS_SETTINGS
     max_jobs: int = 5
-    job_timeout = redis_settings.job_timeout
-    graceful_shutdown_timeout = redis_settings.shutdown_timeout
+    job_timeout = redis_cfg.job_timeout
+    graceful_shutdown_timeout = redis_cfg.shutdown_timeout
 
 
 class AIWorkerSettings(_WorkerSettingsBase):
     """Очередь ai: AI-задачи (генерация критериев, парсинг резюме)."""
     functions = [event_consumer]
-    queue_name = redis_settings.queue_ai
+    queue_name = redis_cfg.queue_ai
     max_jobs = 10
 
 
 class IndexWorkerSettings(_WorkerSettingsBase):
     """Очередь index: индексация, outbox-relay."""
     functions = [outbox_relay]
-    queue_name = redis_settings.queue_index
+    queue_name = redis_cfg.queue_index
     max_jobs = 5
 
 
 class WebhooksWorkerSettings(_WorkerSettingsBase):
     """Очередь webhooks: отправка внешних вебхуков."""
     functions: list = []
-    queue_name = redis_settings.queue_webhooks
+    queue_name = redis_cfg.queue_webhooks
 
 
 class AnalyticsWorkerSettings(_WorkerSettingsBase):
     """Очередь analytics: агрегация метрик, отчёты."""
     functions: list = []
-    queue_name = redis_settings.queue_analytics
+    queue_name = redis_cfg.queue_analytics
     max_jobs = 3
 
 
@@ -117,15 +122,15 @@ class SchedulerWorkerSettings(_WorkerSettingsBase):
     """Очередь scheduler: cron-задачи (напоминания, эскалация)."""
     functions: list = []
     cron_jobs: list = []
-    queue_name = redis_settings.queue_scheduler
+    queue_name = redis_cfg.queue_scheduler
     max_jobs = 2
 
 
 # Реестр очередей (для управления и метрик)
 QUEUE_REGISTRY: dict[str, type] = {
-    redis_settings.queue_ai: AIWorkerSettings,
-    redis_settings.queue_index: IndexWorkerSettings,
-    redis_settings.queue_webhooks: WebhooksWorkerSettings,
-    redis_settings.queue_analytics: AnalyticsWorkerSettings,
-    redis_settings.queue_scheduler: SchedulerWorkerSettings,
+    redis_cfg.queue_ai: AIWorkerSettings,
+    redis_cfg.queue_index: IndexWorkerSettings,
+    redis_cfg.queue_webhooks: WebhooksWorkerSettings,
+    redis_cfg.queue_analytics: AnalyticsWorkerSettings,
+    redis_cfg.queue_scheduler: SchedulerWorkerSettings,
 }
