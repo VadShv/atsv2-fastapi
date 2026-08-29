@@ -18,10 +18,11 @@ from ats.infra.db.base import Base, TenantMixin
 
 
 class OutboxMessageORM(Base, TenantMixin):
-    """Outbox-сообщение: надёжная доставка доменных событий.
+    """Outbox-сообщение: надёжная доставка доменных событий (контракт §4.3).
 
-    Воркер вычитывает необработанные (processed_at IS NULL), диспетчит, ставит
-    processed_at. Идемпотентность — на стороне обработчика.
+    Воркер (outbox-relay) вычитывает необработанные (processed_at IS NULL),
+    публикует в Redis Streams, ставит processed_at. Идемпотентность — на стороне
+    обработчика (processed_events / inbox).
     """
 
     __tablename__ = "outbox"
@@ -29,9 +30,17 @@ class OutboxMessageORM(Base, TenantMixin):
     id: Mapped[UUID] = mapped_column(
         PgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
-    # Тип события (имя класса, напр. VacancyCreated)
+    # event_type в dot.notation (напр. vacancy.created) — по контракту конверта
     event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    # Полная сериализация события (JSON)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    aggregate_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    aggregate_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    actor_type: Mapped[str] = mapped_column(String(50), default="system", nullable=False)
+    actor_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    # Полная сериализация конверта события (JSON) — на публикацию в стрим
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
     # Сколько раз пытались отправить (для DLQ)
     attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -44,6 +53,7 @@ class OutboxMessageORM(Base, TenantMixin):
 class AuditLogORM(Base, TenantMixin):
     """Append-only журнал действий (secure-first, compliance).
 
+    ТЗ §15: кто, что, когда, откуда (IP/UA), trace_id.
     Записи никогда не обновляются/удаляются (immutable).
     """
 
@@ -61,3 +71,5 @@ class AuditLogORM(Base, TenantMixin):
     # Детали изменения (до/после)
     details: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
     ip_address: Mapped[str] = mapped_column(String(45), default="", nullable=False)
+    user_agent: Mapped[str] = mapped_column(String(500), default="", nullable=False)
+    trace_id: Mapped[str] = mapped_column(String(64), default="", nullable=False, index=True)

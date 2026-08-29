@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/registry.v1.json",
+  "title": "Event Registry v1",
+  "description": "Реестр событий v1: event_type → файл схемы payload. Точка стыковки между продюсерами и потребителями.",
+  "version": 1,
+  "events": {
+    "vacancy.created": {
+      "schema_version": 1,
+      "payload_schema": "vacancy.created.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "vacancy"
+    },
+    "vacancy.screening.generated": {
+      "schema_version": 1,
+      "payload_schema": "vacancy.screening.generated.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "vacancy"
+    },
+    "candidate.created": {
+      "schema_version": 1,
+      "payload_schema": "candidate.created.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "candidate"
+    },
+    "application.created": {
+      "schema_version": 1,
+      "payload_schema": "application.created.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "application"
+    },
+    "application.stage.changed": {
+      "schema_version": 1,
+      "payload_schema": "application.stage.changed.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "application"
+    },
+    "ai.run.completed": {
+      "schema_version": 1,
+      "payload_schema": null,
+      "topic": "events:ai",
+      "aggregate": "ai_run",
+      "note": "Схема будет добавлена в Волне 2 (AI Platform)."
+    },
+    "ai.run.failed": {
+      "schema_version": 1,
+      "payload_schema": null,
+      "topic": "events:ai",
+      "aggregate": "ai_run",
+      "note": "Схема будет добавлена в Волне 2 (AI Platform)."
+    }
+  }
+}

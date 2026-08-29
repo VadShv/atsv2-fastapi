@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/vacancy.screening.generated.v1.schema.json",
+  "title": "VacancyScreeningCriteriaGenerated v1",
+  "description": "AI сгенерировал критерии скрининга для вакансии (whitebox: ссылка на provenance). Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["vacancy_id", "provenance_id"],
+  "properties": {
+    "vacancy_id": {"type": "string", "format": "uuid"},
+    "provenance_id": {"type": "string", "format": "uuid", "description": "Запись в provenance ledger (whitebox AI)."}
+  }
+}

@@ -32,6 +32,8 @@ class CandidateSource(str, Enum):
 class CandidateCreated(DomainEvent):
     candidate_id: UUID = field(default_factory=uuid4)
     full_name: str = ""
+    source: str = ""
+    resume_provenance_id: str | None = None
 
 
 @dataclass
@@ -85,6 +87,12 @@ class Candidate(AggregateRoot):
                 payload={"full_name": candidate.full_name, "source": source.value},
                 candidate_id=candidate.id.value,
                 full_name=candidate.full_name,
+                source=source.value,
+                resume_provenance_id=(
+                    str(candidate.resume_provenance)
+                    if candidate.resume_provenance
+                    else None
+                ),
             )
         )
         return candidate

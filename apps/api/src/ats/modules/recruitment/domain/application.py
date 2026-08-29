@@ -59,13 +59,14 @@ class ApplicationCreated(DomainEvent):
     application_id: UUID = field(default_factory=uuid4)
     candidate_id: UUID = field(default_factory=uuid4)
     vacancy_id: UUID = field(default_factory=uuid4)
+    stage: str = "new"
 
 
 @dataclass(frozen=True)
 class StageChanged(DomainEvent):
     application_id: UUID = field(default_factory=uuid4)
-    from_stage: str = ""
-    to_stage: str = ""
+    from_stage_id: str | None = None
+    to_stage_id: str = ""
     candidate_id: UUID = field(default_factory=uuid4)
     vacancy_id: UUID = field(default_factory=uuid4)
     reason: str = ""
@@ -133,6 +134,7 @@ class Application(AggregateRoot):
                 application_id=app.id,
                 candidate_id=candidate_id.value,
                 vacancy_id=vacancy_id.value,
+                stage=ApplicationStage.NEW.value,
             )
         )
         return app
@@ -172,8 +174,8 @@ class Application(AggregateRoot):
                 tenant_id=self.tenant_id.value,
                 payload={},
                 application_id=self.id,
-                from_stage=from_stage.value,
-                to_stage=to_stage.value,
+                from_stage_id=from_stage.value,
+                to_stage_id=to_stage.value,
                 candidate_id=self.candidate_id.value,
                 vacancy_id=self.vacancy_id.value,
                 reason=reason,

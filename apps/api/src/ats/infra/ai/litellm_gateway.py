@@ -49,6 +49,7 @@ class LiteLLMGateway(AIGateway):
     - Семантический кэш для temperature==0 (скорость/стоимость)
     - Запись провенанса для каждого вызова (whitebox)
     - Бюджеты токенов на запрос (runaway protection)
+    - Провайдер: Cloud.ru (OpenAI-совместимый api_base + api_key из env)
     """
 
     def __init__(
@@ -63,14 +64,43 @@ class LiteLLMGateway(AIGateway):
     def dimension(self) -> int:
         return ai_settings.embedding_dimension
 
+    def _provider_kwargs(self) -> dict[str, str]:
+        """Cloud.ru OpenAI-совместимый роутинг: api_base + api_key.
+
+        SECURE FIRST: ключи только из env (ai_settings), никогда из кода.
+        Возвращает пустой dict если cloudru_api_key не задан — тогда LiteLLM
+        использует стандартный env-роутинг (OPENAI_API_KEY и т.д.).
+        """
+        if ai_settings.cloudru_api_key:
+            return {
+                "api_base": ai_settings.cloudru_api_base,
+                "api_key": ai_settings.cloudru_api_key,
+            }
+        return {}
+
     async def embed(self, tenant_id, text: str) -> list[float]:  # type: ignore[no-untyped-def]
-        """Эмбеддинг текста через LiteLLM (для семантического поиска)."""
-        response = await litellm.aembedding(
-            model=ai_settings.embedding_model,
-            input=text,
-            timeout=ai_settings.timeout_seconds,
-        )
-        return list(response["data"][0]["embedding"])
+        """Эмбеддинг текста через LiteLLM (для семантического поиска).
+
+        Провайдер: Cloud.ru (OpenAI-совместимый api_base + api_key из env).
+        Текст обрезается по embedding_max_tokens для защиты от превышения лимита.
+        """
+        truncated = _truncate_for_embedding(text, ai_settings.embedding_max_tokens)
+        kwargs: dict[str, object] = {
+            "model": ai_settings.embedding_model,
+            "input": truncated,
+            "timeout": ai_settings.timeout_seconds,
+        }
+        kwargs.update(self._provider_kwargs())
+        response = await litellm.aembedding(**kwargs)
+        embedding = list(response["data"][0]["embedding"])
+        # Контроль размерности (SECURE FIRST / устойчивость)
+        if len(embedding) != ai_settings.embedding_dimension:
+            logger.warning(
+                "Embedding dimension mismatch: got %d, expected %d",
+                len(embedding),
+                ai_settings.embedding_dimension,
+            )
+        return embedding
 
     async def complete(self, request: AIRequest) -> AIResponse:
         model = request.model or ai_settings.default_model
@@ -187,6 +217,7 @@ class LiteLLMGateway(AIGateway):
         start = time.monotonic()
         messages = [{"role": m.role.value, "content": m.content} for m in request.messages]
         # LiteLLM: единый интерфейс к OpenAI/Anthropic/Yandex и др.
+        # Cloud.ru: OpenAI-совместимый роутинг через api_base + api_key
         resp = await litellm.acompletion(
             model=model,
             messages=messages,
@@ -196,6 +227,7 @@ class LiteLLMGateway(AIGateway):
                 ai_settings.max_tokens_per_request,
             ),
             timeout=ai_settings.timeout_seconds,
+            **self._provider_kwargs(),
         )
         latency_ms = int((time.monotonic() - start) * 1000)
         choice = resp.choices[0]
@@ -235,6 +267,7 @@ class LiteLLMGateway(AIGateway):
             ),
             timeout=ai_settings.timeout_seconds,
             stream=True,
+            **self._provider_kwargs(),
         )
 
     async def _try_cache(self, request: AIRequest, model: str) -> AIResponse | None:
@@ -351,6 +384,18 @@ def _with_model(request: AIRequest, model: str) -> AIRequest:
     from dataclasses import replace
 
     return replace(request, model=model)
+
+
+def _truncate_for_embedding(text: str, max_tokens: int) -> str:
+    """Грубая обрезка текста до max_tokens (приблизительно chars/4).
+
+    Защита от превышения лимита токенов эмбеддинг-модели (устойчивость).
+    Точная токенизация не требуется — обрезаем с запасом.
+    """
+    max_chars = max_tokens * 4
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars]
 
 
 class AIOutputError(Exception):

@@ -51,6 +51,9 @@ class RoleDescription:
 class VacancyCreated(DomainEvent):
     vacancy_id: UUID = field(default_factory=uuid4)
     title: str = ""
+    seniority: str = ""
+    team: str = ""
+    status: str = "draft"
 
 
 @dataclass(frozen=True)
@@ -80,11 +83,7 @@ class Vacancy(AggregateRoot):
     _events: list[DomainEvent] = field(default_factory=list, repr=False)
 
     @classmethod
-    def create(
-        cls,
-        tenant_id: TenantId,
-        role: RoleDescription,
-    ) -> Vacancy:
+    def create(cls, tenant_id: TenantId, role: RoleDescription) -> Vacancy:
         """Фабрика создания вакансии. Публикует VacancyCreated."""
         vacancy = cls(
             id=VacancyId.generate(),
@@ -99,6 +98,9 @@ class Vacancy(AggregateRoot):
                 payload={"title": role.title, "seniority": role.seniority.value},
                 vacancy_id=vacancy.id.value,
                 title=role.title,
+                seniority=role.seniority.value,
+                team=role.team,
+                status=vacancy.status.value,
             )
         )
         return vacancy
@@ -123,3 +125,9 @@ class Vacancy(AggregateRoot):
             raise ValueError("Cannot activate vacancy without role description")
         self.status = VacancyStatus.ACTIVE
         self.updated_at = datetime.now(timezone.utc)
+
+    def to_payload(self) -> dict[str, str]:
+        return {
+            "vacancy_id": str(self.id.value),
+            "title": self.role.title,
+        }

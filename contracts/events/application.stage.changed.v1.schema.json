@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/application.stage.changed.v1.schema.json",
+  "title": "ApplicationStageChanged v1",
+  "description": "Отклик переведён на другой этап воронки. Единственная точка изменения этапа — FunnelService.transition() (ТЗ §5.3). Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["application_id", "to_stage_id"],
+  "properties": {
+    "application_id": {"type": "string", "format": "uuid"},
+    "from_stage_id": {"type": ["string", "null"], "description": "Null если отклик только создан."},
+    "to_stage_id": {"type": "string", "description": "Идентификатор этапа назначения (id или ключ)."},
+    "reason": {"type": ["string", "null"], "description": "Причина перехода (опционально)."}
+  }
+}

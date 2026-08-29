@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from ats.infra.events.bus import InProcessEventBus
 from ats.infra.search.in_memory_search_engine import InMemorySearchEngine
 from ats.infra.stubs import (
     InMemoryProvenanceLedger,
@@ -25,6 +26,8 @@ from ats.modules.ai_core.skills.generate_screening_criteria import (
     GenerateScreeningCriteria,
 )
 from ats.modules.ai_core.skills.parse_resume import ParseResume
+from ats.modules.audit.infra.in_memory_audit_logger import InMemoryAuditLogger
+from ats.modules.audit.ports.audit_logger import AuditLogger
 from ats.modules.candidates.application.upload_resume import UploadResumeUseCase
 from ats.modules.candidates.ports.candidate_repository import CandidateRepository
 from ats.modules.recruitment.application.create_application import (
@@ -52,6 +55,8 @@ class Container:
     provenance_ledger: ProvenanceLedger
     ai_gateway: AIGateway
     search_engine: SearchEngine
+    audit_logger: AuditLogger
+    event_bus: InProcessEventBus
     create_vacancy: CreateVacancyUseCase
     create_application: CreateApplicationUseCase
     move_application: MoveApplicationUseCase
@@ -85,6 +90,9 @@ def build_container() -> Container:
         gateway = LiteLLMGateway(provenance)
         search_engine = PgVectorSearchEngine()
 
+    audit_logger: AuditLogger = InMemoryAuditLogger()
+    event_bus = InProcessEventBus()
+
     screening_skill = GenerateScreeningCriteria(gateway)
     parse_skill = ParseResume(gateway)
     create_vacancy = CreateVacancyUseCase(vacancy_repo, screening_skill)
@@ -102,6 +110,8 @@ def build_container() -> Container:
         provenance_ledger=provenance,
         ai_gateway=gateway,
         search_engine=search_engine,
+        audit_logger=audit_logger,
+        event_bus=event_bus,
         create_vacancy=create_vacancy,
         create_application=create_application,
         move_application=move_application,

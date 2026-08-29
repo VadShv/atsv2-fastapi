@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/envelope.schema.json",
+  "title": "EventEnvelope",
+  "description": "Единый конверт доменного события (ТЗ §4.3). Все события оборачиваются в этот конверт перед записью в outbox и публикацией в Redis Streams.",
+  "type": "object",
+  "required": ["event_id", "event_type", "schema_version", "occurred_at", "tenant_id", "actor", "aggregate", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUIDv7 — детерминированный, сортируемый по времени. Идемпотентность."
+    },
+    "event_type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$",
+      "description": "Тип события в dot.notation: aggregate.verb.tense, напр. application.stage.changed"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Версия схемы payload. Обратно совместимые изменения — без бампа; breaking — бамп + миграция."
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Момент возникновения события (UTC, ISO-8601)."
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Тенант — изоляция данных (RLS)."
+    },
+    "actor": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["user", "system", "ai_agent", "integration"],
+          "description": "Кто инициировал изменение."
+        },
+        "id": {
+          "type": ["string", "null"],
+          "description": "Идентификатор субъекта (user_id, agent_id, integration_id). Null для system."
+        }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "required": ["type", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Тип агрегата: vacancy, candidate, application, etc."
+        },
+        "id": {
+          "type": "string",
+          "description": "Идентификатор агрегата."
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "description": "Данные события. Схема определяется по event_type + schema_version."
+    }
+  }
+}

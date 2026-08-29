@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/vacancy.created.v1.schema.json",
+  "title": "VacancyCreated v1",
+  "description": "Создана вакансия. Публикуется ядром после сохранения агрегата. Дополнительные свойства допустимы (обратно совместимые расширения, §4.3).",
+  "type": "object",
+  "required": ["vacancy_id", "title", "seniority", "team", "status"],
+  "properties": {
+    "vacancy_id": {"type": "string", "format": "uuid"},
+    "title": {"type": "string", "minLength": 1, "maxLength": 300},
+    "seniority": {"type": "string", "enum": ["intern", "junior", "middle", "senior", "lead", "head"]},
+    "team": {"type": "string"},
+    "status": {"type": "string", "enum": ["draft", "active", "on_hold", "closed"]}
+  }
+}

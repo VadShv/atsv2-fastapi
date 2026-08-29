@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/application.created.v1.schema.json",
+  "title": "ApplicationCreated v1",
+  "description": "Кандидат подал отклик на вакансию (связь candidate × vacancy). Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["application_id", "candidate_id", "vacancy_id", "stage"],
+  "properties": {
+    "application_id": {"type": "string", "format": "uuid"},
+    "candidate_id": {"type": "string", "format": "uuid"},
+    "vacancy_id": {"type": "string", "format": "uuid"},
+    "stage": {"type": "string", "description": "Начальный этап воронки."}
+  }
+}

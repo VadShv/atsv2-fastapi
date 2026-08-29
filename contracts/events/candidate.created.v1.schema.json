@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/candidate.created.v1.schema.json",
+  "title": "CandidateCreated v1",
+  "description": "Создан кандидат в базе (талант-пул). Может быть без отклика. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["candidate_id", "source"],
+  "properties": {
+    "candidate_id": {"type": "string", "format": "uuid"},
+    "source": {"type": "string", "description": "Источник: referral, sourcing, inbound, import, etc."},
+    "resume_provenance_id": {"type": ["string", "null"], "format": "uuid", "description": "Provenance распарсенного резюме, если есть."}
+  }
+}
