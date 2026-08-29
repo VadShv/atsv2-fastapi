@@ -29,7 +29,7 @@
 | JUGO-031 | E-03 | Prometheus-метрики — RPS, латентности, очереди | ✅ DONE | #2 (closed) |
 | JUGO-032 | E-03 | Структурные JSON-логи + маскирование ПД | ✅ DONE | #3 (closed) |
 | JUGO-033 | E-03 | audit_log — партиционирование + хелпер чтений | ✅ DONE | #4 (closed) |
-| JUGO-034 | E-03 | Sentry + алерты | ⬜ TODO | #5 |
+| JUGO-034 | E-03 | Sentry + алерты | ✅ DONE | #5 (closed) |
 | CI | — | GitHub Actions (lint + mypy + tests) | ⬜ TODO | #12 |
 
 ### Легенда
@@ -40,20 +40,31 @@
 
 ### Порядок реализации (приоритет)
 
-**Этап 1 — Наблюдаемость (E-03):** ~~JUGO-032~~ ✅ → ~~JUGO-030~~ ✅ → ~~JUGO-031~~ ✅ → ~~JUGO-033~~ ✅ → JUGO-034
+**Этап 1 — Наблюдаемость (E-03):** ✅ 5/5 ЗАВЕРШЁН
 **Этап 2 — Файлы и сиды (E-01):** JUGO-013 → JUGO-014
 **Этап 3 — Безопасность (E-02):** JUGO-021 → JUGO-023 → JUGO-025 → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
 
-### Прогресс по Этапу 1 (Наблюдаемость): 4/5
+### Прогресс
+
+| Этап | Задач | Готово | Тестов |
+|------|-------|--------|--------|
+| 1. Наблюдаемость (E-03) | 5 | 5/5 ✅ | 270 |
+| 2. Файлы и сиды (E-01) | 2 | 0/2 | — |
+| 3. Безопасность (E-02) | 4 | 0/4 | — |
+| 4. CI | 1 | 0/1 | — |
+| **Итого** | **12** | **5/12** | **270** |
+
+### Этап 1 — Детализация
 
 | Задача | Тестов | Коммит |
 |--------|--------|--------|
-| JUGO-032 | +27 | `69c1dc4` |
-| JUGO-030 | +29 | `fbfb504` |
-| JUGO-031 | +28 | `9e2dd0d` |
-| JUGO-033 | +24 | `eba7513` |
-| **Итого** | **252** | |
+| JUGO-032 (Логи + PII) | +27 | `69c1dc4` |
+| JUGO-030 (OTel) | +29 | `fbfb504` |
+| JUGO-031 (Prometheus) | +28 | `9e2dd0d` |
+| JUGO-033 (Audit partition) | +24 | `eba7513` |
+| JUGO-034 (Sentry + alerts) | +23 | `f8a1915` |
+| **Итого Этап 1** | **+131** | |
 
 ---
 
@@ -76,35 +87,31 @@
 - 144 теста green, деплой на 176.108.250.112
 
 ### [2026-08-29] JUGO-032 — Структурные JSON-логи + маскирование ПД — ✅ DONE
-- Коммит: `69c1dc4`
-- Файлы: `infra/logging/` (settings, context, pii_mask, setup, middleware), `tests/test_logging.py`
-- Тесты: 171 passed (+27)
-- Issue #3 закрыт
+- Коммит: `69c1dc4` | Тесты: 171 (+27) | Issue #3 закрыт
 
 ### [2026-08-29] JUGO-030 — OpenTelemetry трейсинг — ✅ DONE
-- Коммит: `fbfb504`
-- Файлы: `infra/tracing/` (settings, setup, context, middleware, propagation), `workers/base_task.py`, `main.py`, `docker-compose.yml` (+Jaeger)
-- Тесты: 200 passed (+29)
-- Issue #1 закрыт
+- Коммит: `fbfb504` | Тесты: 200 (+29) | Issue #1 закрыт
 
 ### [2026-08-29] JUGO-031 — Prometheus-метрики — ✅ DONE
-- Коммит: `9e2dd0d`
-- Файлы: `infra/metrics/` (settings, registry, middleware, router), `main.py`, `docker-compose.yml` (+Prometheus+Grafana), `infra/grafana/dashboards/ats-health.json`, `infra/prometheus/prometheus.yml`
-- Тесты: 228 passed (+28)
-- Issue #2 закрыт
+- Коммит: `9e2dd0d` | Тесты: 228 (+28) | Issue #2 закрыт
 
 ### [2026-08-29] JUGO-033 — audit_log партиционирование + AuditReader — ✅ DONE
-- Коммит: `eba7513`
+- Коммит: `eba7513` | Тесты: 252 (+24) | Issue #4 закрыт
+
+### [2026-08-29] JUGO-034 — Sentry + алерты — ✅ DONE
+- Коммит: `f8a1915`
 - Файлы:
-  - `alembic/versions/0007_audit_log_partitioning.py` — декларативное партиционирование по месяцам
-  - `infra/db/models/events.py` — AuditLogORM updated (PK: id + created_at)
-  - `modules/audit/ports/audit_reader.py` — AuditReader port + AuditQuery
-  - `modules/audit/infra/in_memory_audit_reader.py` — InMemoryAuditReader
-  - `modules/audit/infra/pg_audit_reader.py` — PgAuditReader
-  - `modules/audit/application/audit_helper.py` — audit() helper + AuditActions
-  - `infra/container.py` — audit_reader added to DI
-  - `tests/test_audit.py` — 24 теста
-- Тесты: 252 passed (+24)
-- Issue #4 закрыт
+  - `apps/api/src/ats/infra/sentry/__init__.py` — экспорты
+  - `apps/api/src/ats/infra/sentry/settings.py` — `SentrySettings` (env: `ATS_SENTRY_*`)
+  - `apps/api/src/ats/infra/sentry/setup.py` — `setup_sentry()` (ленивый sentry-sdk + no-op), `capture_exception()`, `capture_message()`, `set_user_context()`
+  - `apps/api/src/ats/infra/sentry/middleware.py` — `SentryMiddleware` (перехват 5xx)
+  - `apps/api/src/ats/infra/sentry/alerts.py` — `send_alert()` (webhook Telegram/Slack), `_build_payload()`, `_should_alert()`
+  - `apps/api/src/ats/main.py` — подключён `setup_sentry()` + `SentryMiddleware`
+  - `apps/api/pyproject.toml` — +sentry-sdk[fastapi], +mypy override
+  - `.env.example` — +ATS_SENTRY_* переменные
+  - `apps/api/tests/test_sentry.py` — 23 теста
+- Тесты: 270 passed (+23)
+- Issue #5 закрыт
+- **Этап 1 (Наблюдаемость) ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5**
 
 ---
