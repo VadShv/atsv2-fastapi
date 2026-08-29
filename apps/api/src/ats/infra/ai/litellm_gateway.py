@@ -52,12 +52,12 @@ class LiteLLMGateway(AIGateway):
     """
 
     def __init__(
-       self,
-       provenance: ProvenanceLedger,
-       cache: CacheStore | None = None,
-   ) -> None:
-       self._provenance = provenance
-       self._cache = cache
+        self,
+        provenance: ProvenanceLedger,
+        cache: CacheStore | None = None,
+    ) -> None:
+        self._provenance = provenance
+        self._cache = cache
 
     @property
     def dimension(self) -> int:
@@ -72,9 +72,9 @@ class LiteLLMGateway(AIGateway):
         )
         return list(response["data"][0]["embedding"])
 
-   async def complete(self, request: AIRequest) -> AIResponse:
-       model = request.model or ai_settings.default_model
-       # Кэш только для детерминированных вызовов
+    async def complete(self, request: AIRequest) -> AIResponse:
+        model = request.model or ai_settings.default_model
+        # Кэш только для детерминированных вызовов
         if self._cache is not None and request.temperature == 0:
             # input_hash считается в PromptSpec.render, сюда приходит уже готовый
             cached = await self._try_cache(request, model)
