@@ -10,9 +10,12 @@ import type {
 /**
  * Тонкий API-клиент. Все запросы идут через /api/v1 (проксируется Next rewrites
  * на бэкенд, см. next.config.mjs). В dev — ATS_STUB_MODE=1 на бэкенде.
+ *
+ * NEXT_PUBLIC_BASE_PATH подставляется при сборке (равен basePath из next.config).
+ * По умолчанию "" — для локальной разработки без basePath.
  */
 
-const BASE = "/api/v1";
+const BASE = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/v1`;
 
 async function request<T>(
   path: string,
