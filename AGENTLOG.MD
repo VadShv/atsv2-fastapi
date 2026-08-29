@@ -22,7 +22,7 @@
 | JUGO-020 | E-02 | Модель users/roles/permissions + скоупы | ✅ DONE | — |
 | JUGO-021 | E-02 | Сессии — refresh + rate limit + CSRF | ✅ DONE | #8 (closed) |
 | JUGO-022 | E-02 | Permission-чекер deny-by-default | ✅ DONE | — |
-| JUGO-023 | E-02 | 2FA (TOTP) для админ-ролей | ⬜ TODO | #9 |
+| JUGO-023 | E-02 | 2FA (TOTP) для админ-ролей | ✅ DONE | #9 (closed) |
 | JUGO-025 | E-02 | API-ключи со скоупами | ⬜ TODO | #10 |
 | JUGO-026 | E-02 | OIDC/SSO — абстракция identity-провайдера | ⬜ TODO | #11 |
 | JUGO-030 | E-03 | OpenTelemetry — трейсы, trace_id, Jaeger | ✅ DONE | #1 (closed) |
@@ -42,7 +42,7 @@
 
 **Этап 1 — Наблюдаемость (E-03):** ✅ 5/5 ЗАВЕРШЁН
 **Этап 2 — Файлы и сиды (E-01):** ✅ 2/2 ЗАВЕРШЁН
-**Этап 3 — Безопасность (E-02):** JUGO-021 ✅ → JUGO-023 → JUGO-025 → JUGO-026
+**Этап 3 — Безопасность (E-02):** JUGO-021 ✅ → JUGO-023 ✅ → JUGO-025 → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
 
 ### Прогресс
@@ -51,9 +51,9 @@
 |------|-------|--------|--------|
 | 1. Наблюдаемость (E-03) | 5 | 5/5 ✅ | 270 |
 | 2. Файлы и сиды (E-01) | 2 | 2/2 ✅ | 353 |
-| 3. Безопасность (E-02) | 4 | 1/4 | 372 |
+| 3. Безопасность (E-02) | 4 | 2/4 | 409 |
 | 4. CI | 1 | 0/1 | — |
-| **Итого** | **12** | **8/12** | **372** |
+| **Итого** | **12** | **9/12** | **409** |
 
 ### Этап 1 — Детализация
 
@@ -79,7 +79,7 @@
 | Задача | Тестов | Коммит |
 |--------|--------|--------|
 | JUGO-021 (Сессии — refresh + rate limit + CSRF) | +19 | `38d38b2` |
-| JUGO-023 (2FA TOTP) | — | — |
+| JUGO-023 (2FA TOTP) | +37 | `3ca59dc` |
 | JUGO-025 (API-ключи) | — | — |
 | JUGO-026 (OIDC/SSO) | — | — |
 
@@ -180,5 +180,19 @@
   - `apps/api/tests/test_sessions.py` — 19 тестов (rate limit, lockout, refresh, CSRF, cookies)
 - Тесты: 372 passed (+19)
 - Issue #8 закрыт
+
+### [2026-08-29] JUGO-023 — 2FA (TOTP) для админ-ролей — ✅ DONE
+- Коммит: `3ca59dc` | Тесты: 409 (+37) | Issue #9 закрыт
+- Файлы:
+  - `apps/api/src/ats/modules/identity/domain/totp.py` — TOTP на чистом stdlib (HMAC-SHA1, RFC 6238/4226), без pyotp: `generate_secret`, `totp_code`, `verify_totp` (tolerance ±30s, constant-time), `build_otpauth_uri` (для QR-кода), `generate_backup_codes`, `hash_backup_code` (SHA-256)
+  - `apps/api/src/ats/modules/identity/domain/two_factor.py` — `TwoFactorConfig`, `TwoFactorSetupResult`, `TwoFactorChallenge`, `ROLES_REQUIRING_2FA` = {admin, head_of_recruiting}, `is_2fa_required_for_user`
+  - `apps/api/src/ats/modules/identity/ports/two_factor.py` — `TwoFactorStore` Protocol (setup, verify_and_enable, verify_code, verify_backup_code, disable, challenge lifecycle)
+  - `apps/api/src/ats/modules/identity/infra/in_memory_2fa.py` — `InMemoryTwoFactorStore` (dev/тесты)
+  - `apps/api/src/ats/modules/identity/infra/runtime.py` — `get_two_factor_store()` singleton + reset
+  - `apps/api/src/ats/modules/identity/api/router.py` — 2FA endpoints: `/2fa/setup`, `/2fa/enable`, `/2fa/status`, `/2fa/disable` + login challenge flow `/2fa/verify`, `/2fa/backup`; login возвращает challenge_token если 2FA требуется
+  - `apps/api/tests/test_api.py` — fix `asyncio.get_event_loop().run_until_complete` → `asyncio.run` (устаревший API ломался при порядке тестов)
+  - `apps/api/tests/test_2fa.py` — 37 тестов (TOTP, backup codes, store, API)
+- Тесты: 409 passed (+37)
+- Issue #9 закрыт
 
 ---
