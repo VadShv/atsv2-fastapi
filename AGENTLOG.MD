@@ -27,7 +27,7 @@
 | JUGO-026 | E-02 | OIDC/SSO — абстракция identity-провайдера | ⬜ TODO | #11 |
 | JUGO-030 | E-03 | OpenTelemetry — трейсы, trace_id, Jaeger | ⬜ TODO | #1 |
 | JUGO-031 | E-03 | Prometheus-метрики — RPS, латентности, очереди | ⬜ TODO | #2 |
-| JUGO-032 | E-03 | Структурные JSON-логи + маскирование ПД | ⬜ TODO | #3 |
+| JUGO-032 | E-03 | Структурные JSON-логи + маскирование ПД | ✅ DONE | #3 (closed) |
 | JUGO-033 | E-03 | audit_log — партиционирование + хелпер чтений | 🔶 PARTIAL | #4 |
 | JUGO-034 | E-03 | Sentry + алерты | ⬜ TODO | #5 |
 | CI | — | GitHub Actions (lint + mypy + tests) | ⬜ TODO | #12 |
@@ -40,7 +40,7 @@
 
 ### Порядок реализации (приоритет)
 
-**Этап 1 — Наблюдаемость (E-03):** JUGO-032 → JUGO-030 → JUGO-031 → JUGO-033 → JUGO-034
+**Этап 1 — Наблюдаемость (E-03):** ~~JUGO-032~~ ✅ → JUGO-030 → JUGO-031 → JUGO-033 → JUGO-034
 **Этап 2 — Файлы и сиды (E-01):** JUGO-013 → JUGO-014
 **Этап 3 — Безопасность (E-02):** JUGO-021 → JUGO-023 → JUGO-025 → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
@@ -64,5 +64,19 @@
 - ✅ Cloud.ru + embedding 4096: gateway api_base/api_key, миграция 0006 (halfvec+HNSW)
 - ✅ Каркас воркеров arq (JUGO-012): 5 очередей, BaseTask, дедупликация, CLI
 - 144 теста green, деплой на 176.108.250.112
+
+### [2026-08-29] JUGO-032 — Структурные JSON-логи + маскирование ПД — ✅ DONE
+- Коммит: `69c1dc4`
+- Файлы:
+  - `apps/api/src/ats/infra/logging/__init__.py` — экспорты
+  - `apps/api/src/ats/infra/logging/settings.py` — `LogSettings` (env: `ATS_LOG_*`)
+  - `apps/api/src/ats/infra/logging/context.py` — contextvars: tenant_id, trace_id, user_id, request_id
+  - `apps/api/src/ats/infra/logging/pii_mask.py` — `mask_pii_processor` (email, телефон, nested dict/list)
+  - `apps/api/src/ats/infra/logging/setup.py` — `setup_logging()` (structlog + stdlib fallback), `get_logger()`
+  - `apps/api/src/ats/infra/logging/middleware.py` — `RequestContextMiddleware` (X-Request-Id, X-Trace-Id)
+  - `apps/api/tests/test_logging.py` — 27 тестов
+  - `apps/api/src/ats/main.py` — подключён `setup_logging()` + `RequestContextMiddleware`
+- Тесты: 171 passed (144 + 27)
+- Issue #3 закрыт на GitHub
 
 ---
