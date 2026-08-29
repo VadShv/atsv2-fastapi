@@ -1,0 +1,36 @@
+# Прод-конфиг Caddy: http по IP ВМ на порту 3080.
+# Маршруты:
+#   /ats/*       → ATS Core (web:3000, сеть docker_default)
+#   всё остальное → headhunter-roguelike (app:3000)
+# Когда появится домен — замените :3080 на домен и Caddy включит auto-TLS.
+
+:3080 {
+	encode zstd gzip
+
+	# ATS Core — path-prefix reverse-proxy
+	@ats path /ats /ats/*
+	handle @ats {
+		reverse_proxy web:3000 {
+			header_up Host {host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	# headhunter-roguelike — всё остальное
+	handle {
+		reverse_proxy app:3000 {
+			header_up Host {host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}
