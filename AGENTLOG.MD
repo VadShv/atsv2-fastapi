@@ -26,7 +26,7 @@
 | JUGO-025 | E-02 | API-ключи со скоупами | ⬜ TODO | #10 |
 | JUGO-026 | E-02 | OIDC/SSO — абстракция identity-провайдера | ⬜ TODO | #11 |
 | JUGO-030 | E-03 | OpenTelemetry — трейсы, trace_id, Jaeger | ✅ DONE | #1 (closed) |
-| JUGO-031 | E-03 | Prometheus-метрики — RPS, латентности, очереди | ⬜ TODO | #2 |
+| JUGO-031 | E-03 | Prometheus-метрики — RPS, латентности, очереди | ✅ DONE | #2 (closed) |
 | JUGO-032 | E-03 | Структурные JSON-логи + маскирование ПД | ✅ DONE | #3 (closed) |
 | JUGO-033 | E-03 | audit_log — партиционирование + хелпер чтений | 🔶 PARTIAL | #4 |
 | JUGO-034 | E-03 | Sentry + алерты | ⬜ TODO | #5 |
@@ -40,10 +40,19 @@
 
 ### Порядок реализации (приоритет)
 
-**Этап 1 — Наблюдаемость (E-03):** ~~JUGO-032~~ ✅ → ~~JUGO-030~~ ✅ → JUGO-031 → JUGO-033 → JUGO-034
+**Этап 1 — Наблюдаемость (E-03):** ~~JUGO-032~~ ✅ → ~~JUGO-030~~ ✅ → ~~JUGO-031~~ ✅ → JUGO-033 → JUGO-034
 **Этап 2 — Файлы и сиды (E-01):** JUGO-013 → JUGO-014
 **Этап 3 — Безопасность (E-02):** JUGO-021 → JUGO-023 → JUGO-025 → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
+
+### Прогресс по Этапу 1 (Наблюдаемость): 3/5
+
+| Задача | Тестов | Коммит |
+|--------|--------|--------|
+| JUGO-032 | +27 | `69c1dc4` |
+| JUGO-030 | +29 | `fbfb504` |
+| JUGO-031 | +28 | `9e2dd0d` |
+| **Итого** | **228** | |
 
 ---
 
@@ -96,5 +105,23 @@
   - `apps/api/tests/test_tracing.py` — 29 тестов
 - Тесты: 200 passed (171 + 29)
 - Issue #1 закрыт на GitHub
+
+### [2026-08-29] JUGO-031 — Prometheus-метрики — ✅ DONE
+- Коммит: `9e2dd0d`
+- Файлы:
+  - `apps/api/src/ats/infra/metrics/__init__.py` — экспорты
+  - `apps/api/src/ats/infra/metrics/settings.py` — `MetricsSettings` (env: `ATS_METRICS_*`)
+  - `apps/api/src/ats/infra/metrics/registry.py` — реестр метрик (HTTP, arq, outbox, AI, search) + no-op fallback
+  - `apps/api/src/ats/infra/metrics/middleware.py` — `MetricsMiddleware` (RPS, latency, in-progress)
+  - `apps/api/src/ats/infra/metrics/router.py` — `/metrics` endpoint
+  - `apps/api/src/ats/main.py` — подключён `MetricsMiddleware` + `metrics_router`
+  - `apps/api/pyproject.toml` — +prometheus-client, +mypy override
+  - `infra/docker/docker-compose.yml` — +Prometheus (:9091) + Grafana (:3001)
+  - `infra/prometheus/prometheus.yml` — scrape config (api:8000/metrics)
+  - `infra/grafana/dashboards/ats-health.json` — дашборд (8 панелей: RPS, latency p50/p95/p99, queue depth, outbox lag, AI RPS)
+  - `.env.example` — +ATS_METRICS_* переменные
+  - `apps/api/tests/test_metrics.py` — 28 тестов
+- Тесты: 228 passed (200 + 28)
+- Issue #2 закрыт на GitHub
 
 ---
