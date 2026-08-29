@@ -1,0 +1,110 @@
+"""DI-контейнер: сборка графа зависимостей.
+
+В dev-режиме (ATS_STUB_MODE=1) использует in-memory/stub адаптеры.
+В prod — реальные адаптеры (Postgres, LiteLLM, Redis).
+"""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+
+from ats.infra.search.in_memory_search_engine import InMemorySearchEngine
+from ats.infra.stubs import (
+    InMemoryProvenanceLedger,
+    InMemoryVacancyRepository,
+    StubAIGateway,
+)
+from ats.infra.stubs_repositories import (
+    InMemoryApplicationRepository,
+    InMemoryCandidateRepository,
+)
+from ats.modules.ai_core.domain.gateway import AIGateway
+from ats.modules.ai_core.ports.provenance import ProvenanceLedger
+from ats.modules.ai_core.skills.generate_screening_criteria import (
+    GenerateScreeningCriteria,
+)
+from ats.modules.ai_core.skills.parse_resume import ParseResume
+from ats.modules.candidates.application.upload_resume import UploadResumeUseCase
+from ats.modules.candidates.ports.candidate_repository import CandidateRepository
+from ats.modules.recruitment.application.create_application import (
+    CreateApplicationUseCase,
+)
+from ats.modules.recruitment.application.create_vacancy import CreateVacancyUseCase
+from ats.modules.recruitment.application.move_application import (
+    MoveApplicationUseCase,
+)
+from ats.modules.recruitment.ports.application_repository import (
+    ApplicationRepository,
+)
+from ats.modules.recruitment.ports.vacancy_repository import VacancyRepository
+from ats.modules.search.application.search_candidates import SearchCandidatesUseCase
+from ats.modules.search.ports.search_engine import SearchEngine
+
+
+@dataclass
+class Container:
+    """Граф зависимостей приложения."""
+
+    vacancy_repository: VacancyRepository
+    candidate_repository: CandidateRepository
+    application_repository: ApplicationRepository
+    provenance_ledger: ProvenanceLedger
+    ai_gateway: AIGateway
+    search_engine: SearchEngine
+    create_vacancy: CreateVacancyUseCase
+    create_application: CreateApplicationUseCase
+    move_application: MoveApplicationUseCase
+    upload_resume: UploadResumeUseCase
+    search_candidates: SearchCandidatesUseCase
+
+
+def build_container() -> Container:
+    """Собрать контейнер по окружению."""
+    stub_mode = os.getenv("ATS_STUB_MODE", "1") == "1"
+
+    if stub_mode:
+        vacancy_repo: VacancyRepository = InMemoryVacancyRepository()
+        candidate_repo: CandidateRepository = InMemoryCandidateRepository()
+        application_repo: ApplicationRepository = InMemoryApplicationRepository()
+        provenance: ProvenanceLedger = InMemoryProvenanceLedger()
+        gateway: AIGateway = StubAIGateway()
+        search_engine: SearchEngine = InMemorySearchEngine()
+    else:
+        from ats.infra.ai.litellm_gateway import LiteLLMGateway
+        from ats.infra.db.repositories.provenance_repository import (
+            PgProvenanceLedger,
+        )
+        from ats.infra.db.repositories.vacancy_repository import PgVacancyRepository
+        from ats.infra.search.pgvector_search_engine import PgVectorSearchEngine
+
+        vacancy_repo = PgVacancyRepository()
+        candidate_repo = InMemoryCandidateRepository()  # Pg-реализация в след. фазе
+        application_repo = InMemoryApplicationRepository()
+        provenance = PgProvenanceLedger()
+        gateway = LiteLLMGateway(provenance)
+        search_engine = PgVectorSearchEngine()
+
+    screening_skill = GenerateScreeningCriteria(gateway)
+    parse_skill = ParseResume(gateway)
+    create_vacancy = CreateVacancyUseCase(vacancy_repo, screening_skill)
+    create_application = CreateApplicationUseCase(application_repo)
+    move_application = MoveApplicationUseCase(application_repo)
+    upload_resume = UploadResumeUseCase(
+        candidate_repo, parse_skill, search_engine, gateway
+    )
+    search_candidates = SearchCandidatesUseCase(search_engine, gateway)
+
+    return Container(
+        vacancy_repository=vacancy_repo,
+        candidate_repository=candidate_repo,
+        application_repository=application_repo,
+        provenance_ledger=provenance,
+        ai_gateway=gateway,
+        search_engine=search_engine,
+        create_vacancy=create_vacancy,
+        create_application=create_application,
+        move_application=move_application,
+        upload_resume=upload_resume,
+        search_candidates=search_candidates,
+    )
