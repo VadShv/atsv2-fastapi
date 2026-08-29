@@ -27,7 +27,8 @@ dependencies = [
     "prometheus-client>=0.20",
     "sentry-sdk[fastapi]>=2.0",
     "aioboto3>=13.0",
-    "boto3>=1.34",
+   "boto3>=1.34",
+    "faker>=25.0",
 ]
 
 [project.optional-dependencies]
@@ -89,6 +90,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "botocore.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "faker.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

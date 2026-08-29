@@ -102,6 +102,22 @@ services:
       "
     restart: "no"
 
+  seed:
+    build:
+      context: ../../apps/api
+      dockerfile: ../../infra/docker/Dockerfile.api
+    command: ["python", "-m", "ats.infra.seeds", "--dry-run"]
+    env_file:
+      - ../../.env
+    environment:
+      ATS_DB_URL: postgresql+asyncpg://ats:ats@postgres:5432/ats
+      ATS_REDIS_URL: redis://redis:6379/0
+      ATS_STUB_MODE: "0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   jaeger:
     image: jaegertracing/all-in-one:1.60
     environment:
