@@ -20,7 +20,7 @@
 | JUGO-013 | E-01 | S3-клиент + модуль core/files | ✅ DONE | #6 (closed) |
 | JUGO-014 | E-01 | Сиды демо-данных (5к кандидатов, 20 вакансий) | ✅ DONE | #7 (closed) |
 | JUGO-020 | E-02 | Модель users/roles/permissions + скоупы | ✅ DONE | — |
-| JUGO-021 | E-02 | Сессии — refresh + rate limit + CSRF | 🔶 PARTIAL | #8 |
+| JUGO-021 | E-02 | Сессии — refresh + rate limit + CSRF | ✅ DONE | #8 (closed) |
 | JUGO-022 | E-02 | Permission-чекер deny-by-default | ✅ DONE | — |
 | JUGO-023 | E-02 | 2FA (TOTP) для админ-ролей | ⬜ TODO | #9 |
 | JUGO-025 | E-02 | API-ключи со скоупами | ⬜ TODO | #10 |
@@ -42,7 +42,7 @@
 
 **Этап 1 — Наблюдаемость (E-03):** ✅ 5/5 ЗАВЕРШЁН
 **Этап 2 — Файлы и сиды (E-01):** ✅ 2/2 ЗАВЕРШЁН
-**Этап 3 — Безопасность (E-02):** JUGO-021 → JUGO-023 → JUGO-025 → JUGO-026
+**Этап 3 — Безопасность (E-02):** JUGO-021 ✅ → JUGO-023 → JUGO-025 → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
 
 ### Прогресс
@@ -51,9 +51,9 @@
 |------|-------|--------|--------|
 | 1. Наблюдаемость (E-03) | 5 | 5/5 ✅ | 270 |
 | 2. Файлы и сиды (E-01) | 2 | 2/2 ✅ | 353 |
-| 3. Безопасность (E-02) | 4 | 0/4 | — |
+| 3. Безопасность (E-02) | 4 | 1/4 | 372 |
 | 4. CI | 1 | 0/1 | — |
-| **Итого** | **12** | **7/12** | **353** |
+| **Итого** | **12** | **8/12** | **372** |
 
 ### Этап 1 — Детализация
 
@@ -73,6 +73,15 @@
 | JUGO-013 (S3 + core/files) | +45 | `1a8d38c` |
 | JUGO-014 (Сиды демо-данных) | +38 | `82aa700` |
 | **Итого Этап 2** | **+83** | |
+
+### Этап 3 — Детализация (Безопасность)
+
+| Задача | Тестов | Коммит |
+|--------|--------|--------|
+| JUGO-021 (Сессии — refresh + rate limit + CSRF) | +19 | `38d38b2` |
+| JUGO-023 (2FA TOTP) | — | — |
+| JUGO-025 (API-ключи) | — | — |
+| JUGO-026 (OIDC/SSO) | — | — |
 
 ---
 
@@ -155,5 +164,21 @@
 - Тесты: 353 passed (+38)
 - Issue #7 закрыт
 - **Этап 2 (Файлы и сиды) ПОЛНОСТЬЮ ЗАВЕРШЁН: 2/2**
+
+### [2026-08-29] JUGO-021 — Сессии: refresh + rate limit + account lockout + CSRF — ✅ DONE
+- Коммит: `38d38b2` | Тесты: 372 (+19) | Issue #8 закрыт
+- Файлы:
+  - `apps/api/src/ats/modules/identity/domain/session.py` — добавлен `metadata` в `Session.create()`
+  - `apps/api/src/ats/modules/identity/infra/in_memory_auth.py` — `create_session` сохраняет email в metadata
+  - `apps/api/src/ats/modules/identity/infra/rate_limiter.py` — `LoginRateLimiter` (5 попыток/5 мин/IP) + `AccountLockout` (5 неудач → блокировка 15 мин)
+  - `apps/api/src/ats/modules/identity/infra/csrf.py` — `CSRFMiddleware` (double-submit cookie: `ats_csrf` + `X-CSRF-Token`), exempt для login/refresh/health
+  - `apps/api/src/ats/modules/identity/infra/runtime.py` — singleton-ы (`get_authenticator`, `get_session_store`, `get_rate_limiter`, `get_account_lockout`) + `reset_runtime()` для тестов
+  - `apps/api/src/ats/modules/identity/api/router.py` — rate limit + account lockout в login, `/auth/refresh` (token rotation), CSRF cookie при логине, logout отзывает сессию
+  - `apps/api/src/ats/modules/identity/api/deps.py` — prod-валидация токена из cookie `ats_session` или `Authorization: Bearer` через SessionStore
+  - `apps/api/src/ats/main.py` — подключён `CSRFMiddleware`
+  - `apps/api/tests/conftest.py` — autouse fixture `reset_runtime()` между тестами
+  - `apps/api/tests/test_sessions.py` — 19 тестов (rate limit, lockout, refresh, CSRF, cookies)
+- Тесты: 372 passed (+19)
+- Issue #8 закрыт
 
 ---
