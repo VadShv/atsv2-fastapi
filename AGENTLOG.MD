@@ -25,7 +25,7 @@
 | JUGO-023 | E-02 | 2FA (TOTP) для админ-ролей | ⬜ TODO | #9 |
 | JUGO-025 | E-02 | API-ключи со скоупами | ⬜ TODO | #10 |
 | JUGO-026 | E-02 | OIDC/SSO — абстракция identity-провайдера | ⬜ TODO | #11 |
-| JUGO-030 | E-03 | OpenTelemetry — трейсы, trace_id, Jaeger | ⬜ TODO | #1 |
+| JUGO-030 | E-03 | OpenTelemetry — трейсы, trace_id, Jaeger | ✅ DONE | #1 (closed) |
 | JUGO-031 | E-03 | Prometheus-метрики — RPS, латентности, очереди | ⬜ TODO | #2 |
 | JUGO-032 | E-03 | Структурные JSON-логи + маскирование ПД | ✅ DONE | #3 (closed) |
 | JUGO-033 | E-03 | audit_log — партиционирование + хелпер чтений | 🔶 PARTIAL | #4 |
@@ -40,7 +40,7 @@
 
 ### Порядок реализации (приоритет)
 
-**Этап 1 — Наблюдаемость (E-03):** ~~JUGO-032~~ ✅ → JUGO-030 → JUGO-031 → JUGO-033 → JUGO-034
+**Этап 1 — Наблюдаемость (E-03):** ~~JUGO-032~~ ✅ → ~~JUGO-030~~ ✅ → JUGO-031 → JUGO-033 → JUGO-034
 **Этап 2 — Файлы и сиды (E-01):** JUGO-013 → JUGO-014
 **Этап 3 — Безопасность (E-02):** JUGO-021 → JUGO-023 → JUGO-025 → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
@@ -78,5 +78,23 @@
   - `apps/api/src/ats/main.py` — подключён `setup_logging()` + `RequestContextMiddleware`
 - Тесты: 171 passed (144 + 27)
 - Issue #3 закрыт на GitHub
+
+### [2026-08-29] JUGO-030 — OpenTelemetry трейсинг — ✅ DONE
+- Коммит: `fbfb504`
+- Файлы:
+  - `apps/api/src/ats/infra/tracing/__init__.py` — экспорты
+  - `apps/api/src/ats/infra/tracing/settings.py` — `TracingSettings` (env: `ATS_OTEL_*`)
+  - `apps/api/src/ats/infra/tracing/setup.py` — `setup_tracing()` (ленивый OTel + no-op fallback), `get_tracer()`
+  - `apps/api/src/ats/infra/tracing/context.py` — `get_current_trace_id()`, propagation helpers
+  - `apps/api/src/ats/infra/tracing/middleware.py` — `TracingMiddleware` (OTel span per HTTP request)
+  - `apps/api/src/ats/infra/tracing/propagation.py` — `capture/restore_trace_context()` для воркеров
+  - `apps/api/src/ats/infra/workers/base_task.py` — восстановление trace_ctx из params
+  - `apps/api/src/ats/main.py` — подключён `setup_tracing()` + `TracingMiddleware`
+  - `apps/api/pyproject.toml` — +OTel зависимости, +mypy override
+  - `infra/docker/docker-compose.yml` — +Jaeger all-in-one (OTLP gRPC + UI :16686)
+  - `.env.example` — +ATS_OTEL_* и ATS_LOG_* переменные
+  - `apps/api/tests/test_tracing.py` — 29 тестов
+- Тесты: 200 passed (171 + 29)
+- Issue #1 закрыт на GitHub
 
 ---
