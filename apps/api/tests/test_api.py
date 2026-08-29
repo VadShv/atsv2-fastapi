@@ -58,9 +58,7 @@ class TestApplicationsAPI:
         )
         import asyncio
 
-        asyncio.get_event_loop().run_until_complete(
-            container.candidate_repository.save(candidate)
-        )
+        asyncio.run(container.candidate_repository.save(candidate))
 
         # 2. Создать вакансию
         vacancy_resp = client.post(
@@ -132,9 +130,7 @@ class TestApplicationsAPI:
             full_name="Петр Петров",
             source=CandidateSource.REFERRAL,
         )
-        asyncio.get_event_loop().run_until_complete(
-            container.candidate_repository.save(candidate)
-        )
+        asyncio.run(container.candidate_repository.save(candidate))
         vacancy_resp = client.post(
             "/api/v1/vacancies",
             json={
