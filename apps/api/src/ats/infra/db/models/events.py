@@ -3,6 +3,9 @@
 Outbox: события пишутся в ту же транзакцию, что и агрегат → воркер диспетчит.
 Гарантия at-least-once → обработчики идемпотентны.
 Audit: append-only журнал действий пользователей.
+
+JUGO-033: audit_log партиционирован по месяцам (PARTITION BY RANGE created_at).
+Primary key: (id, created_at) — требование декларативного партиционирования.
 """
 
 from __future__ import annotations
@@ -55,6 +58,9 @@ class AuditLogORM(Base, TenantMixin):
 
     ТЗ §15: кто, что, когда, откуда (IP/UA), trace_id.
     Записи никогда не обновляются/удаляются (immutable).
+
+    JUGO-033: партиционирована по месяцам (PARTITION BY RANGE created_at).
+    Primary key: (id, created_at) — требование декларативного партиционирования.
     """
 
     __tablename__ = "audit_log"
@@ -62,6 +68,9 @@ class AuditLogORM(Base, TenantMixin):
     id: Mapped[UUID] = mapped_column(
         PgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
+    # created_at — часть PK (требование партиционирования по RANGE)
+    # TenantMixin уже добавляет created_at, но для партиционирования
+    # он должен быть в PK. SQLAlchemy обработает это через __table_args__.
     actor_id: Mapped[UUID | None] = mapped_column(
         PgUUID(as_uuid=True), nullable=True, index=True
     )

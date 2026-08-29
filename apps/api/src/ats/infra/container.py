@@ -27,7 +27,9 @@ from ats.modules.ai_core.skills.generate_screening_criteria import (
 )
 from ats.modules.ai_core.skills.parse_resume import ParseResume
 from ats.modules.audit.infra.in_memory_audit_logger import InMemoryAuditLogger
+from ats.modules.audit.infra.in_memory_audit_reader import InMemoryAuditReader
 from ats.modules.audit.ports.audit_logger import AuditLogger
+from ats.modules.audit.ports.audit_reader import AuditReader
 from ats.modules.candidates.application.upload_resume import UploadResumeUseCase
 from ats.modules.candidates.ports.candidate_repository import CandidateRepository
 from ats.modules.recruitment.application.create_application import (
@@ -56,6 +58,7 @@ class Container:
     ai_gateway: AIGateway
     search_engine: SearchEngine
     audit_logger: AuditLogger
+    audit_reader: AuditReader
     event_bus: InProcessEventBus
     create_vacancy: CreateVacancyUseCase
     create_application: CreateApplicationUseCase
@@ -91,6 +94,7 @@ def build_container() -> Container:
         search_engine = PgVectorSearchEngine()
 
     audit_logger: AuditLogger = InMemoryAuditLogger()
+    audit_reader: AuditReader = InMemoryAuditReader()
     event_bus = InProcessEventBus()
 
     screening_skill = GenerateScreeningCriteria(gateway)
@@ -111,6 +115,7 @@ def build_container() -> Container:
         ai_gateway=gateway,
         search_engine=search_engine,
         audit_logger=audit_logger,
+        audit_reader=audit_reader,
         event_bus=event_bus,
         create_vacancy=create_vacancy,
         create_application=create_application,
