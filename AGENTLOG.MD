@@ -17,7 +17,7 @@
 | JUGO-010 | E-01 | docker-compose (pg+pgvector, redis, api, web, worker) | ✅ DONE | — |
 | JUGO-011 | E-01 | Alembic (миграции 0001–0007) | ✅ DONE | — |
 | JUGO-012 | E-01 | Каркас воркеров arq (5 очередей, BaseTask) | ✅ DONE | — |
-| JUGO-013 | E-01 | S3-клиент + модуль core/files | ⬜ TODO | #6 |
+| JUGO-013 | E-01 | S3-клиент + модуль core/files | ✅ DONE | #6 (closed) |
 | JUGO-014 | E-01 | Сиды демо-данных (5к кандидатов, 20 вакансий) | ⬜ TODO | #7 |
 | JUGO-020 | E-02 | Модель users/roles/permissions + скоупы | ✅ DONE | — |
 | JUGO-021 | E-02 | Сессии — refresh + rate limit + CSRF | 🔶 PARTIAL | #8 |
@@ -41,7 +41,7 @@
 ### Порядок реализации (приоритет)
 
 **Этап 1 — Наблюдаемость (E-03):** ✅ 5/5 ЗАВЕРШЁН
-**Этап 2 — Файлы и сиды (E-01):** JUGO-013 → JUGO-014
+**Этап 2 — Файлы и сиды (E-01):** JUGO-013 ✅ → JUGO-014
 **Этап 3 — Безопасность (E-02):** JUGO-021 → JUGO-023 → JUGO-025 → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
 
@@ -50,10 +50,10 @@
 | Этап | Задач | Готово | Тестов |
 |------|-------|--------|--------|
 | 1. Наблюдаемость (E-03) | 5 | 5/5 ✅ | 270 |
-| 2. Файлы и сиды (E-01) | 2 | 0/2 | — |
+| 2. Файлы и сиды (E-01) | 2 | 1/2 | 315 |
 | 3. Безопасность (E-02) | 4 | 0/4 | — |
 | 4. CI | 1 | 0/1 | — |
-| **Итого** | **12** | **5/12** | **270** |
+| **Итого** | **12** | **6/12** | **315** |
 
 ### Этап 1 — Детализация
 
@@ -65,6 +65,13 @@
 | JUGO-033 (Audit partition) | +24 | `eba7513` |
 | JUGO-034 (Sentry + alerts) | +23 | `f8a1915` |
 | **Итого Этап 1** | **+131** | |
+
+### Этап 2 — Детализация
+
+| Задача | Тестов | Коммит |
+|--------|--------|--------|
+| JUGO-013 (S3 + core/files) | +45 | `1a8d38c` |
+| **Итого Этап 2** | **+45** | |
 
 ---
 
@@ -106,12 +113,30 @@
   - `apps/api/src/ats/infra/sentry/setup.py` — `setup_sentry()` (ленивый sentry-sdk + no-op), `capture_exception()`, `capture_message()`, `set_user_context()`
   - `apps/api/src/ats/infra/sentry/middleware.py` — `SentryMiddleware` (перехват 5xx)
   - `apps/api/src/ats/infra/sentry/alerts.py` — `send_alert()` (webhook Telegram/Slack), `_build_payload()`, `_should_alert()`
-  - `apps/api/src/ats/main.py` — подключён `setup_sentry()` + `SentryMiddleware`
+  - `apps/api/main.py` — подключён `setup_sentry()` + `SentryMiddleware`
   - `apps/api/pyproject.toml` — +sentry-sdk[fastapi], +mypy override
   - `.env.example` — +ATS_SENTRY_* переменные
   - `apps/api/tests/test_sentry.py` — 23 теста
 - Тесты: 270 passed (+23)
 - Issue #5 закрыт
 - **Этап 1 (Наблюдаемость) ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5**
+
+### [2026-08-29] JUGO-013 — S3-клиент + модуль core/files — ✅ DONE
+- Коммит: `1a8d38c` | Тесты: 315 (+45) | Issue #6 закрыт
+- Файлы:
+  - `apps/api/src/ats/infra/storage/__init__.py` — экспорты + `get_storage()` фабрика
+  - `apps/api/src/ats/infra/storage/settings.py` — `StorageSettings` (env: `ATS_STORAGE_*`)
+  - `apps/api/src/ats/infra/storage/models.py` — `FileMetadata`, `UploadResult`, `ScanResult`, `DownloadResult`, `FileCategory`, `ScanStatus`
+  - `apps/api/src/ats/infra/storage/protocol.py` — `FileStorage` Protocol + `AntivirusScanner` Protocol
+  - `apps/api/src/ats/infra/storage/whitelist.py` — whitelist MIME (category-specific) + `validate_extension` + `validate_size`
+  - `apps/api/src/ats/infra/storage/antivirus.py` — `NoOpAntivirus` (заглушка, реализация в E-61)
+  - `apps/api/src/ats/infra/storage/in_memory_storage.py` — `InMemoryFileStorage` (тесты/stub/dev)
+  - `apps/api/src/ats/infra/storage/s3_storage.py` — `S3FileStorage` (lazy aioboto3+boto3, MinIO dev / Cloud.ru prod)
+  - `apps/api/pyproject.toml` — +aioboto3, +boto3, +mypy overrides
+  - `.env.example` — +ATS_STORAGE_* переменные
+  - `infra/docker/docker-compose.yml` — +MinIO, +minio-init (автосоздание бакета)
+  - `apps/api/tests/test_storage.py` — 45 тестов
+- Тесты: 315 passed (+45)
+- Issue #6 закрыт
 
 ---
