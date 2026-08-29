@@ -18,7 +18,7 @@
 | JUGO-011 | E-01 | Alembic (миграции 0001–0007) | ✅ DONE | — |
 | JUGO-012 | E-01 | Каркас воркеров arq (5 очередей, BaseTask) | ✅ DONE | — |
 | JUGO-013 | E-01 | S3-клиент + модуль core/files | ✅ DONE | #6 (closed) |
-| JUGO-014 | E-01 | Сиды демо-данных (5к кандидатов, 20 вакансий) | ⬜ TODO | #7 |
+| JUGO-014 | E-01 | Сиды демо-данных (5к кандидатов, 20 вакансий) | ✅ DONE | #7 (closed) |
 | JUGO-020 | E-02 | Модель users/roles/permissions + скоупы | ✅ DONE | — |
 | JUGO-021 | E-02 | Сессии — refresh + rate limit + CSRF | 🔶 PARTIAL | #8 |
 | JUGO-022 | E-02 | Permission-чекер deny-by-default | ✅ DONE | — |
@@ -41,7 +41,7 @@
 ### Порядок реализации (приоритет)
 
 **Этап 1 — Наблюдаемость (E-03):** ✅ 5/5 ЗАВЕРШЁН
-**Этап 2 — Файлы и сиды (E-01):** JUGO-013 ✅ → JUGO-014
+**Этап 2 — Файлы и сиды (E-01):** ✅ 2/2 ЗАВЕРШЁН
 **Этап 3 — Безопасность (E-02):** JUGO-021 → JUGO-023 → JUGO-025 → JUGO-026
 **Этап 4 — CI:** GitHub Actions pipeline
 
@@ -50,10 +50,10 @@
 | Этап | Задач | Готово | Тестов |
 |------|-------|--------|--------|
 | 1. Наблюдаемость (E-03) | 5 | 5/5 ✅ | 270 |
-| 2. Файлы и сиды (E-01) | 2 | 1/2 | 315 |
+| 2. Файлы и сиды (E-01) | 2 | 2/2 ✅ | 353 |
 | 3. Безопасность (E-02) | 4 | 0/4 | — |
 | 4. CI | 1 | 0/1 | — |
-| **Итого** | **12** | **6/12** | **315** |
+| **Итого** | **12** | **7/12** | **353** |
 
 ### Этап 1 — Детализация
 
@@ -71,7 +71,8 @@
 | Задача | Тестов | Коммит |
 |--------|--------|--------|
 | JUGO-013 (S3 + core/files) | +45 | `1a8d38c` |
-| **Итого Этап 2** | **+45** | |
+| JUGO-014 (Сиды демо-данных) | +38 | `82aa700` |
+| **Итого Этап 2** | **+83** | |
 
 ---
 
@@ -138,5 +139,21 @@
   - `apps/api/tests/test_storage.py` — 45 тестов
 - Тесты: 315 passed (+45)
 - Issue #6 закрыт
+
+### [2026-08-29] JUGO-014 — Сиды демо-данных — ✅ DONE
+- Коммит: `82aa700` | Тесты: 353 (+38) | Issue #7 закрыт
+- Файлы:
+  - `apps/api/src/ats/infra/seeds/__init__.py` — экспорты
+  - `apps/api/src/ats/infra/seeds/__main__.py` — entry point (`python -m ats.infra.seeds`)
+  - `apps/api/src/ats/infra/seeds/settings.py` — `SeedSettings` (env: `ATS_SEED_*`)
+  - `apps/api/src/ats/infra/seeds/generator.py` — `SeedGenerator` (детерминированный, lazy Faker)
+  - `apps/api/src/ats/infra/seeds/cli.py` — CLI: `--dry-run`, `--seed`, `--candidates`, `--tenants`, `--vacancies`
+  - `apps/api/pyproject.toml` — +faker, +mypy override
+  - `.env.example` — +ATS_SEED_* переменные
+  - `infra/docker/docker-compose.yml` — +seed сервис
+  - `apps/api/tests/test_seeds.py` — 38 тестов
+- Тесты: 353 passed (+38)
+- Issue #7 закрыт
+- **Этап 2 (Файлы и сиды) ПОЛНОСТЬЮ ЗАВЕРШЁН: 2/2**
 
 ---
