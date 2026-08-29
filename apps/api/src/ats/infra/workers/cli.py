@@ -14,18 +14,18 @@ import argparse
 import logging
 import sys
 
-from ats.infra.workers.settings import settings as redis_settings
+from ats.infra.workers.settings import settings as redis_cfg
 from ats.infra.workers.worker_settings import QUEUE_REGISTRY
 
 logger = logging.getLogger(__name__)
 
 # Короткие имена очередей → полные имена из настроек
 _SHORT_NAMES: dict[str, str] = {
-    "ai": redis_settings.queue_ai,
-    "index": redis_settings.queue_index,
-    "webhooks": redis_settings.queue_webhooks,
-    "analytics": redis_settings.queue_analytics,
-    "scheduler": redis_settings.queue_scheduler,
+    "ai": redis_cfg.queue_ai,
+    "index": redis_cfg.queue_index,
+    "webhooks": redis_cfg.queue_webhooks,
+    "analytics": redis_cfg.queue_analytics,
+    "scheduler": redis_cfg.queue_scheduler,
 }
 
 
@@ -67,7 +67,6 @@ async def _run_worker(queue_name: str) -> None:
         queue_name=queue_name,
         max_jobs=settings_cls.max_jobs,
         job_timeout=settings_cls.job_timeout,
-        graceful_shutdown_timeout=settings_cls.graceful_shutdown_timeout,
         on_startup=settings_cls.on_startup,
         on_shutdown=settings_cls.on_shutdown,
         on_job_failure=settings_cls.on_job_failure,
