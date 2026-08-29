@@ -6,10 +6,9 @@ Dev-режим (без БД/LLM): ATS_STUB_MODE=1
 
 from __future__ import annotations
 
-import logging
-
 from fastapi import FastAPI
 
+from ats.infra.logging import RequestContextMiddleware, setup_logging
 from ats.modules.candidates.api.router import router as candidates_router
 from ats.modules.events.api.router import router as events_router
 from ats.modules.identity.api.router import router as auth_router
@@ -19,8 +18,9 @@ from ats.modules.recruitment.api.applications_router import (
 from ats.modules.recruitment.api.router import router as recruitment_router
 from ats.modules.search.api.router import router as search_router
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-logger = logging.getLogger(__name__)
+# Структурные JSON-логи с маскированием ПД (JUGO-032)
+setup_logging()
+logger = __import__("ats.infra.logging", fromlist=["get_logger"]).get_logger(__name__)
 
 
 def create_app() -> FastAPI:
@@ -29,6 +29,9 @@ def create_app() -> FastAPI:
         description="AI-native Applicant Tracking System",
         version="0.1.0",
     )
+
+    # Middleware: request_id + trace_id в contextvars
+    app.add_middleware(RequestContextMiddleware)
 
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(recruitment_router, prefix="/api/v1")
