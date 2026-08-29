@@ -25,6 +25,7 @@ dependencies = [
     "opentelemetry-exporter-otlp>=1.25",
     "opentelemetry-instrumentation-fastapi>=0.45b0",
     "prometheus-client>=0.20",
+    "sentry-sdk[fastapi]>=2.0",
 ]
 
 [project.optional-dependencies]
@@ -70,6 +71,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "prometheus_client.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sentry_sdk.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

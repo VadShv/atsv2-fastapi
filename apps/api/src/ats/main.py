@@ -10,6 +10,7 @@ from fastapi import FastAPI
 
 from ats.infra.logging import RequestContextMiddleware, setup_logging
 from ats.infra.metrics import MetricsMiddleware, metrics_router
+from ats.infra.sentry import SentryMiddleware, setup_sentry
 from ats.infra.tracing import TracingMiddleware, setup_tracing
 from ats.modules.candidates.api.router import router as candidates_router
 from ats.modules.events.api.router import router as events_router
@@ -24,6 +25,8 @@ from ats.modules.search.api.router import router as search_router
 setup_logging()
 # OpenTelemetry трейсинг (JUGO-030) — no-op если OTel не установлен
 setup_tracing()
+# Sentry + алерты (JUGO-034) — no-op если sentry-sdk не установлен
+setup_sentry()
 logger = __import__("ats.infra.logging", fromlist=["get_logger"]).get_logger(__name__)
 
 
@@ -40,6 +43,8 @@ def create_app() -> FastAPI:
     app.add_middleware(TracingMiddleware)
     # Middleware: Prometheus HTTP-метрики (JUGO-031)
     app.add_middleware(MetricsMiddleware)
+    # Middleware: Sentry + алерты (JUGO-034)
+    app.add_middleware(SentryMiddleware)
 
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(recruitment_router, prefix="/api/v1")
