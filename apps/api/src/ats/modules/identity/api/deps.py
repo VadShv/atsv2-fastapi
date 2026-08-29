@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 from uuid import UUID
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 
 from ats.modules.identity.domain.rbac import (
     Permission,
@@ -47,7 +47,23 @@ def _stub_user() -> User:
     )
 
 
+def _extract_token(
+    request: Request | None, authorization: str | None
+) -> str | None:
+    """Извлечь opaque-токен из cookie ats_session или Authorization: Bearer."""
+    # 1. Cookie
+    if request is not None:
+        cookie_token = request.cookies.get("ats_session", "")
+        if cookie_token:
+            return cookie_token
+    # 2. Authorization header
+    if authorization and authorization.startswith("Bearer "):
+        return authorization.removeprefix("Bearer ").strip()
+    return None
+
+
 async def get_current_user(
+    request: Request,
     authorization: str | None = Header(default=None),
 ) -> User:
     """Извлечь текущего пользователя из запроса.
@@ -59,21 +75,41 @@ async def get_current_user(
     if os.getenv("ATS_STUB_MODE", "1") == "1":
         return _stub_user()
 
-    # Prod-путь: токен из заголовка
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Требуется авторизация (Bearer token)",
-        )
-    token = authorization.removeprefix("Bearer ").strip()
-    # TODO (Wave 1): валидация через SessionStore из контейнера
+    token = _extract_token(request, authorization)
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Недействительный токен",
+            detail="Требуется авторизация (Bearer token или cookie)",
         )
-    # Пока в prod без полной интеграции SessionStore — откат к stub
-    return _stub_user()
+
+    # Валидация через SessionStore
+    from ats.modules.identity.infra.runtime import get_session_store
+
+    session_store = get_session_store()
+    session = await session_store.get_session(token)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Недействительный или истёкший токен",
+        )
+
+    # Восстанавливаем User из сессии
+    role_name = session.role_name
+    role = Role(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        tenant_id=session.tenant_id,
+        name=role_name,
+        permissions=permissions_for_role(role_name),
+        scope=scope_for_role(role_name),
+        is_system=True,
+    )
+    email = session.metadata.get("email", "unknown@ats.local")
+    return User(
+        id=session.user_id,
+        tenant_id=session.tenant_id,
+        email=email,
+        role=role,
+    )
 
 
 def require_permission(permission: str):

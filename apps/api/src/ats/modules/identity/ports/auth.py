@@ -36,3 +36,11 @@ class SessionStore(Protocol):
     async def revoke_session(self, token: str) -> None:
         """Отозвать сессию (logout)."""
         ...
+
+    async def refresh_session(self, token: str) -> Session | None:
+        """Продлить сессию: выдать новый токен, старый отозвать (rotation).
+
+        SECURE FIRST: token rotation — старый токен становится недействительным.
+        None — сессия не найдена или истекла.
+        """
+        ...

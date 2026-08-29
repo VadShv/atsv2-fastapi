@@ -40,6 +40,7 @@ class Session:
         ttl: timedelta = DEFAULT_SESSION_TTL,
         requires_2fa: bool = False,
         csrf_token: str = "",
+        metadata: dict[str, str] | None = None,
     ) -> Session:
         now = datetime.now(timezone.utc)
         return cls(
@@ -51,6 +52,7 @@ class Session:
             expires_at=now + ttl,
             csrf_token=csrf_token or _generate_token(),
             requires_2fa=requires_2fa,
+            metadata=metadata or {},
         )
 
 

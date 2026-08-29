@@ -15,7 +15,7 @@ from ats.modules.identity.domain.rbac import (
     permissions_for_role,
     scope_for_role,
 )
-from ats.modules.identity.domain.session import Session
+from ats.modules.identity.domain.session import Session, new_csrf_token
 from ats.modules.identity.ports.auth import Authenticator, SessionStore
 
 
@@ -64,6 +64,7 @@ class InMemorySessionStore:
             tenant_id=user.tenant_id,
             role_name=user.role.name if user.role else "viewer",
             requires_2fa=requires_2fa,
+            metadata={"email": user.email},
         )
         self._sessions[session.token] = session
         return session
@@ -76,3 +77,22 @@ class InMemorySessionStore:
 
     async def revoke_session(self, token: str) -> None:
         self._sessions.pop(token, None)
+
+    async def refresh_session(self, token: str) -> Session | None:
+        """Продлить сессию: token rotation — новый токен + новый CSRF."""
+        old = self._sessions.get(token)
+        if old is None or old.is_expired:
+            return None
+        # Отзываем старый токен
+        self._sessions.pop(token, None)
+        # Создаём новую сессию с тем же user, новый токен + CSRF
+        new_session = Session.create(
+            user_id=old.user_id,
+            tenant_id=old.tenant_id,
+            role_name=old.role_name,
+            requires_2fa=old.requires_2fa,
+            csrf_token=new_csrf_token(),
+            metadata=dict(old.metadata),
+        )
+        self._sessions[new_session.token] = new_session
+        return new_session
