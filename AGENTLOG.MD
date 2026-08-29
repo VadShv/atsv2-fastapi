@@ -24,7 +24,7 @@
 | JUGO-022 | E-02 | Permission-чекер deny-by-default | ✅ DONE | — |
 | JUGO-023 | E-02 | 2FA (TOTP) для админ-ролей | ✅ DONE | #9 (closed) |
 | JUGO-025 | E-02 | API-ключи со скоупами | ✅ DONE | #10 (closed) |
-| JUGO-026 | E-02 | OIDC/SSO — абстракция identity-провайдера | ⬜ TODO | #11 |
+| JUGO-026 | E-02 | OIDC/SSO — абстракция identity-провайдера | ✅ DONE | #11 (closed) |
 | JUGO-030 | E-03 | OpenTelemetry — трейсы, trace_id, Jaeger | ✅ DONE | #1 (closed) |
 | JUGO-031 | E-03 | Prometheus-метрики — RPS, латентности, очереди | ✅ DONE | #2 (closed) |
 | JUGO-032 | E-03 | Структурные JSON-логи + маскирование ПД | ✅ DONE | #3 (closed) |
@@ -42,7 +42,7 @@
 
 **Этап 1 — Наблюдаемость (E-03):** ✅ 5/5 ЗАВЕРШЁН
 **Этап 2 — Файлы и сиды (E-01):** ✅ 2/2 ЗАВЕРШЁН
-**Этап 3 — Безопасность (E-02):** JUGO-021 ✅ → JUGO-023 ✅ → JUGO-025 ✅ → JUGO-026
+**Этап 3 — Безопасность (E-02):** JUGO-021 ✅ → JUGO-023 ✅ → JUGO-025 ✅ → JUGO-026 ✅ → **4/4 ЗАВЕРШЁН**
 **Этап 4 — CI:** GitHub Actions pipeline
 
 ### Прогресс
@@ -51,9 +51,9 @@
 |------|-------|--------|--------|
 | 1. Наблюдаемость (E-03) | 5 | 5/5 ✅ | 270 |
 | 2. Файлы и сиды (E-01) | 2 | 2/2 ✅ | 353 |
-| 3. Безопасность (E-02) | 4 | 3/4 | 432 |
+| 3. Безопасность (E-02) | 4 | 4/4 ✅ | 456 |
 | 4. CI | 1 | 0/1 | — |
-| **Итого** | **12** | **10/12** | **432** |
+| **Итого** | **12** | **11/12** | **456** |
 
 ### Этап 1 — Детализация
 
@@ -81,6 +81,7 @@
 | JUGO-021 (Сессии — refresh + rate limit + CSRF) | +19 | `38d38b2` |
 | JUGO-023 (2FA TOTP) | +37 | `3ca59dc` |
 | JUGO-025 (API-ключи) | +23 | `1577581` |
+| JUGO-026 (OIDC/SSO) | +24 | `a47c99b` |
 | JUGO-025 (API-ключи) | — | — |
 | JUGO-026 (OIDC/SSO) | — | — |
 
@@ -181,6 +182,20 @@
   - `apps/api/tests/test_sessions.py` — 19 тестов (rate limit, lockout, refresh, CSRF, cookies)
 - Тесты: 372 passed (+19)
 - Issue #8 закрыт
+
+### [2026-08-29] JUGO-026 — OIDC/SSO абстракция — ✅ DONE
+- Коммит: `a47c99b` | Тесты: 456 (+24) | Issue #11 закрыт
+- Файлы:
+  - `apps/api/src/ats/modules/identity/domain/oidc.py` — OIDC модели (AuthRequest, TokenResponse, UserInfo, CallbackResult), OIDCProvider enum, PKCE helpers (generate_state, generate_pkce_verifier, generate_pkce_challenge S256)
+  - `apps/api/src/ats/modules/identity/ports/identity_provider.py` — `IdentityProvider` Protocol (authorize, exchange_code, get_userinfo, verify_state)
+  - `apps/api/src/ats/modules/identity/infra/oidc_settings.py` — `OIDCSettings` (env: `ATS_OIDC_*`)
+  - `apps/api/src/ats/modules/identity/infra/stub_identity_provider.py` — `StubIdentityProvider` (имитирует OIDC flow для dev/тестов)
+  - `apps/api/src/ats/modules/identity/infra/runtime.py` — `get_oidc_settings()` + `get_identity_provider()` singletons
+  - `apps/api/src/ats/modules/identity/api/router.py` — `POST /auth/oidc/start` (authorization_url + state + code_verifier), `POST /auth/oidc/callback` (exchange code → локальная сессия)
+  - `apps/api/tests/test_oidc.py` — 24 теста (domain, settings, stub provider, API)
+- Тесты: 456 passed (+24)
+- Issue #11 закрыт
+- **Этап 3 (Безопасность) ПОЛНОСТЬЮ ЗАВЕРШЁН: 4/4**
 
 ### [2026-08-29] JUGO-025 — API-ключи со скоупами — ✅ DONE
 - Коммит: `1577581` | Тесты: 432 (+23) | Issue #10 закрыт
