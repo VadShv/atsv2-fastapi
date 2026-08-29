@@ -14,11 +14,11 @@ class AISettings(BaseSettings):
     # Провайдеры (ключи только из env, никогда в коде)
     openai_api_key: str = Field(default="", description="OpenAI API key")
     # Роутинг по умолчанию
-   default_model: str = "gpt-4o-mini"
+    default_model: str = "gpt-4o-mini"
     # Эмбеддинги (для семантического поиска кандидатов)
     embedding_model: str = "text-embedding-3-small"
     embedding_dimension: int = 1536
-   # Семантический кэш (Redis). Пусто — кэш выключен.
+    # Семантический кэш (Redis). Пусто — кэш выключен.
     cache_enabled: bool = True
     cache_ttl_seconds: int = 86400
     # Retry/fallback (устойчивость)
