@@ -5,7 +5,10 @@
 запросы SQLAlchemy (SECURE FIRST: никаких f-string в SQL).
 
 Таблица candidates_search содержит: tenant_id, candidate_id, search_text,
-search_tsv (tsvector), embedding (vector), metadata (jsonb).
+search_tsv (tsvector), embedding (halfvec), metadata (jsonb).
+
+Размерность: эмбеддинги 4096, HNSW-индекс на halfvec(4000) — pgvector лимит.
+Обрезка 4096→4000 в _vec_to_pg (потеря 2.3%, незначительно).
 """
 
 from __future__ import annotations
@@ -32,6 +35,10 @@ from ats.modules.search.ports.search_engine import SearchEngine
 
 logger = logging.getLogger(__name__)
 
+# pgvector: halfvec поддерживает до 4000 dim с HNSW-индексом.
+# Эмбеддинги 4096 обрезаются до 4000 (потеря 2.3%, см. миграцию 0006).
+PGVECTOR_INDEX_DIM = 4000
+
 
 class PgVectorSearchEngine(SearchEngine):
     """Production-адаптер поиска на Postgres + pgvector.
@@ -53,7 +60,7 @@ class PgVectorSearchEngine(SearchEngine):
                     VALUES
                         (:tenant_id, :candidate_id, :search_text,
                          to_tsvector('russian', :search_text),
-                         CAST(:embedding AS vector),
+                         CAST(:embedding AS halfvec(4000)),
                          CAST(:metadata AS jsonb))
                     ON CONFLICT (tenant_id, candidate_id) DO UPDATE SET
                         search_text = EXCLUDED.search_text,
@@ -111,10 +118,10 @@ class PgVectorSearchEngine(SearchEngine):
                 candidate_id,
                 ts_rank(search_tsv, plainto_tsquery('russian', :q_text)) AS bm25_score,
                 CASE WHEN :embedding IS NULL THEN 0.0
-                     ELSE 1 - (embedding <=> CAST(:embedding AS vector)) END AS vec_score,
+                     ELSE 1 - (embedding <=> CAST(:embedding AS halfvec(4000))) END AS vec_score,
                 (:bm25_w * ts_rank(search_tsv, plainto_tsquery('russian', :q_text))
                  + :vec_w * CASE WHEN :embedding IS NULL THEN 0.0
-                                 ELSE 1 - (embedding <=> CAST(:embedding AS vector)) END
+                                 ELSE 1 - (embedding <=> CAST(:embedding AS halfvec(4000))) END
                 ) AS final_score,
                 search_text,
                 metadata
@@ -224,9 +231,15 @@ def _build_filter_sql(
 
 
 def _vec_to_pg(vec: list[float] | None) -> str | None:
+    """Конвертация вектора в PG-строку с обрезкой до PGVECTOR_INDEX_DIM.
+
+    pgvector HNSW на halfvec поддерживает max 4000 dim. Эмбеддинги 4096
+    обрезаются до 4000 (потеря 2.3%, см. миграцию 0006).
+    """
     if vec is None:
         return None
-    return "[" + ",".join(str(v) for v in vec) + "]"
+    truncated = vec[:PGVECTOR_INDEX_DIM]
+    return "[" + ",".join(str(v) for v in truncated) + "]"
 
 
 def _json_to_pg(obj: Any) -> str:

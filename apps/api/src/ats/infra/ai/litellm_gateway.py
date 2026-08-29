@@ -83,6 +83,7 @@ class LiteLLMGateway(AIGateway):
 
         Провайдер: Cloud.ru (OpenAI-совместимый api_base + api_key из env).
         Текст обрезается по embedding_max_tokens для защиты от превышения лимита.
+        Эмбеддинг обрезается до pgvector_index_dim (4096→4000, лимит pgvector HNSW).
         """
         truncated = _truncate_for_embedding(text, ai_settings.embedding_max_tokens)
         kwargs: dict[str, object] = {
@@ -100,6 +101,14 @@ class LiteLLMGateway(AIGateway):
                 len(embedding),
                 ai_settings.embedding_dimension,
             )
+        # Обрезка до pgvector_index_dim (pgvector HNSW лимит на halfvec = 4000)
+        index_dim = ai_settings.pgvector_index_dim
+        if len(embedding) > index_dim:
+            logger.debug(
+                "Truncating embedding %d → %d for pgvector index",
+                len(embedding), index_dim,
+            )
+            embedding = embedding[:index_dim]
         return embedding
 
     async def complete(self, request: AIRequest) -> AIResponse:

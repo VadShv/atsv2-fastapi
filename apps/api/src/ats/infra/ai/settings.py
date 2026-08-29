@@ -35,6 +35,9 @@ class AISettings(BaseSettings):
     embedding_dimension: int = 4096
     # Максимальная длина текста для эмбеддинга (токены, защита от превышения лимита)
     embedding_max_tokens: int = 8000
+    # Размерность HNSW-индекса pgvector. pgvector лимит: halfvec max 4000 dim.
+    # Эмбеддинги 4096 обрезаются до 4000 при индексации (потеря 2.3%).
+    pgvector_index_dim: int = 4000
 
     # --- Семантический кэш (Redis) ---
     cache_enabled: bool = True
