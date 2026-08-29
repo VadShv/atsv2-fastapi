@@ -69,7 +69,6 @@ async def _run_worker(queue_name: str) -> None:
         job_timeout=settings_cls.job_timeout,
         on_startup=settings_cls.on_startup,
         on_shutdown=settings_cls.on_shutdown,
-        on_job_failure=settings_cls.on_job_failure,
     )
     try:
         await worker.async_run()
