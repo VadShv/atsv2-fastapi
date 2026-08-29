@@ -8,6 +8,8 @@
 - `task_id` — уникальный идентификатор задачи (для дедупликации).
 - `dedup_key` — ключ идемпотентности (если None — дедупликация не выполняется).
 - `execute(ctx, **params)` — основная логика, вызывается в контексте воркера.
+
+JUGO-030: trace_ctx из params восстанавливается в contextvars + OTel span.
 """
 
 from __future__ import annotations
@@ -43,6 +45,7 @@ class TaskContext:
     worker_name: str = ""
     job_id: str = ""
     attempt: int = 1
+    trace_id: str | None = None
 
 
 class BaseTask(ABC):
@@ -53,6 +56,7 @@ class BaseTask(ABC):
     - расчёт длительности
     - graceful обработку ошибок (не падает воркер)
     - опциональную дедупликацию через Redis SET
+    - восстановление trace_context (JUGO-030)
     """
 
     #: Уникальное имя функции arq (для регистрации в WorkerSettings)
@@ -64,12 +68,17 @@ class BaseTask(ABC):
 
     async def __call__(self, ctx: dict[str, Any], **params: Any) -> dict[str, Any]:
         """Точка входа для arq: ctx — контекст воркера, params — аргументы job."""
+        # JUGO-030: восстановить trace_context из params
+        trace_ctx = params.pop("trace_ctx", None)
+        trace_id = self._restore_trace(trace_ctx)
+
         task_ctx = TaskContext(
             redis=ctx.get("redis"),
             container=ctx.get("container"),
             worker_name=ctx.get("worker_name", ""),
             job_id=ctx.get("job_id", ""),
             attempt=ctx.get("job_try", 1),
+            trace_id=trace_id,
         )
         dedup_key = self._dedup_key(params)
         result = await self._run_with_dedup(task_ctx, dedup_key, params)
@@ -81,7 +90,22 @@ class BaseTask(ABC):
             "duration_ms": result.duration_ms,
             "error": result.error,
             "metadata": result.metadata,
+            "trace_id": trace_id,
         }
+
+    def _restore_trace(self, trace_ctx: dict[str, Any] | None) -> str | None:
+        """Восстановить trace_context из переданных заголовков.
+
+        JUGO-030: trace_ctx — dict заголовков W3C (traceparent) или fallback.
+        """
+        if not trace_ctx:
+            return None
+        try:
+            from ats.infra.tracing.propagation import restore_trace_context
+
+            return restore_trace_context(trace_ctx)
+        except Exception:
+            return None
 
     async def _run_with_dedup(
         self,
@@ -115,8 +139,11 @@ class BaseTask(ABC):
         start = time.monotonic()
         try:
             logger.info(
-                "Task %s started (job=%s, attempt=%d)",
-                self.name, ctx.job_id, ctx.attempt,
+                "Task %s started (job=%s, attempt=%d, trace=%s)",
+                self.name,
+                ctx.job_id,
+                ctx.attempt,
+                ctx.trace_id or "-",
             )
             metadata = await self.execute(ctx, **params)
             duration_ms = int((time.monotonic() - start) * 1000)
