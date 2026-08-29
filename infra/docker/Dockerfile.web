@@ -12,6 +12,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# API_URL нужен при build time: Next.js rewrites() вычисляются на этапе сборки
+# и результат записывается в routes-manifest.json (не переоценивается в runtime).
+ENV API_URL=http://api:8000
 RUN npm run build
 
 # --- Продакшен ---
