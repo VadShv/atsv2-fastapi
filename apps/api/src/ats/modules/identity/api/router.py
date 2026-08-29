@@ -12,6 +12,8 @@ import logging
 import os
 import re
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, field_validator
 
@@ -22,8 +24,10 @@ from ats.modules.identity.domain.api_key import is_api_key
 from ats.modules.identity.infra.csrf import CSRF_COOKIE_NAME
 from ats.modules.identity.infra.runtime import (
     get_account_lockout,
-    get_authenticator,
     get_api_key_store,
+    get_authenticator,
+    get_identity_provider,
+    get_oidc_settings,
     get_rate_limiter,
     get_session_store,
     get_two_factor_store,
@@ -617,3 +621,123 @@ async def revoke_api_key(
             detail="API-ключ не найден",
         )
     logger.info("API key revoked: %s", key_id)
+
+
+# ---------------------------------------------------------------------------
+# OIDC/SSO endpoints (JUGO-026)
+# ---------------------------------------------------------------------------
+
+
+class OIDCStartResponse(BaseModel):
+    authorization_url: str
+    state: str
+    code_verifier: str
+
+
+class OIDCCallbackRequest(BaseModel):
+    code: str
+    state: str
+    code_verifier: str
+
+
+class OIDCCallbackAPIResponse(BaseModel):
+    token: str
+    csrf_token: str
+    role: str
+    expires_at: str
+    is_new_user: bool
+
+
+@router.post("/oidc/start", response_model=OIDCStartResponse)
+async def oidc_start() -> OIDCStartResponse:
+    """Начать OIDC-флоу: вернуть URL для редиректа к IdP + state.
+
+    SECURE FIRST: state для CSRF-защиты, PKCE для code interception protection.
+    Фронтенд редиректит пользователя по authorization_url.
+    """
+    oidc_settings = get_oidc_settings()
+    if not oidc_settings.enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="OIDC/SSO не настроен",
+        )
+
+    provider = get_identity_provider()
+    auth_req = await provider.authorize(oidc_settings.redirect_uri)
+
+    logger.info("OIDC start: provider=%s", provider.provider_name)
+
+    return OIDCStartResponse(
+        authorization_url=auth_req.authorization_url,
+        state=auth_req.state,
+        code_verifier=auth_req.code_verifier,
+    )
+
+
+@router.post("/oidc/callback", response_model=OIDCCallbackAPIResponse)
+async def oidc_callback(
+    body: OIDCCallbackRequest,
+    response: Response,
+) -> OIDCCallbackAPIResponse:
+    """Обработать callback от IdP: обменять code на токены → локальная сессия.
+
+    SECURE FIRST: проверка state (CSRF) + PKCE code_verifier.
+    """
+    oidc_settings = get_oidc_settings()
+    provider = get_identity_provider()
+
+    try:
+        result = await provider.exchange_code(
+            code=body.code,
+            state=body.state,
+            code_verifier=body.code_verifier,
+            redirect_uri=oidc_settings.redirect_uri,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"OIDC error: {e}",
+        )
+
+    # Создаём локальную сессию для SSO-пользователя
+    from ats.modules.identity.domain.rbac import (
+        Role,
+        permissions_for_role,
+        scope_for_role,
+    )
+
+    role_name = result.user_info.roles[0] if result.user_info.roles else "viewer"
+    role = Role(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        tenant_id=result.user_info.tenant_id
+        or UUID("00000000-0000-0000-0000-000000000001"),
+        name=role_name,
+        permissions=permissions_for_role(role_name),
+        scope=scope_for_role(role_name),
+        is_system=True,
+    )
+    user = User(
+        id=UUID("00000000-0000-0000-0000-000000000020"),
+        tenant_id=result.user_info.tenant_id
+        or UUID("00000000-0000-0000-0000-000000000001"),
+        email=result.user_info.email,
+        role=role,
+    )
+
+    session_store = get_session_store()
+    session = await session_store.create_session(user)
+    _set_session_cookie(response, session.token, session.csrf_token)
+
+    logger.info(
+        "OIDC callback success: sub=%s, email=%s",
+        result.user_info.subject,
+        result.user_info.email,
+    )
+
+    return OIDCCallbackAPIResponse(
+        token=session.token,
+        csrf_token=session.csrf_token,
+        role=session.role_name,
+        expires_at=session.expires_at.isoformat(),
+        is_new_user=result.is_new_user,
+    )

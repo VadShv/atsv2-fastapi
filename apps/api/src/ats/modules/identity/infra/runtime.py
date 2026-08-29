@@ -21,7 +21,10 @@ from ats.modules.identity.infra.rate_limiter import (
     LoginRateLimiter,
 )
 from ats.modules.identity.ports.auth import Authenticator, SessionStore
+from ats.modules.identity.infra.oidc_settings import OIDCSettings
+from ats.modules.identity.infra.stub_identity_provider import StubIdentityProvider
 from ats.modules.identity.ports.api_key import ApiKeyStore
+from ats.modules.identity.ports.identity_provider import IdentityProvider
 from ats.modules.identity.ports.two_factor import TwoFactorStore
 
 # Singleton-ы для stub/dev-режима (в prod — из DI-контейнера)
@@ -31,6 +34,8 @@ _rate_limiter: LoginRateLimiter = LoginRateLimiter()
 _account_lockout: AccountLockout = AccountLockout()
 _two_factor_store: TwoFactorStore = InMemoryTwoFactorStore()
 _api_key_store: ApiKeyStore = InMemoryApiKeyStore()
+_oidc_settings: OIDCSettings = OIDCSettings()
+_identity_provider: IdentityProvider = StubIdentityProvider(_oidc_settings)
 
 
 def get_authenticator() -> Authenticator:
@@ -63,6 +68,16 @@ def get_api_key_store() -> ApiKeyStore:
     return _api_key_store
 
 
+def get_oidc_settings() -> OIDCSettings:
+    """Получить singleton OIDCSettings."""
+    return _oidc_settings
+
+
+def get_identity_provider() -> IdentityProvider:
+    """Получить singleton IdentityProvider (stub: StubIdentityProvider)."""
+    return _identity_provider
+
+
 def reset_runtime() -> None:
     """Сбросить всё state (для тестов).
 
@@ -72,9 +87,12 @@ def reset_runtime() -> None:
     global _authenticator, _session_store, _rate_limiter, _account_lockout
     global _two_factor_store
     global _api_key_store
+    global _oidc_settings, _identity_provider
     _authenticator = InMemoryAuthenticator()
     _session_store = InMemorySessionStore()
     _rate_limiter = LoginRateLimiter()
     _account_lockout = AccountLockout()
     _two_factor_store = InMemoryTwoFactorStore()
     _api_key_store = InMemoryApiKeyStore()
+    _oidc_settings = OIDCSettings()
+    _identity_provider = StubIdentityProvider(_oidc_settings)
