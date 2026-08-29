@@ -18,10 +18,12 @@ from pydantic import BaseModel, field_validator
 from ats.modules.identity.api.deps import get_current_user
 from ats.modules.identity.domain.rbac import User
 from ats.modules.identity.domain.two_factor import is_2fa_required_for_user
+from ats.modules.identity.domain.api_key import is_api_key
 from ats.modules.identity.infra.csrf import CSRF_COOKIE_NAME
 from ats.modules.identity.infra.runtime import (
     get_account_lockout,
     get_authenticator,
+    get_api_key_store,
     get_rate_limiter,
     get_session_store,
     get_two_factor_store,
@@ -508,3 +510,110 @@ async def disable_2fa(
         required=is_2fa_required_for_user(role_name, None),
         remaining_backup_codes=0,
     )
+
+
+# ---------------------------------------------------------------------------
+# API-key management endpoints (CRUD)
+# ---------------------------------------------------------------------------
+
+
+class ApiKeyCreateRequest(BaseModel):
+    name: str
+    scopes: list[str]
+
+
+class ApiKeyCreateAPIResponse(BaseModel):
+    raw_key: str
+    key_id: str
+    name: str
+    scopes: list[str]
+    expires_at: str
+
+
+class ApiKeyInfoResponse(BaseModel):
+    key_id: str
+    name: str
+    scopes: list[str]
+    created_at: str
+    expires_at: str | None
+    revoked_at: str | None
+    last_used_at: str | None
+    is_active: bool
+
+
+@router.post("/api-keys", response_model=ApiKeyCreateAPIResponse)
+async def create_api_key(
+    body: ApiKeyCreateRequest,
+    user: User = Depends(get_current_user),
+) -> ApiKeyCreateAPIResponse:
+    """Создать API-ключ со скоупами.
+
+    SECURE FIRST: raw_key возвращается ТОЛЬКО один раз.
+    В БД хранится только SHA-256 хэш.
+    """
+    store = get_api_key_store()
+    result = await store.create_key(
+        tenant_id=user.tenant_id,
+        name=body.name,
+        scopes=frozenset(body.scopes),
+        created_by=user.id,
+    )
+    logger.info("API key created: name=%s, user=%s", body.name, user.id)
+    return ApiKeyCreateAPIResponse(
+        raw_key=result.raw_key,
+        key_id=str(result.api_key.id),
+        name=result.api_key.name,
+        scopes=sorted(result.api_key.scopes),
+        expires_at=result.api_key.expires_at.isoformat()
+        if result.api_key.expires_at
+        else "",
+    )
+
+
+@router.get("/api-keys", response_model=list[ApiKeyInfoResponse])
+async def list_api_keys(
+    user: User = Depends(get_current_user),
+) -> list[ApiKeyInfoResponse]:
+    """Список API-ключей текущего тенанта (без raw_key и hash)."""
+    store = get_api_key_store()
+    keys = await store.list_keys(user.tenant_id)
+    return [
+        ApiKeyInfoResponse(
+            key_id=str(k.id),
+            name=k.name,
+            scopes=k.scopes,
+            created_at=k.created_at.isoformat(),
+            expires_at=k.expires_at.isoformat() if k.expires_at else None,
+            revoked_at=k.revoked_at.isoformat() if k.revoked_at else None,
+            last_used_at=k.last_used_at.isoformat()
+            if k.last_used_at
+            else None,
+            is_active=k.is_active,
+        )
+        for k in keys
+    ]
+
+
+@router.delete("/api-keys/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def revoke_api_key(
+    key_id: str,
+    user: User = Depends(get_current_user),
+) -> None:
+    """Отозвать API-ключ."""
+    from uuid import UUID
+
+    store = get_api_key_store()
+    try:
+        kid = UUID(key_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Некорректный key_id",
+        )
+    success = await store.revoke_key(kid)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API-ключ не найден",
+        )
+    logger.info("API key revoked: %s", key_id)
