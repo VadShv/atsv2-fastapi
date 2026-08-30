@@ -4980,6 +4980,150 @@
         }
       }
     },
+    "/api/v1/embeddings/info": {
+      "get": {
+        "tags": [
+          "embeddings"
+        ],
+        "summary": "Метаданные эмбеддинг-модели и конфигурации pgvector",
+        "operationId": "get_embedding_info_api_v1_embeddings_info_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingInfoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/embeddings": {
+      "post": {
+        "tags": [
+          "embeddings"
+        ],
+        "summary": "Получить эмбеддинг текста",
+        "operationId": "embed_text_api_v1_embeddings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmbedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbedResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/embeddings/similarity": {
+      "post": {
+        "tags": [
+          "embeddings"
+        ],
+        "summary": "Косинусная схожесть двух текстов",
+        "operationId": "compute_similarity_api_v1_embeddings_similarity_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimilarityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimilarityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/embeddings/index": {
+      "post": {
+        "tags": [
+          "embeddings"
+        ],
+        "summary": "Индексировать документ в поисковый движок (админка/тесты)",
+        "operationId": "index_document_api_v1_embeddings_index_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IndexDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexDocumentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -6483,6 +6627,91 @@
         ],
         "title": "DuplicateMatchResponse"
       },
+      "EmbedRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "Текст для векторизации"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "EmbedRequest",
+        "description": "Запрос на получение эмбеддинга текста."
+      },
+      "EmbedResponse": {
+        "properties": {
+          "text_preview": {
+            "type": "string",
+            "title": "Text Preview",
+            "description": "Первые 100 символов исходного текста"
+          },
+          "dimension": {
+            "type": "integer",
+            "title": "Dimension",
+            "description": "Размерность вектора"
+          },
+          "embedding": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Embedding",
+            "description": "Вектор эмбеддинга"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text_preview",
+          "dimension",
+          "embedding"
+        ],
+        "title": "EmbedResponse",
+        "description": "Эмбеддинг текста + метаданные."
+      },
+      "EmbeddingInfoResponse": {
+        "properties": {
+          "embedding_model": {
+            "type": "string",
+            "title": "Embedding Model",
+            "description": "Модель эмбеддингов (провайдер/модель)"
+          },
+          "embedding_dimension": {
+            "type": "integer",
+            "title": "Embedding Dimension",
+            "description": "Полная размерность модели (до обрезки)"
+          },
+          "pgvector_index_dim": {
+            "type": "integer",
+            "title": "Pgvector Index Dim",
+            "description": "Размерность индекса pgvector (после обрезки)"
+          },
+          "gateway_dimension": {
+            "type": "integer",
+            "title": "Gateway Dimension",
+            "description": "Фактическая размерность вектора от gateway"
+          },
+          "embedding_max_tokens": {
+            "type": "integer",
+            "title": "Embedding Max Tokens",
+            "description": "Макс. длина текста для эмбеддинга (токены)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "embedding_model",
+          "embedding_dimension",
+          "pgvector_index_dim",
+          "gateway_dimension",
+          "embedding_max_tokens"
+        ],
+        "title": "EmbeddingInfoResponse",
+        "description": "Метаданные эмбеддинг-модели и конфигурации pgvector."
+      },
       "FacetResponse": {
         "properties": {
           "field": {
@@ -6890,6 +7119,52 @@
           "vector_score"
         ],
         "title": "HitResponse"
+      },
+      "IndexDocumentRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "Текст документа для индексации"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Метаданные документа (навыки, источник, должность и т.д.)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "IndexDocumentRequest",
+        "description": "Запрос на индексацию документа в поисковый движок."
+      },
+      "IndexDocumentResponse": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "title": "Document Id"
+          },
+          "dimension": {
+            "type": "integer",
+            "title": "Dimension"
+          },
+          "text_preview": {
+            "type": "string",
+            "title": "Text Preview"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_id",
+          "dimension",
+          "text_preview"
+        ],
+        "title": "IndexDocumentResponse",
+        "description": "Результат индексации: document_id + dimension."
       },
       "LegalEntityResponse": {
         "properties": {
@@ -8473,6 +8748,54 @@
           "head"
         ],
         "title": "Seniority"
+      },
+      "SimilarityRequest": {
+        "properties": {
+          "text_a": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text A",
+            "description": "Первый текст"
+          },
+          "text_b": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text B",
+            "description": "Второй текст"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text_a",
+          "text_b"
+        ],
+        "title": "SimilarityRequest",
+        "description": "Запрос на косинусную схожесть двух текстов."
+      },
+      "SimilarityResponse": {
+        "properties": {
+          "text_a_preview": {
+            "type": "string",
+            "title": "Text A Preview"
+          },
+          "text_b_preview": {
+            "type": "string",
+            "title": "Text B Preview"
+          },
+          "similarity": {
+            "type": "number",
+            "title": "Similarity",
+            "description": "Косинусная схожесть [-1, 1]"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text_a_preview",
+          "text_b_preview",
+          "similarity"
+        ],
+        "title": "SimilarityResponse",
+        "description": "Косинусная схожесть двух текстов (0..1 диапазон может быть шире)."
       },
       "SkillListResponse": {
         "properties": {

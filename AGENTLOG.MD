@@ -6,7 +6,7 @@
 
 ---
 
-## Текущий фокус: Волна 2 — AI Platform 🚧 В РАБОТЕ
+## Текущий фокус: Волна 2 — AI Platform ✅ ЗАВЕРШЕНА
 
 ### Карта задач Волны 2
 
@@ -17,7 +17,7 @@
 | JUGO-310..314 | E-31 | Prompt Registry | ✅ DONE | — |
 | JUGO-320..324 | E-32 | AI Skills | 🚧 PENDING | — |
 | JUGO-320..324 | E-32 | AI Skills | ✅ DONE | — |
-| JUGO-330..334 | E-33 | Embeddings (pgvector) | 🚧 PENDING | — |
+| JUGO-330..334 | E-33 | Embeddings (pgvector) | ✅ DONE | — |
 
 ### Прогресс Волны 2
 
@@ -26,7 +26,8 @@
 | E-30 (LLM Gateway) | 6 | 6/6 ✅ | 1094 (+19) |
 | E-31 (Prompt Registry) | 5 | 5/5 ✅ | 1111 (+17) |
 | E-32 (AI Skills) | 5 | 5/5 ✅ | 1124 (+13) |
-| **Итого** | **16** | **16/16 ✅** | **1124** |
+| E-33 (Embeddings) | 5 | 5/5 ✅ | 1144 (+20) |
+| **Итого** | **21** | **21/21 ✅** | **1144** |
 
 **Волна 1 — Ядро ✅ ЗАВЕРШЕНА + 🔒 ГЕЙТ ПРОЙДЕН** (тег `contracts-v1.0`)
 
@@ -102,6 +103,26 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-330..334 — E-33: Embeddings API — ✅ DONE
+- Коммит: (pending) | Тесты: 1144 (+20) | OpenAPI: 91 paths (+4), 132 schemas (+7)
+- **JUGO-330 — Embeddings API: метаданные**:
+  - `apps/api/src/ats/modules/ai_core/api/embeddings_router.py` — `GET /embeddings/info`: embedding_model, embedding_dimension (4096), pgvector_index_dim (4000), gateway_dimension, embedding_max_tokens
+- **JUGO-331 — Embeddings API: эмбеддинг текста**:
+  - `POST /embeddings` — получить вектор эмбеддинга через `gateway.embed()`, возвращает dimension + embedding + text_preview
+  - StubAIGateway._DIMENSION обновлён 1536→4000 (соответствие pgvector_index_dim)
+- **JUGO-332 — Embeddings API: косинусная схожесть**:
+  - `POST /embeddings/similarity` — косинусная схожесть двух текстов [-1, 1], два эмбеддинга → cosine
+- **JUGO-333 — Embeddings API: индексация документа**:
+  - `POST /embeddings/index` — индексация документа в поисковый движок (для тестов/админки)
+  - Создаёт SearchableDocument с эмбеддингом + metadata, индексирует через `search_engine.index()`
+- **JUGO-334 — Консистентность размерности gateway**:
+  - `apps/api/src/ats/infra/ai/litellm_gateway.py` — `dimension` property: 4096→pgvector_index_dim (4000), т.к. embed() возвращает обрезанный вектор
+  - `apps/api/tests/test_embeddings_api.py` — 20 тестов: info (2), embed (6, incl. deterministic + normalized), similarity (5), index (5, incl. searchable + metadata preserved), dimension consistency (2)
+- Регистрация роутера: `apps/api/src/ats/main.py` — `app.include_router(embeddings_router, prefix="/api/v1")`
+- ruff check + format: clean | OpenAPI backward compatible
+- **E-33 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-330..334)**
+- **ВОЛНА 2 ПОЛНОСТЬЮ ЗАВЕРШЕНА: 21/21 (E-30..E-33), 1144 тестов ✅**
 
 ### [2026-08-30] JUGO-320..324 — E-32: AI Skills API — ✅ DONE
 - Коммит: `be5fd05` | Тесты: 1124 (+13) | OpenAPI: 87 paths (+3), 125 schemas (+5)

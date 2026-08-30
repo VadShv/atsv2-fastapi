@@ -86,7 +86,7 @@ class StubAIGateway(AIGateway):
     Если передан provenance_ledger, записи сохраняются (whitebox), как в LiteLLMGateway.
     """
 
-    _DIMENSION = 1536
+    _DIMENSION = 4000
 
     def __init__(self, provenance_ledger: ProvenanceLedger | None = None) -> None:
         self._provenance = provenance_ledger

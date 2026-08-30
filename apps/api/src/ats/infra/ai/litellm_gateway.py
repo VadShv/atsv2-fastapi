@@ -62,7 +62,9 @@ class LiteLLMGateway(AIGateway):
 
     @property
     def dimension(self) -> int:
-        return ai_settings.embedding_dimension
+        # Вектора обрезаются до pgvector_index_dim (4096→4000, лимит HNSW halfvec).
+        # embed() возвращает уже обрезанный вектор, поэтому dimension = pgvector_index_dim.
+        return ai_settings.pgvector_index_dim
 
     def _provider_kwargs(self) -> dict[str, str]:
         """Cloud.ru OpenAI-совместимый роутинг: api_base + api_key.
