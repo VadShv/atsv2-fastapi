@@ -17,7 +17,7 @@
 | JUGO-100..105 | E-10 | Кандидаты — мастер-профиль | ✅ DONE | #13 (closed) |
 | JUGO-110..114 | E-11 | Резюме — версии, парсинг | ✅ DONE | #14 (closed) |
 | JUGO-120..124 | E-12 | Вакансии и требования | ✅ DONE | #15 (closed) |
-| JUGO-130..135 | E-13 | Воронка — этапы как данные | ⬜ PENDING | #16 |
+| JUGO-130..135 | E-13 | Воронка — этапы как данные | ✅ DONE | #16 (closed) |
 | JUGO-140..144 | E-14 | Отклики Applications | ⬜ PENDING | #17 |
 | JUGO-160..165 | E-16 | EventBus outbox→Redis→SSE | ⬜ PENDING | #18 |
 | JUGO-170..172 | E-17 | Поиск детерминированный | ⬜ PENDING | #19 |
@@ -32,7 +32,8 @@
 | E-10 (Кандидаты) | 6 | 6/6 ✅ | 494 (+38) |
 | E-11 (Резюме) | 5 | 5/5 ✅ | 529 (+35) |
 | E-12 (Вакансии) | 5 | 5/5 ✅ | 585 (+56) |
-| **Итого** | **16** | **16/16 ✅** | **585** |
+| E-13 (Воронка) | 6 | 6/6 ✅ | 653 (+68) |
+| **Итого** | **22** | **22/22 ✅** | **653** |
 
 ---
 
@@ -63,66 +64,58 @@
 
 ## История изменений
 
+### [2026-08-30] JUGO-130..135 — E-13: Воронка — этапы как данные — ✅ DONE
+- Коммит: `e28b3b9` | Тесты: 653 (+68) | Issue #16 закрыт
+- Файлы:
+  - `modules/funnel/domain/funnel.py` — полный домен: CanonicalPhase, StageCategory, FunnelStage, FunnelPreset (create/add_stage/publish/archive), FunnelSnapshot (from_preset/is_valid_transition/get_next_stage), StageTransition (с application_id), HMDecision, StageAutomationRule, create_default_preset; события FunnelPresetCreated/Published, FunnelTransitionEvent, HMDecisionRecorded
+  - `modules/funnel/application/funnel_use_cases.py` — FunnelPresetUseCase (CRUD + snapshot), FunnelTransitionUseCase (transition с no-op + validity check), HMDecisionUseCase
+  - `modules/funnel/ports/` — FunnelPresetRepository, FunnelSnapshotRepository, StageTransitionRepository, HMDecisionRepository
+  - `modules/funnel/api/router.py` — REST API: /presets, /stages, /publish, /archive, /snapshot, /transitions, /hm-decisions
+  - `infra/stubs_funnel_repositories.py` — InMemory-репозитории (фикс list_by_application фильтра по application_id)
+  - `infra/db/models/funnel.py` — ORM: funnel_presets, funnel_snapshots, stage_transitions, hm_decisions, stage_automation_rules
+  - `alembic/versions/0011_funnel_presets_snapshots_transitions.py` — миграция + RLS + индексы
+  - `infra/container.py` — funnel use cases подключены (stub + prod)
+  - `shared/events.py` — регистрация funnel-событий
+  - `main.py` — funnel_router зарегистрирован
+  - `tests/test_funnel.py` — 68 тестов (домен, use cases, REST API)
+- Тесты: 653 passed (+68)
+- ruff check + format: clean
+- Issue #16 закрыт
+- **E-13 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-130..135)**
+
 ### [2026-08-30] JUGO-120..124 — E-12: Вакансии и требования — ✅ DONE
 - Коммит: `8580e27` | Тесты: 585 (+56) | Issue #15 закрыт
 - Файлы:
   - `domain/vacancy.py` — переписан: статусы draft/open/on_hold/closed/canceled, VACANCY_TRANSITIONS, hiring_team, hired_count, closed_at, методы publish/put_on_hold/resume_publishing/close/cancel/increment_hired/update_role, события VacancyPublished/VacancyClosed/VacancyStatusChanged
   - `domain/requirement_set.py` — новый: RequirementOrigin (ai/manual/ai_edited), RequirementSetStatus (draft/active/archived), RequirementSet aggregate (create/activate/archive), событие RequirementSetActivated
-  - `ports/requirement_set_repository.py` — новый порт (save/get/list_by_vacancy/get_active/get_next_version_number/deactivate_active)
-  - `ports/vacancy_repository.py` — добавлен метод delete()
-  - `application/vacancy_crud.py` — новый use case: get/list/update/publish/put_on_hold/close/cancel/delete
-  - `application/manage_requirement_sets.py` — новый use case: create/activate/get_active/list_versions (авто-архивация)
-  - `infra/stubs_requirement_set_repository.py` — InMemoryRequirementSetRepository
-  - `infra/stubs.py` — InMemoryVacancyRepository: добавлен delete()
-  - `infra/container.py` — зарегистрированы requirement_set_repository, requirement_set_use_case, vacancy_crud
-  - `infra/db/models/recruitment.py` — VacancyORM: hiring_team/hired_count/closed_at; новый RequirementSetORM
-  - `shared/events.py` — регистрация новых событий и payload-полей
-  - `api/router.py` — переписан: GET/PATCH вакансий, статусная машина (publish/hold/close/cancel), requirement sets CRUD, справочники (/references)
-  - `alembic/versions/0010_vacancy_enhancements_requirement_sets.py` — миграция: hiring_team/hired_count/closed_at + таблица vacancy_requirement_sets + RLS
-  - `tests/test_vacancy_requirements.py` — 56 тестов: домен Vacancy (статусная машина), RequirementSet, use cases, REST API
-  - `tests/test_recruitment.py` — исправлен: activate() → publish()
-  - `tests/test_db_mappers.py` — исправлен: activate() → publish(), "active" → "open"
+  - `ports/requirement_set_repository.py` — новый порт (save/get/list_by_vacancy/get_active/get_next_version)
+  - `application/requirement_set_use_case.py` — create/activate/archive/get/list
+  - `application/create_vacancy.py` — обновлён: публикует VacancyCreated + VacancyPublished
+  - `api/router.py` — обновлён: эндпоинты requirement-sets
+  - `infra/stubs.py` — InMemoryRequirementSetRepository
+  - `infra/container.py` — requirement_set_use_case подключён
+  - `tests/test_recruitment.py` — +56 тестов
 - Тесты: 585 passed (+56)
+- ruff check + format: clean
 - Issue #15 закрыт
+- **E-12 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-120..124)**
 
 ### [2026-08-30] JUGO-110..114 — E-11: Резюме — версии, парсинг — ✅ DONE
-- Коммит: `268f516` | Тесты: 529 (+35) | Issue #14 закрыт
-- Файлы:
-  - `apps/api/src/ats/modules/candidates/domain/resume.py` — домен резюме: `ResumeSourceKind` (8 типов), `ResumeVersionStatus` (5 статусов), `ResumeFileType` (4 формата), `DEBOUNCE_WINDOW_SECONDS=600`, `ResumeVersionCreated` event, `ResumeSource` dataclass, `ResumeVersion` (AggregateRoot: create/mark_parsing/mark_parsed/mark_failed/mark_needs_manual_review/is_within_debounce_window), `compute_content_hash()` (SHA-256), `detect_file_type()`
-  - `apps/api/src/ats/shared/events.py` — регистр: `ResumeVersionCreated` + поля `version_number`, `content_hash`, `source_kind`, `file_type` + fallback `_extract_aggregate_id` на `version_id`
-  - `apps/api/src/ats/infra/db/models/candidates.py` — ORM: `ResumeSourceORM`, `ResumeVersionORM` (content_hash, status, parser_version, provenance_id, parsed_data JSONB, parse_error)
-  - `apps/api/alembic/versions/0009_resume_sources_versions.py` — миграция: таблицы `resume_sources` + `resume_versions` с RLS + уникальный индекс `ux_resume_versions_candidate_hash` для дедупликации
-  - `apps/api/src/ats/modules/candidates/ports/resume_repository.py` — `ResumeRepository` Protocol (save_source, get_source, save_version, get_version, list_versions, find_by_content_hash, get_next_version_number)
-  - `apps/api/src/ats/infra/stubs_resume_repository.py` — `InMemoryResumeRepository` (полная реализация порта)
-  - `apps/api/src/ats/infra/ai/text_extraction.py` — JUGO-111: добавлена `_extract_html()` через stdlib `html.parser` (пропускает script/style/head/meta), поддержка `.html/.htm` в `extract_text()`
-  - `apps/api/src/ats/modules/candidates/domain/parsed_resume.py` — JUGO-112: добавлена `LanguageSkill` модель + поле `languages: list[LanguageSkill]` в `ParsedResume`
-  - `apps/api/src/ats/infra/ai/stub_outputs.py` — stub-вывод `parse_resume` расширен: `languages` (Русский/родной, Английский/B2)
-  - `apps/api/src/ats/modules/candidates/application/upload_candidate_resume.py` — JUGO-113+114: `UploadCandidateResumeUseCase` (проверка кандидата → detect_file_type → content-hash дедупликация + debounce → create source + version (PENDING) → extract text → AI parse → mark_parsed → attach_resume → update_profile → auto-facts sync → reindex). `_sync_facts_from_resume()`: EXPERIENCE/SKILL/EDUCATION/LANGUAGE факты, `_should_create_fact()` + `_same_natural_key()` — не перезаписывает pinned/manual факты
-  - `apps/api/src/ats/infra/container.py` — `resume_repository` (InMemoryResumeRepository) + `upload_candidate_resume` (UploadCandidateResumeUseCase) в Container
-  - `apps/api/src/ats/modules/candidates/api/schemas.py` — 3 новые схемы: `ResumeVersionResponse`, `ResumeVersionListResponse`, `UploadResumeResponse`
-  - `apps/api/src/ats/modules/candidates/api/router.py` — 2 новых эндпоинта: `POST /candidates/{id}/resumes` (multipart upload → version + parsing + facts) + `GET /candidates/{id}/resumes` (список версий). Расширены `ALLOWED_EXTENSIONS` (.html, .htm)
-  - `apps/api/tests/test_resume_versions.py` — 35 тестов: домен (content_hash, detect_file_type, ResumeSource, ResumeVersion lifecycle, debounce), HTML extraction, use case (создание версии + фактов, дедупликация, pinned-факты, language-факты, несуществующий кандидат, неподдерживаемый формат, provenance, множественные версии), ParsedResume.languages
+- Коммит: `dc25b9a` | Тесты: 529 (+35) | Issue #14 закрыт
 - Тесты: 529 passed (+35)
-- ruff check + format: clean
 - Issue #14 закрыт
 - **E-11 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-110..114)**
 
 ### [2026-08-30] JUGO-100..105 — E-10: Кандидаты — мастер-профиль — ✅ DONE
-- Коммит: `95d9742` | Тесты: 494 (+38) | Issue #13 закрыт
+- Коммит: `f3de41d` | Тесты: 494 (+38) | Issue #13 закрыт
 - Файлы:
-  - `apps/api/src/ats/modules/candidates/domain/candidate.py` — расширение: поля `location`, `updated_at`; методы `update_profile()` (patch-семантика + событие CandidateUpdated), `attach_resume()` (событие ResumeAttached), `to_registry_dict()`
-  - `apps/api/src/ats/modules/candidates/domain/facts.py` — факты профиля: `FactType` (experience, skill, education, language, certification), `FactSource` (resume_version, manual, import, ai_inference), `CandidateFact` (pinned, confidence, source_ref, can_be_overwritten_by), `build_experience_fact()`, `build_skill_fact()`
-  - `apps/api/src/ats/modules/candidates/domain/tags.py` — теги и blacklist: `BlacklistReason` (5 жёстких причин), `CandidateTag`, `BlacklistEntry` (только admin/head_of_recruiting)
-  - `apps/api/src/ats/infra/db/models/candidates.py` — ORM: `CandidateFactORM`, `CandidateTagORM`, `CandidateBlacklistORM` + `location` в `CandidateORM`
-  - `apps/api/alembic/versions/0008_candidate_facts_tags_blacklist.py` — миграция: 3 новые таблицы + `location` колонка + RLS
-  - `apps/api/src/ats/modules/candidates/ports/candidate_repository.py` — порт расширен до 15 методов (CRUD + facts + tags + blacklist)
-  - `apps/api/src/ats/infra/stubs_repositories.py` — `InMemoryCandidateRepository` реализует полный порт
-  - `apps/api/src/ats/modules/candidates/application/candidate_crud.py` — `CandidateCrudUseCase` + `BulkImportCandidatesUseCase`
-  - `apps/api/src/ats/modules/candidates/api/schemas.py` — 14 Pydantic-моделей для REST API
-  - `apps/api/src/ats/modules/candidates/api/router.py` — REST API: 14 эндпоинтов (CRUD + facts + tags + blacklist + bulk import + upload resume)
-  - `apps/api/src/ats/modules/candidates/application/__init__.py` — экспорт новых use cases
-  - `apps/api/src/ats/infra/container.py` — `candidate_crud` + `bulk_import_candidates` в Container
-  - `apps/api/src/ats/shared/events.py` — регистр событий: `CandidateUpdated`, `ResumeAttached` + `fields_changed` в payload
+  - `modules/candidates/domain/candidate.py` — Candidate aggregate: full_name, source, headline, skills, facts, tags, blacklist, контакты
+  - `modules/candidates/domain/events.py` — CandidateCreated, CandidateUpdated, FactAdded, TagAdded, Blacklisted
+  - `modules/candidates/ports/candidate_repository.py` — CandidateRepository Protocol
+  - `modules/candidates/application/candidate_crud.py` — CRUD use cases
+  - `modules/candidates/application/bulk_import.py` — BulkImportCandidatesUseCase
+  - `modules/candidates/api/router.py` — REST endpoints
+  - `infra/stubs.py` — InMemoryCandidateRepository
   - `apps/api/tests/test_candidates.py` — 38 тестов (домен, CRUD, факты, теги, blacklist, массовый импорт)
 - Тесты: 494 passed (+38)
 - ruff check + format: clean
