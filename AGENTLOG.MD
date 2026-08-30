@@ -6,7 +6,23 @@
 
 ---
 
-## Текущий фокус: Волна 2 — AI Platform 🚧 ОЖИДАЕТ СТАРТА
+## Текущий фокус: Волна 2 — AI Platform 🚧 В РАБОТЕ
+
+### Карта задач Волны 2
+
+| JUGO | Эпик | Описание | Статус | Issue |
+|------|------|----------|--------|-------|
+| JUGO-300..305 | E-30 | LLM Gateway (Cloud.ru) | ✅ DONE | — |
+| JUGO-310..314 | E-31 | Prompt Registry | 🚧 PENDING | — |
+| JUGO-320..324 | E-32 | AI Skills | 🚧 PENDING | — |
+| JUGO-330..334 | E-33 | Embeddings (pgvector) | 🚧 PENDING | — |
+
+### Прогресс Волны 2
+
+| Эпик | Задач | Готово | Тестов |
+|------|-------|--------|--------|
+| E-30 (LLM Gateway) | 6 | 6/6 ✅ | 1094 (+19) |
+| **Итого** | **6** | **6/6 ✅** | **1094** |
 
 **Волна 1 — Ядро ✅ ЗАВЕРШЕНА + 🔒 ГЕЙТ ПРОЙДЕН** (тег `contracts-v1.0`)
 
@@ -82,6 +98,25 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-300..305 — E-30: LLM Gateway (Cloud.ru) — ✅ DONE
+- Коммит: `d44dbb7` | Тесты: 1094 (+19) | OpenAPI: 80 paths (+4), 113 schemas (+4)
+- **JUGO-300 — Redis CacheStore**:
+  - `apps/api/src/ats/infra/ai/redis_cache.py` — `RedisCacheStore(CacheStore)`: ленивая инициализация, noop при отсутствии Redis, `get/set/delete/close`
+- **JUGO-301 — AI API: статус Gateway**:
+  - `apps/api/src/ats/modules/ai_core/api/router.py` — `GET /ai/status`: провайдер (stub/cloudru), модели, размерность эмбеддингов (4096→4000), кэш, retry
+- **JUGO-302 — AI API: список моделей**:
+  - `GET /ai/models` — default/fallback/embedding модели из `AISettings`
+- **JUGO-303 — AI API: провенанс (whitebox)**:
+  - `GET /ai/provenance/{id}` — полная запись провенанса AI-вызова (skill, prompt, model, input_hash, raw/parsed output, confidence, tokens, cost)
+  - `POST /ai/provenance/{id}/verify` — отметка human_verified
+- **JUGO-304 — Интеграция cache в container**:
+  - `apps/api/src/ats/infra/container.py` — `LiteLLMGateway(provenance, cache=RedisCacheStore())` в prod-режиме
+- **JUGO-305 — Тесты LLM Gateway**:
+  - `apps/api/tests/test_ai_gateway.py` — 19 тестов: `complete()` (content+provenance+non-ai fallback), `structured()` (parse+JSON repair), `embed()` (truncation 4096→4000), Redis cache (noop, deterministic keys), AI API (status/models/provenance/verify)
+  - Mock `litellm.acompletion` / `litellm.aembedding` через `unittest.mock.AsyncMock`
+- ruff check + format: clean | OpenAPI backward compatible
+- **E-30 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-300..305)**
 
 ### [2026-08-30] Деплой на сервер — порт 3015 — ✅ DONE
 - Сервер: `176.108.250.112`, порт `3015` (API), пользователь `user1`
