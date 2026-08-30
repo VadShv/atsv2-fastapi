@@ -97,6 +97,38 @@ class ProvenanceId:
 
 
 @dataclass(frozen=True)
+class ApplicationId:
+    value: UUID
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    @classmethod
+    def generate(cls) -> ApplicationId:
+        return cls(uuid4())
+
+    @classmethod
+    def from_string(cls, raw: str) -> ApplicationId:
+        return cls(UUID(raw))
+
+
+@dataclass(frozen=True)
+class ScreeningResultId:
+    value: UUID
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    @classmethod
+    def generate(cls) -> ScreeningResultId:
+        return cls(uuid4())
+
+    @classmethod
+    def from_string(cls, raw: str) -> ScreeningResultId:
+        return cls(UUID(raw))
+
+
+@dataclass(frozen=True)
 class IdempotencyKey:
     """Идемпотентный ключ команд (устойчивость)."""
 

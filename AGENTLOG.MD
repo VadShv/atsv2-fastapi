@@ -6,7 +6,22 @@
 
 ---
 
-## Текущий фокус: Волна 2 — AI Platform ✅ ЗАВЕРШЕНА
+## Текущий фокус: Волна 3 — M1 Screening (AI-native screening pipeline)
+
+### Карта задач Волны 3
+
+| JUGO | Эпик | Описание | Статус |
+|------|------|----------|--------|
+| JUGO-400..410 | E-40 | M1 Screening | ✅ DONE (backend) |
+
+### Прогресс Волны 3
+
+| Эпик | Задач | Готово | Тестов |
+|------|-------|--------|--------|
+| E-40 (M1 Screening) | 11 | 6/11 ✅ | 1210 (+66) |
+| **Итого** | **11** | **6/11 ✅** | **1210** |
+
+**Волна 2 — AI Platform ✅ ЗАВЕРШЕНА** (21/21, 1144 тестов)
 
 ### Карта задач Волны 2
 
@@ -103,6 +118,34 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-400..410 — E-40: M1 Screening — ✅ DONE
+- Коммит: (pending) | Тесты: 1210 (+66) | OpenAPI: 98 paths (+7), 138 schemas (+6)
+- **JUGO-400 — Module skeleton**:
+  - `apps/api/src/ats/modules/m1_screening/domain/screening.py` — ScreeningResult aggregate, enums, events, scoring functions
+  - `apps/api/src/ats/modules/m1_screening/ports/screening_repository.py` — Protocol
+  - `apps/api/src/ats/infra/stubs_screening.py` — InMemoryScreeningResultRepository
+  - `apps/api/src/ats/modules/m1_screening/module.yaml` — module manifest
+  - `apps/api/alembic/versions/0016_m1_screening_results.py` — migration + RLS
+  - `apps/api/src/ats/shared/ids.py` — ApplicationId, ScreeningResultId added
+  - `apps/api/src/ats/modules/identity/domain/rbac.py` — screening:read, screening:override permissions
+- **JUGO-403 — Level 0 deterministic rules**:
+  - `apps/api/src/ats/modules/m1_screening/domain/level0_rules.py` — check_unreadable, check_spam, check_hard_disqualify, run_level0
+  - Priority: blacklisted > hard_disqualify > duplicate > unreadable > spam
+- **JUGO-404 — Screening score prompt + structured output**:
+  - `apps/api/src/ats/modules/ai_core/prompts/m1_screening_score_v1.txt` — prompt template
+  - `apps/api/src/ats/modules/m1_screening/domain/scoring_output.py` — ScreeningScoreOutput Pydantic schema
+  - `apps/api/src/ats/infra/ai/stub_outputs.py` — stub_screening_score() golden set
+- **JUGO-405 — Screening pipeline (use case)**:
+  - `apps/api/src/ats/modules/m1_screening/application/screen_candidate.py` — ScreenCandidateUseCase: level0 -> AI scoring -> non_ai fallback
+  - Resume truncation (MAX_RESUME_CHARS=8000), provenance recording
+- **JUGO-407/408 — Override + Invalidate API**:
+  - `apps/api/src/ats/modules/m1_screening/api/router.py` — 7 endpoints: run, get, by-application, list, stale, override, invalidate
+- **Tests**: `tests/test_m1_screening_domain.py` (40 tests) + `tests/test_m1_screening_api.py` (26 tests)
+- Integration: container, main.py router, prompts registry, stub outputs, prompts_router schemas
+- ruff check + format: clean | OpenAPI backward compatible
+- **E-40 BACKEND DONE: JUGO-400,403,404,405,407,408. JUGO-402,406,409 deferred (UI, EventBus, FunnelService).**
+- **WAVE 3 STARTED: E-40, 1210 tests**
 
 ### [2026-08-30] JUGO-330..334 — E-33: Embeddings API — ✅ DONE
 - Коммит: (pending) | Тесты: 1144 (+20) | OpenAPI: 91 paths (+4), 132 schemas (+7)

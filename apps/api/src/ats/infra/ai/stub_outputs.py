@@ -164,8 +164,70 @@ def stub_embed(text: str, dimension: int = 1536) -> list[float]:
     return vec
 
 
+def stub_screening_score() -> str:
+    """Realistic stub ScreeningScoreOutput for dev/tests (JUGO-404)."""
+    return json.dumps(
+        {
+            "summary": (
+                "Candidate meets most hard-skill requirements with solid experience. "
+                "FastAPI and PostgreSQL confirmed. Some soft skills need verification."
+            ),
+            "evaluations": [
+                {
+                    "criterion_name": "Python",
+                    "category": "hard_skill",
+                    "score": 1.0,
+                    "weight": 20,
+                    "evidence": "5+ years of Python development, FastAPI projects",
+                    "explanation": "Strong Python experience confirmed in resume",
+                    "must_have": True,
+                },
+                {
+                    "criterion_name": "FastAPI",
+                    "category": "hard_skill",
+                    "score": 1.0,
+                    "weight": 20,
+                    "evidence": "Built REST API services with FastAPI",
+                    "explanation": "Direct FastAPI experience confirmed",
+                    "must_have": True,
+                },
+                {
+                    "criterion_name": "Commercial experience",
+                    "category": "experience",
+                    "score": 1.0,
+                    "weight": 30,
+                    "evidence": "5.5 years commercial development",
+                    "explanation": "Exceeds 2-year requirement",
+                    "must_have": True,
+                },
+                {
+                    "criterion_name": "Communication",
+                    "category": "soft_skill",
+                    "score": 0.5,
+                    "weight": 20,
+                    "evidence": "SCRUM participation mentioned",
+                    "explanation": "Partial evidence, needs interview verification",
+                    "must_have": False,
+                },
+                {
+                    "criterion_name": "Frequent job changes",
+                    "category": "red_flag",
+                    "score": 1.0,
+                    "weight": 10,
+                    "evidence": "2 employers in 5 years",
+                    "explanation": "No red flag detected",
+                    "must_have": False,
+                },
+            ],
+            "confidence": 0.85,
+        },
+        ensure_ascii=False,
+    )
+
+
 # Диспетчер: prompt_id → stub JSON
 STUB_OUTPUTS: dict[str, callable[[], str]] = {
     "screening_criteria": stub_screening_criteria,
     "parse_resume": stub_parsed_resume,
+    "m1_screening_score": stub_screening_score,
 }

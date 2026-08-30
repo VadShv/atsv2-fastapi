@@ -1,0 +1,55 @@
+# M1 — Screening & Scoring module manifest (JUGO-400)
+# Декларативное описание модуля для системы регистрации модулей (ТЗ §17).
+# Модули регистрируются при импорте, активируются/деактивируются флагами.
+
+id: m1_screening
+name: "M1 — Screening & Scoring"
+description: >
+  Автоматический скрининг кандидатов по AI-критериям вакансии.
+  Уровень 0: детерминированные правила очистки (дубликат, спам, дисквалификаторы).
+  Уровень 1: AI-скоринг (0/0.5/1 × вес, цитата, объяснение) + пороговые правила.
+version: "1.0.0"
+status: active
+feature_flag: "m1.autoscreen"
+
+# Доменная зона (правила AGENTS.md)
+zone: modules/m1_screening
+
+# Зависимости (должны быть активны)
+depends_on:
+  - ai_core          # AIGateway, prompts, provenance
+  - recruitment      # Vacancy, Application, vacancy_repository
+  - candidates       # Candidate, resume parsing
+
+# Разрешения модуля
+permissions:
+  - screening:run        # запуск скрининга
+  - screening:read       # чтение результатов
+  - screening:override   # подтверждение/оспаривание (JUGO-407)
+
+# Промпты
+prompts:
+  - id: m1_screening_score
+    version: "1.0.0"
+    output_schema: ScreeningScoreOutput
+
+# Доменные события
+events:
+  - screening.completed
+  - screening.overridden
+
+# Таблицы БД
+tables:
+  - m1_screening_results
+
+# Пороговые правила (JUGO-409)
+thresholds:
+  auto_advance: 0.6   # score >= 0.6 → авто-переход screening→interview
+  auto_reject: 0.2    # score <= 0.2 → очередь «на отсев»
+
+# Конфигурация
+config:
+  max_resume_chars: 8000      # бюджет токенов: усечение резюме
+  min_resume_length: 50       # уровень 0: порог нечитаемого резюме
+  enable_auto_advance: false  # авто-переход за флагом (JUGO-409)
+  enable_auto_reject: false   # авто-отказ за флагом (JUGO-409)

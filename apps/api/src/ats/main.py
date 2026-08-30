@@ -28,6 +28,7 @@ from ats.modules.events.api.router import router as events_router
 from ats.modules.funnel.api.router import router as funnel_router
 from ats.modules.identity.api.router import router as auth_router
 from ats.modules.identity.infra.csrf import CSRFMiddleware
+from ats.modules.m1_screening.api.router import router as screening_router
 from ats.modules.organization.api.router import router as org_router
 from ats.modules.recruitment.api.applications_router import (
     router as applications_router,
@@ -111,6 +112,7 @@ def create_app() -> FastAPI:
     app.include_router(prompts_router, prefix="/api/v1")
     app.include_router(skills_router, prefix="/api/v1")
     app.include_router(embeddings_router, prefix="/api/v1")
+    app.include_router(screening_router, prefix="/api/v1")
     # /metrics endpoint (JUGO-031)
     app.include_router(metrics_router)
 

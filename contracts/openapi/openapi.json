@@ -5124,6 +5124,335 @@
         }
       }
     },
+    "/api/v1/screening/run": {
+      "post": {
+        "tags": [
+          "screening"
+        ],
+        "summary": "Запустить скрининг кандидата",
+        "operationId": "run_screening_api_v1_screening_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunScreeningRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screening/{screening_id}": {
+      "get": {
+        "tags": [
+          "screening"
+        ],
+        "summary": "Получить результат скрининга по ID",
+        "operationId": "get_screening_api_v1_screening__screening_id__get",
+        "parameters": [
+          {
+            "name": "screening_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screening Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screening/by-application/{application_id}": {
+      "get": {
+        "tags": [
+          "screening"
+        ],
+        "summary": "Получить результат скрининга по заявке",
+        "operationId": "get_screening_by_application_api_v1_screening_by_application__application_id__get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screening/vacancy/{vacancy_id}": {
+      "get": {
+        "tags": [
+          "screening"
+        ],
+        "summary": "Список результатов скрининга для вакансии",
+        "operationId": "list_screening_by_vacancy_api_v1_screening_vacancy__vacancy_id__get",
+        "parameters": [
+          {
+            "name": "vacancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Vacancy Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screening/vacancy/{vacancy_id}/stale": {
+      "get": {
+        "tags": [
+          "screening"
+        ],
+        "summary": "Устаревшие результаты скрининга (is_stale=True)",
+        "operationId": "list_stale_screening_api_v1_screening_vacancy__vacancy_id__stale_get",
+        "parameters": [
+          {
+            "name": "vacancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Vacancy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screening/{screening_id}/override": {
+      "post": {
+        "tags": [
+          "screening"
+        ],
+        "summary": "Подтвердить/оспорить результат скрининга (JUGO-407)",
+        "operationId": "override_screening_api_v1_screening__screening_id__override_post",
+        "parameters": [
+          {
+            "name": "screening_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screening Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverrideRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screening/{screening_id}/invalidate": {
+      "post": {
+        "tags": [
+          "screening"
+        ],
+        "summary": "Пометить результат устаревшим (JUGO-408)",
+        "operationId": "invalidate_screening_api_v1_screening__screening_id__invalidate_post",
+        "parameters": [
+          {
+            "name": "screening_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screening Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -6497,6 +6826,49 @@
         ],
         "title": "CreateVacancyResponse"
       },
+      "CriterionEvaluationResponse": {
+        "properties": {
+          "criterion_name": {
+            "type": "string",
+            "title": "Criterion Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight"
+          },
+          "evidence": {
+            "type": "string",
+            "title": "Evidence",
+            "default": ""
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation",
+            "default": ""
+          },
+          "must_have": {
+            "type": "boolean",
+            "title": "Must Have",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "criterion_name",
+          "category",
+          "score",
+          "weight"
+        ],
+        "title": "CriterionEvaluationResponse"
+      },
       "DeliveryResponse": {
         "properties": {
           "id": {
@@ -7215,6 +7587,31 @@
         ],
         "title": "LegalEntityResponse"
       },
+      "Level0ResultResponse": {
+        "properties": {
+          "rejected": {
+            "type": "boolean",
+            "title": "Rejected"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "default": ""
+          },
+          "matched_rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Rules"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rejected"
+        ],
+        "title": "Level0ResultResponse"
+      },
       "LoginChallengeResponse": {
         "properties": {
           "challenge_token": {
@@ -7654,6 +8051,26 @@
           "updated_at"
         ],
         "title": "OrgUnitResponse"
+      },
+      "OverrideRequest": {
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "confirm или dispute"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "ID пользователя"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action",
+          "user_id"
+        ],
+        "title": "OverrideRequest"
       },
       "PlaygroundRequest": {
         "properties": {
@@ -8477,6 +8894,57 @@
         "title": "ResumeVersionResponse",
         "description": "Ответ: версия резюме кандидата."
       },
+      "RunScreeningRequest": {
+        "properties": {
+          "application_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Application Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Candidate Id"
+          },
+          "vacancy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vacancy Id"
+          },
+          "resume_text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Resume Text",
+            "description": "Текст резюме кандидата"
+          },
+          "is_blacklisted": {
+            "type": "boolean",
+            "title": "Is Blacklisted",
+            "default": false
+          },
+          "is_duplicate": {
+            "type": "boolean",
+            "title": "Is Duplicate",
+            "default": false
+          },
+          "hard_disqualify_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hard Disqualify Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "candidate_id",
+          "vacancy_id",
+          "resume_text"
+        ],
+        "title": "RunScreeningRequest",
+        "description": "Запрос на запуск скрининга."
+      },
       "RunSkillRequest": {
         "properties": {
           "variables": {
@@ -8635,6 +9103,173 @@
         },
         "type": "object",
         "title": "ScreeningCriteriaResponse"
+      },
+      "ScreeningListResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ScreeningResponse"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "total"
+        ],
+        "title": "ScreeningListResponse"
+      },
+      "ScreeningResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "application_id": {
+            "type": "string",
+            "title": "Application Id"
+          },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "vacancy_id": {
+            "type": "string",
+            "title": "Vacancy Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "total_score": {
+            "type": "number",
+            "title": "Total Score"
+          },
+          "recommendation": {
+            "type": "string",
+            "title": "Recommendation"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "evaluations": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionEvaluationResponse"
+            },
+            "type": "array",
+            "title": "Evaluations"
+          },
+          "level0": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Level0ResultResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provenance_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Id"
+          },
+          "criteria_provenance_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Criteria Provenance Id"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "default": ""
+          },
+          "non_ai": {
+            "type": "boolean",
+            "title": "Non Ai",
+            "default": false
+          },
+          "overridden_by": {
+            "type": "string",
+            "title": "Overridden By",
+            "default": ""
+          },
+          "override_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Action"
+          },
+          "is_stale": {
+            "type": "boolean",
+            "title": "Is Stale",
+            "default": false
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At",
+            "default": ""
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "default": ""
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "application_id",
+          "candidate_id",
+          "vacancy_id",
+          "status",
+          "total_score",
+          "recommendation"
+        ],
+        "title": "ScreeningResponse",
+        "description": "Результат скрининга (whitebox: все оценки и reasoning доступны)."
       },
       "SearchRequest": {
         "properties": {

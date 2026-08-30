@@ -55,3 +55,24 @@ PARSE_RESUME_V1 = register(
         variables=["resume_text"],
     )
 )
+
+# m1_screening_score v1.0.0 — AI-скоринг кандидата по критериям (JUGO-404)
+M1_SCREENING_SCORE_V1 = register(
+    PromptSpec(
+        id="m1_screening_score",
+        version="1.0.0",
+        name="M1 Screening Score",
+        description="Оценивает кандидата по каждому критерию скрининга (0/0.5/1 x вес)",
+        system=(
+            "Ты — Senior Recruiter и эксперт по оценке кандидатов. "
+            "Оцениваешь резюме по утверждённым критериям скрининга. "
+            "Отвечай СТРОГО на русском языке в формате JSON по схеме."
+        ),
+        template_file="m1_screening_score_v1.txt",
+        output_format=OutputFormat.JSON,
+        model_hint="gpt-4o-mini",
+        temperature=0.0,
+        output_schema="ScreeningScoreOutput",
+        variables=["criteria", "resume", "vacancy_title"],
+    )
+)

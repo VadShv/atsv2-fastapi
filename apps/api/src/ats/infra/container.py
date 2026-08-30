@@ -36,6 +36,7 @@ from ats.infra.stubs_requirement_set_repository import (
     InMemoryRequirementSetRepository,
 )
 from ats.infra.stubs_resume_repository import InMemoryResumeRepository
+from ats.infra.stubs_screening import InMemoryScreeningResultRepository
 from ats.infra.stubs_search import InMemorySynonymRepository
 from ats.infra.stubs_webhooks import (
     InMemoryWebhookDeliveryRepository,
@@ -77,6 +78,10 @@ from ats.modules.funnel.ports.funnel_snapshot_repository import (
 from ats.modules.funnel.ports.funnel_transition_repository import (
     HMDecisionRepository,
     StageTransitionRepository,
+)
+from ats.modules.m1_screening.application.screen_candidate import ScreenCandidateUseCase
+from ats.modules.m1_screening.ports.screening_repository import (
+    ScreeningResultRepository,
 )
 from ats.modules.organization.application.org_use_cases import (
     LegalEntityUseCase,
@@ -171,6 +176,8 @@ class Container:
     org_unit_repository: OrgUnitRepository
     legal_entity_use_case: LegalEntityUseCase
     org_unit_use_case: OrgUnitUseCase
+    screening_result_repository: ScreeningResultRepository
+    screen_candidate_use_case: ScreenCandidateUseCase
 
 
 def build_container() -> Container:
@@ -197,6 +204,7 @@ def build_container() -> Container:
         legal_entity_repo: LegalEntityRepository = InMemoryLegalEntityRepository()
         org_unit_repo: OrgUnitRepository = InMemoryOrgUnitRepository()
         dedup_repo: DedupRepository = InMemoryDedupRepository()
+        screening_repo: ScreeningResultRepository = InMemoryScreeningResultRepository()
     else:
         from ats.infra.ai.litellm_gateway import LiteLLMGateway
         from ats.infra.db.repositories.provenance_repository import (
@@ -227,6 +235,7 @@ def build_container() -> Container:
         legal_entity_repo = InMemoryLegalEntityRepository()  # Pg-реализация в след. фазе
         org_unit_repo = InMemoryOrgUnitRepository()  # Pg-реализация в след. фазе
         dedup_repo = InMemoryDedupRepository()  # Pg-реализация в след. фазе
+        screening_repo = InMemoryScreeningResultRepository()  # Pg-реализация в след. фазе
 
     audit_logger: AuditLogger = InMemoryAuditLogger()
     audit_reader: AuditReader = InMemoryAuditReader()
@@ -262,6 +271,8 @@ def build_container() -> Container:
 
     legal_entity_use_case = LegalEntityUseCase(legal_entity_repo)
     org_unit_use_case = OrgUnitUseCase(org_unit_repo, legal_entity_repo)
+
+    screen_candidate = ScreenCandidateUseCase(screening_repo, vacancy_repo, gateway, provenance)
 
     return Container(
         vacancy_repository=vacancy_repo,
@@ -306,4 +317,6 @@ def build_container() -> Container:
         org_unit_repository=org_unit_repo,
         legal_entity_use_case=legal_entity_use_case,
         org_unit_use_case=org_unit_use_case,
+        screening_result_repository=screening_repo,
+        screen_candidate_use_case=screen_candidate,
     )

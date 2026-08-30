@@ -102,6 +102,8 @@ RECRUITER_PERMISSIONS = _perms(
     "candidate:create",
     "candidate:update",
     "screening:run",
+    "screening:read",
+    "screening:override",
     "search:run",
     "scheduler:manage",
 )
@@ -120,12 +122,14 @@ HIRING_MANAGER_PERMISSIONS = _perms(
     "application:decide",
     "vacancy:read",
     "candidate:read",
+    "screening:read",
 )
 
 VIEWER_PERMISSIONS = _perms(
     "vacancy:read",
     "candidate:read",
     "application:read",
+    "screening:read",
     "audit:read",
 )
 

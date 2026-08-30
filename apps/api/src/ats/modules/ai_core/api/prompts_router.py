@@ -39,6 +39,9 @@ def _ensure_schemas() -> None:
 
     _register_schema("ScreeningCriteriaOutput", ScreeningCriteriaOutput)
     _register_schema("ParsedResume", ParsedResume)
+    from ats.modules.m1_screening.domain.scoring_output import ScreeningScoreOutput
+
+    _register_schema("ScreeningScoreOutput", ScreeningScoreOutput)
 
 
 def _resolve_schema(name: str | None) -> type[BaseModel] | None:
