@@ -14,6 +14,7 @@
 |------|------|----------|--------|-------|
 | JUGO-300..305 | E-30 | LLM Gateway (Cloud.ru) | ✅ DONE | — |
 | JUGO-310..314 | E-31 | Prompt Registry | 🚧 PENDING | — |
+| JUGO-310..314 | E-31 | Prompt Registry | ✅ DONE | — |
 | JUGO-320..324 | E-32 | AI Skills | 🚧 PENDING | — |
 | JUGO-330..334 | E-33 | Embeddings (pgvector) | 🚧 PENDING | — |
 
@@ -22,7 +23,8 @@
 | Эпик | Задач | Готово | Тестов |
 |------|-------|--------|--------|
 | E-30 (LLM Gateway) | 6 | 6/6 ✅ | 1094 (+19) |
-| **Итого** | **6** | **6/6 ✅** | **1094** |
+| E-31 (Prompt Registry) | 5 | 5/5 ✅ | 1111 (+17) |
+| **Итого** | **11** | **11/11 ✅** | **1111** |
 
 **Волна 1 — Ядро ✅ ЗАВЕРШЕНА + 🔒 ГЕЙТ ПРОЙДЕН** (тег `contracts-v1.0`)
 
@@ -98,6 +100,24 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-310..314 — E-31: Prompt Registry API — ✅ DONE
+- Коммит: `pending` | Тесты: 1111 (+17) | OpenAPI: 84 paths (+4), 120 schemas (+7)
+- **JUGO-310 — Prompt API: список промптов**:
+  - `apps/api/src/ats/modules/ai_core/api/prompts_router.py` — `GET /prompts`: список всех зарегистрированных промптов (id, version, name, description, variables, output_schema, model_hint, temperature)
+- **JUGO-311 — Prompt API: детали промпта**:
+  - `GET /prompts/{id}/{version}` — системный промпт + сырой шаблон + метаданные (whitebox)
+- **JUGO-312 — Prompt API: рендер**:
+  - `POST /prompts/{id}/{version}/render` — подстановка переменных без вызова LLM, возвращает user_message + input_hash
+- **JUGO-313 — Prompt API: playground**:
+  - `POST /prompts/{id}/{version}/playground` — запуск через AIGateway (structured или text completion), возвращает raw_output + parsed_output + provenance_id
+  - Резолвер схем: `_resolve_schema()` маппит имя класса → Pydantic-модель (ScreeningCriteriaOutput, ParsedResume)
+- **JUGO-314 — StubAIGateway provenance recording**:
+  - `apps/api/src/ats/infra/stubs.py` — `StubAIGateway(provenance_ledger=...)`: теперь записывает provenance (как LiteLLMGateway), whitebox работает в stub-режиме
+  - `apps/api/src/ats/infra/container.py` — `StubAIGateway(provenance_ledger=provenance)` в stub-режиме
+  - `apps/api/tests/test_prompt_registry.py` — 17 тестов: list (3), get (3), render (5), playground (6, incl. provenance recording)
+- ruff check + format: clean | OpenAPI backward compatible
+- **E-31 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-310..314)**
 
 ### [2026-08-30] JUGO-300..305 — E-30: LLM Gateway (Cloud.ru) — ✅ DONE
 - Коммит: `d44dbb7` | Тесты: 1094 (+19) | OpenAPI: 80 paths (+4), 113 schemas (+4)

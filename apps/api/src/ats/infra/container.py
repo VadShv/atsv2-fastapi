@@ -189,7 +189,7 @@ def build_container() -> Container:
         stage_transition_repo: StageTransitionRepository = InMemoryStageTransitionRepository()
         hm_decision_repo: HMDecisionRepository = InMemoryHMDecisionRepository()
         provenance: ProvenanceLedger = InMemoryProvenanceLedger()
-        gateway: AIGateway = StubAIGateway()
+        gateway: AIGateway = StubAIGateway(provenance_ledger=provenance)
         search_engine: SearchEngine = InMemorySearchEngine()
         synonym_repo: SynonymRepository = InMemorySynonymRepository()
         webhook_sub_repo: WebhookSubscriptionRepository = InMemoryWebhookSubscriptionRepository()

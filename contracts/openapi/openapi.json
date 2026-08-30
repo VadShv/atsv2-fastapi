@@ -4670,6 +4670,200 @@
         }
       }
     },
+    "/api/v1/prompts": {
+      "get": {
+        "tags": [
+          "prompts"
+        ],
+        "summary": "Список всех зарегистрированных промптов",
+        "operationId": "list_prompts_api_v1_prompts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prompts/{prompt_id}/{version}": {
+      "get": {
+        "tags": [
+          "prompts"
+        ],
+        "summary": "Детали промпта: метаданные + системный промпт + шаблон",
+        "operationId": "get_prompt_detail_api_v1_prompts__prompt_id___version__get",
+        "parameters": [
+          {
+            "name": "prompt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Prompt Id"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prompts/{prompt_id}/{version}/render": {
+      "post": {
+        "tags": [
+          "prompts"
+        ],
+        "summary": "Рендер промпта переменными (preview без вызова LLM)",
+        "operationId": "render_prompt_api_v1_prompts__prompt_id___version__render_post",
+        "parameters": [
+          {
+            "name": "prompt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Prompt Id"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenderPromptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderPromptResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prompts/{prompt_id}/{version}/playground": {
+      "post": {
+        "tags": [
+          "prompts"
+        ],
+        "summary": "Запуск промпта через AIGateway (playground / тестовый прогон)",
+        "operationId": "playground_api_v1_prompts__prompt_id___version__playground_post",
+        "parameters": [
+          {
+            "name": "prompt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Prompt Id"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaygroundRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaygroundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -7070,6 +7264,296 @@
         ],
         "title": "OrgUnitResponse"
       },
+      "PlaygroundRequest": {
+        "properties": {
+          "variables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Variables",
+            "description": "Значения переменных шаблона"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "Переопределение модели"
+          },
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature",
+            "description": "Переопределение temperature"
+          }
+        },
+        "type": "object",
+        "title": "PlaygroundRequest",
+        "description": "Запрос на запуск промпта через AIGateway (playground)."
+      },
+      "PlaygroundResponse": {
+        "properties": {
+          "prompt_id": {
+            "type": "string",
+            "title": "Prompt Id"
+          },
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "output_format": {
+            "type": "string",
+            "title": "Output Format"
+          },
+          "raw_output": {
+            "type": "string",
+            "title": "Raw Output"
+          },
+          "parsed_output": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parsed Output",
+            "description": "Распарсенный JSON, если output_format=json"
+          },
+          "provenance_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Id"
+          },
+          "latency_ms": {
+            "type": "integer",
+            "title": "Latency Ms"
+          },
+          "tokens_in": {
+            "type": "integer",
+            "title": "Tokens In"
+          },
+          "tokens_out": {
+            "type": "integer",
+            "title": "Tokens Out"
+          },
+          "cost_usd": {
+            "type": "number",
+            "title": "Cost Usd"
+          },
+          "repaired": {
+            "type": "boolean",
+            "title": "Repaired",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "prompt_id",
+          "prompt_version",
+          "model",
+          "output_format",
+          "raw_output",
+          "latency_ms",
+          "tokens_in",
+          "tokens_out",
+          "cost_usd"
+        ],
+        "title": "PlaygroundResponse",
+        "description": "Результат playground: raw output + parsed (если structured) + provenance."
+      },
+      "PromptDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "template": {
+            "type": "string",
+            "title": "Template",
+            "description": "Сырой текст шаблона с {{переменными}}"
+          },
+          "output_format": {
+            "type": "string",
+            "title": "Output Format"
+          },
+          "output_schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Schema"
+          },
+          "model_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Hint"
+          },
+          "temperature": {
+            "type": "number",
+            "title": "Temperature"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variables"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "name",
+          "description",
+          "system",
+          "template",
+          "output_format",
+          "temperature",
+          "variables"
+        ],
+        "title": "PromptDetailResponse",
+        "description": "Детали промпта: метаданные + системный промпт + шаблон."
+      },
+      "PromptListResponse": {
+        "properties": {
+          "prompts": {
+            "items": {
+              "$ref": "#/components/schemas/PromptSummaryResponse"
+            },
+            "type": "array",
+            "title": "Prompts"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "prompts",
+          "total"
+        ],
+        "title": "PromptListResponse",
+        "description": "Список всех зарегистрированных промптов."
+      },
+      "PromptSummaryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "output_format": {
+            "type": "string",
+            "title": "Output Format"
+          },
+          "output_schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Schema"
+          },
+          "model_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Hint"
+          },
+          "temperature": {
+            "type": "number",
+            "title": "Temperature"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variables"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "name",
+          "description",
+          "output_format",
+          "temperature",
+          "variables"
+        ],
+        "title": "PromptSummaryResponse",
+        "description": "Краткая сводка промпта (для списка)."
+      },
       "ProvenanceResponse": {
         "properties": {
           "provenance_id": {
@@ -7264,6 +7748,53 @@
           "reason_label"
         ],
         "title": "RejectApplicationRequest"
+      },
+      "RenderPromptRequest": {
+        "properties": {
+          "variables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Variables",
+            "description": "Значения переменных шаблона"
+          }
+        },
+        "type": "object",
+        "title": "RenderPromptRequest",
+        "description": "Запрос на рендер промпта переменными."
+      },
+      "RenderPromptResponse": {
+        "properties": {
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "user_message": {
+            "type": "string",
+            "title": "User Message"
+          },
+          "input_hash": {
+            "type": "string",
+            "title": "Input Hash"
+          },
+          "variables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Variables"
+          }
+        },
+        "type": "object",
+        "required": [
+          "system",
+          "user_message",
+          "input_hash",
+          "variables"
+        ],
+        "title": "RenderPromptResponse",
+        "description": "Результат рендера: готовый user_message + input_hash (whitebox)."
       },
       "RequirementOrigin": {
         "type": "string",

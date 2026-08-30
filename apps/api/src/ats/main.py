@@ -18,6 +18,7 @@ from ats.infra.middleware import (
 )
 from ats.infra.sentry import SentryMiddleware, setup_sentry
 from ats.infra.tracing import TracingMiddleware, setup_tracing
+from ats.modules.ai_core.api.prompts_router import router as prompts_router
 from ats.modules.ai_core.api.router import router as ai_router
 from ats.modules.candidates.api.dedup_router import router as dedup_router
 from ats.modules.candidates.api.router import router as candidates_router
@@ -105,6 +106,7 @@ def create_app() -> FastAPI:
     app.include_router(webhooks_router, prefix="/api/v1")
     app.include_router(org_router, prefix="/api/v1")
     app.include_router(ai_router, prefix="/api/v1")
+    app.include_router(prompts_router, prefix="/api/v1")
     # /metrics endpoint (JUGO-031)
     app.include_router(metrics_router)
 

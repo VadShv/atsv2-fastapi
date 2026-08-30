@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -82,9 +83,13 @@ class StubAIGateway(AIGateway):
 
     Возвращает предзаготовленный structured output из STUB_OUTPUTS по prompt_id.
     Позволяет разрабатывать фронт и тестировать поток без затрат на LLM.
+    Если передан provenance_ledger, записи сохраняются (whitebox), как в LiteLLMGateway.
     """
 
     _DIMENSION = 1536
+
+    def __init__(self, provenance_ledger: ProvenanceLedger | None = None) -> None:
+        self._provenance = provenance_ledger
 
     @property
     def dimension(self) -> int:
@@ -94,12 +99,17 @@ class StubAIGateway(AIGateway):
         return stub_embed(text, self._DIMENSION)
 
     async def complete(self, request: AIRequest) -> AIResponse:
+        prov_id = ProvenanceId.generate()
+        usage = AIUsage(tokens_in=0, tokens_out=0, cost_usd=0.0)
+        content = "[stub] AI response"
+        if self._provenance is not None:
+            await self._record(request, "stub", content, content, usage, 0, prov_id)
         return AIResponse(
-            provenance_id=ProvenanceId.generate(),
-            content="[stub] AI response",
-            raw_output="[stub] AI response",
+            provenance_id=prov_id,
+            content=content,
+            raw_output=content,
             model="stub",
-            usage=AIUsage(tokens_in=0, tokens_out=0, cost_usd=0.0),
+            usage=usage,
             latency_ms=0,
         )
 
@@ -109,15 +119,53 @@ class StubAIGateway(AIGateway):
     async def structured(self, request: AIRequest, schema: type[T]) -> StructuredResponse[T]:
         raw = _stub_for(request.prompt_id, schema)
         parsed = schema.model_validate_json(raw)
+        prov_id = ProvenanceId.generate()
+        usage = AIUsage(tokens_in=0, tokens_out=0, cost_usd=0.0)
+        if self._provenance is not None:
+            await self._record(request, "stub", raw, parsed.model_dump_json(), usage, 1, prov_id)
         return StructuredResponse(
-            provenance_id=ProvenanceId.generate(),
+            provenance_id=prov_id,
             parsed=parsed,
             raw_output=raw,
             model="stub",
-            usage=AIUsage(tokens_in=0, tokens_out=0, cost_usd=0.0),
+            usage=usage,
             latency_ms=1,
             repaired=False,
         )
+
+    async def _record(
+        self,
+        request: AIRequest,
+        model: str,
+        raw_output: str,
+        parsed_output: str,
+        usage: AIUsage,
+        latency_ms: int,
+        provenance_id: ProvenanceId,
+    ) -> None:
+        """Записать provenance в ledger (если доступен)."""
+        record = ProvenanceRecord(
+            provenance_id=provenance_id,
+            tenant_id=request.tenant_id,
+            skill=request.skill,
+            prompt_id=request.prompt_id,
+            prompt_version=request.prompt_version,
+            model=model,
+            input_hash=request.input_refs.get("input_hash", ""),
+            input_refs=request.input_refs,
+            raw_output=raw_output,
+            parsed_output=parsed_output,
+            confidence=None,
+            latency_ms=latency_ms,
+            tokens_in=usage.tokens_in,
+            tokens_out=usage.tokens_out,
+            cost_usd=usage.cost_usd,
+            timestamp=datetime.now(UTC),
+            human_verified=False,
+            reasoning_trace="",
+            non_ai=False,
+        )
+        await self._provenance.append(record)
 
 
 def _stub_for(prompt_id: str, schema: type[BaseModel]) -> str:
