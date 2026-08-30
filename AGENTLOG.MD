@@ -16,7 +16,7 @@
 |------|------|----------|--------|-------|
 | JUGO-100..105 | E-10 | Кандидаты — мастер-профиль | ✅ DONE | #13 (closed) |
 | JUGO-110..114 | E-11 | Резюме — версии, парсинг | ✅ DONE | #14 (closed) |
-| JUGO-120..124 | E-12 | Вакансии и требования | ⬜ PENDING | #15 |
+| JUGO-120..124 | E-12 | Вакансии и требования | ✅ DONE | #15 (closed) |
 | JUGO-130..135 | E-13 | Воронка — этапы как данные | ⬜ PENDING | #16 |
 | JUGO-140..144 | E-14 | Отклики Applications | ⬜ PENDING | #17 |
 | JUGO-160..165 | E-16 | EventBus outbox→Redis→SSE | ⬜ PENDING | #18 |
@@ -31,7 +31,8 @@
 |------|-------|--------|--------|
 | E-10 (Кандидаты) | 6 | 6/6 ✅ | 494 (+38) |
 | E-11 (Резюме) | 5 | 5/5 ✅ | 529 (+35) |
-| **Итого** | **11** | **11/11 ✅** | **529** |
+| E-12 (Вакансии) | 5 | 5/5 ✅ | 585 (+56) |
+| **Итого** | **16** | **16/16 ✅** | **585** |
 
 ---
 
@@ -61,6 +62,28 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-120..124 — E-12: Вакансии и требования — ✅ DONE
+- Коммит: `8580e27` | Тесты: 585 (+56) | Issue #15 закрыт
+- Файлы:
+  - `domain/vacancy.py` — переписан: статусы draft/open/on_hold/closed/canceled, VACANCY_TRANSITIONS, hiring_team, hired_count, closed_at, методы publish/put_on_hold/resume_publishing/close/cancel/increment_hired/update_role, события VacancyPublished/VacancyClosed/VacancyStatusChanged
+  - `domain/requirement_set.py` — новый: RequirementOrigin (ai/manual/ai_edited), RequirementSetStatus (draft/active/archived), RequirementSet aggregate (create/activate/archive), событие RequirementSetActivated
+  - `ports/requirement_set_repository.py` — новый порт (save/get/list_by_vacancy/get_active/get_next_version_number/deactivate_active)
+  - `ports/vacancy_repository.py` — добавлен метод delete()
+  - `application/vacancy_crud.py` — новый use case: get/list/update/publish/put_on_hold/close/cancel/delete
+  - `application/manage_requirement_sets.py` — новый use case: create/activate/get_active/list_versions (авто-архивация)
+  - `infra/stubs_requirement_set_repository.py` — InMemoryRequirementSetRepository
+  - `infra/stubs.py` — InMemoryVacancyRepository: добавлен delete()
+  - `infra/container.py` — зарегистрированы requirement_set_repository, requirement_set_use_case, vacancy_crud
+  - `infra/db/models/recruitment.py` — VacancyORM: hiring_team/hired_count/closed_at; новый RequirementSetORM
+  - `shared/events.py` — регистрация новых событий и payload-полей
+  - `api/router.py` — переписан: GET/PATCH вакансий, статусная машина (publish/hold/close/cancel), requirement sets CRUD, справочники (/references)
+  - `alembic/versions/0010_vacancy_enhancements_requirement_sets.py` — миграция: hiring_team/hired_count/closed_at + таблица vacancy_requirement_sets + RLS
+  - `tests/test_vacancy_requirements.py` — 56 тестов: домен Vacancy (статусная машина), RequirementSet, use cases, REST API
+  - `tests/test_recruitment.py` — исправлен: activate() → publish()
+  - `tests/test_db_mappers.py` — исправлен: activate() → publish(), "active" → "open"
+- Тесты: 585 passed (+56)
+- Issue #15 закрыт
 
 ### [2026-08-30] JUGO-110..114 — E-11: Резюме — версии, парсинг — ✅ DONE
 - Коммит: `268f516` | Тесты: 529 (+35) | Issue #14 закрыт
