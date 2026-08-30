@@ -6,7 +6,7 @@
 
 ---
 
-## Текущий фокус: Волна 0 — Гейт ✅ ЗАВЕРШЁНА
+## Текущий фокус: Волна 0 — Гейт ✅ ЗАВЕРШЕНА
 
 **Цель гейта:** пустое приложение с логином, ролями, аудитом, метриками и зелёным CI.
 
@@ -77,7 +77,7 @@
 
 | Задача | Тестов | Коммит |
 |--------|--------|--------|
-| JUGO-027 (GitHub Actions) | 0 | `40c7d31` |
+| JUGO-027 (GitHub Actions) | 0 | `40c7d31` + fixes |
 | **Итого Этап 4** | **0** | |
 
 ---
@@ -219,6 +219,14 @@
   - `README.md` — CI badge added
 - Тесты: 456 passed
 - Issue #12 закрыт
-- **ВОЛНА 0 ПОЛНОСТЬЮ ЗАВЕРШЕНА: 12/12 задач, 456 тестов green**
+
+### [2026-08-30] JUGO-027 — CI fixes (3 commits: a8ad041, 073c3a9, 6d4e6ef)
+- 3 fix-коммита чтобы CI pipeline стал зелёным:
+  1. `a8ad041` — structlog `PrintLoggerFactory` → `stdlib.LoggerFactory` (AttributeError: 'PrintLogger' has no attribute 'name')
+  2. `073c3a9` — `request.url.host` → `request.url.hostname` (starlette совместимость, 56 тестов падало)
+  3. `6d4e6ef` — tracing propagation fallback (`x-trace-id` всегда добавляется из contextvars) + `test_storage` mock `aioboto3` через `sys.modules`
+- Все fix-ы верифицированы локально с установленными structlog + opentelemetry + aioboto3
+- CI статус: **Tests ✅ + Lint ✅ green, mypy advisory (non-blocking)**
+- **ВОЛНА 0 ПОЛНОСТЬЮ ЗАВЕРШЕНА: 12/12 задач, 456 тестов green, CI green ✅**
 
 ---
