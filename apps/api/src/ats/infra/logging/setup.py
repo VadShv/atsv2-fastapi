@@ -64,7 +64,7 @@ def _setup_structlog(level: int) -> None:
     structlog.configure(
         processors=[*shared_processors, renderer],
         wrapper_class=structlog.make_filtering_bound_logger(level),
-        logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
 
