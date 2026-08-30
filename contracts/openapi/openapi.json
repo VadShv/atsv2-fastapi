@@ -4542,6 +4542,134 @@
         }
       }
     },
+    "/api/v1/ai/status": {
+      "get": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Статус LLM Gateway (провайдер, модели, кэш)",
+        "operationId": "get_ai_status_api_v1_ai_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIGatewayStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/models": {
+      "get": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Список сконфигурированных моделей",
+        "operationId": "list_models_api_v1_ai_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/provenance/{provenance_id}": {
+      "get": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Получить запись провенанса AI-вызова (whitebox)",
+        "operationId": "get_provenance_api_v1_ai_provenance__provenance_id__get",
+        "parameters": [
+          {
+            "name": "provenance_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Provenance Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/provenance/{provenance_id}/verify": {
+      "post": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Отметить AI-артефакт как проверенный человеком (human_verified)",
+        "operationId": "mark_provenance_verified_api_v1_ai_provenance__provenance_id__verify_post",
+        "parameters": [
+          {
+            "name": "provenance_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Provenance Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -4570,6 +4698,78 @@
   },
   "components": {
     "schemas": {
+      "AIGatewayStatusResponse": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Провайдер LLM (Cloud.ru / stub)"
+          },
+          "stub_mode": {
+            "type": "boolean",
+            "title": "Stub Mode",
+            "description": "True — stub-режим без реальной LLM"
+          },
+          "default_model": {
+            "type": "string",
+            "title": "Default Model"
+          },
+          "fallback_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback Model"
+          },
+          "embedding_model": {
+            "type": "string",
+            "title": "Embedding Model"
+          },
+          "embedding_dimension": {
+            "type": "integer",
+            "title": "Embedding Dimension"
+          },
+          "pgvector_index_dim": {
+            "type": "integer",
+            "title": "Pgvector Index Dim"
+          },
+          "cache_enabled": {
+            "type": "boolean",
+            "title": "Cache Enabled"
+          },
+          "max_retries": {
+            "type": "integer",
+            "title": "Max Retries"
+          },
+          "timeout_seconds": {
+            "type": "number",
+            "title": "Timeout Seconds"
+          },
+          "enable_non_ai_fallback": {
+            "type": "boolean",
+            "title": "Enable Non Ai Fallback"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "stub_mode",
+          "default_model",
+          "embedding_model",
+          "embedding_dimension",
+          "pgvector_index_dim",
+          "cache_enabled",
+          "max_retries",
+          "timeout_seconds",
+          "enable_non_ai_fallback"
+        ],
+        "title": "AIGatewayStatusResponse",
+        "description": "Статус LLM Gateway: провайдер, модели, размерность эмбеддингов."
+      },
       "AddBlacklistRequest": {
         "properties": {
           "reason": {
@@ -6650,6 +6850,43 @@
         ],
         "title": "MergeResponse"
       },
+      "ModelInfoResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "default / fallback / embedding"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "role"
+        ],
+        "title": "ModelInfoResponse",
+        "description": "Информация о доступной модели."
+      },
+      "ModelsListResponse": {
+        "properties": {
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelInfoResponse"
+            },
+            "type": "array",
+            "title": "Models"
+          }
+        },
+        "type": "object",
+        "required": [
+          "models"
+        ],
+        "title": "ModelsListResponse",
+        "description": "Список сконфигурированных моделей."
+      },
       "MoveApplicationRequest": {
         "properties": {
           "to_stage": {
@@ -6832,6 +7069,119 @@
           "updated_at"
         ],
         "title": "OrgUnitResponse"
+      },
+      "ProvenanceResponse": {
+        "properties": {
+          "provenance_id": {
+            "type": "string",
+            "title": "Provenance Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "prompt_id": {
+            "type": "string",
+            "title": "Prompt Id"
+          },
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "input_hash": {
+            "type": "string",
+            "title": "Input Hash"
+          },
+          "input_refs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Input Refs"
+          },
+          "raw_output": {
+            "type": "string",
+            "title": "Raw Output"
+          },
+          "parsed_output": {
+            "type": "string",
+            "title": "Parsed Output"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "latency_ms": {
+            "type": "integer",
+            "title": "Latency Ms"
+          },
+          "tokens_in": {
+            "type": "integer",
+            "title": "Tokens In"
+          },
+          "tokens_out": {
+            "type": "integer",
+            "title": "Tokens Out"
+          },
+          "cost_usd": {
+            "type": "number",
+            "title": "Cost Usd"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "human_verified": {
+            "type": "boolean",
+            "title": "Human Verified",
+            "default": false
+          },
+          "reasoning_trace": {
+            "type": "string",
+            "title": "Reasoning Trace",
+            "default": ""
+          },
+          "non_ai": {
+            "type": "boolean",
+            "title": "Non Ai",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "provenance_id",
+          "tenant_id",
+          "skill",
+          "prompt_id",
+          "prompt_version",
+          "model",
+          "input_hash",
+          "input_refs",
+          "raw_output",
+          "parsed_output",
+          "latency_ms",
+          "tokens_in",
+          "tokens_out",
+          "cost_usd",
+          "timestamp"
+        ],
+        "title": "ProvenanceResponse",
+        "description": "Запись провенанса AI-вызова (whitebox)."
       },
       "RefreshResponse": {
         "properties": {

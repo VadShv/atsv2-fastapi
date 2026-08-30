@@ -216,7 +216,10 @@ def build_container() -> Container:
         stage_transition_repo = InMemoryStageTransitionRepository()
         hm_decision_repo = InMemoryHMDecisionRepository()
         provenance = PgProvenanceLedger()
-        gateway = LiteLLMGateway(provenance)
+        from ats.infra.ai.redis_cache import RedisCacheStore
+
+        cache = RedisCacheStore()
+        gateway = LiteLLMGateway(provenance, cache=cache)
         search_engine = PgVectorSearchEngine()
         synonym_repo = InMemorySynonymRepository()  # Pg-реализация в след. фазе
         webhook_sub_repo: WebhookSubscriptionRepository = InMemoryWebhookSubscriptionRepository()
