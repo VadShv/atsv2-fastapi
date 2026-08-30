@@ -79,3 +79,26 @@ jobs:
         env:
           ATS_STUB_MODE: "1"
         run: PYTHONPATH=src python -m pytest tests/ -q
+
+  openapi:
+    name: OpenAPI Snapshot Compat
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: apps/api/pyproject.toml
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Check OpenAPI backward compatibility
+        env:
+          ATS_STUB_MODE: "1"
+        run: PYTHONPATH=src python3 scripts/check_openapi_compat.py

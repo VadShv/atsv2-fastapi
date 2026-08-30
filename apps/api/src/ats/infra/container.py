@@ -32,6 +32,10 @@ from ats.infra.stubs_requirement_set_repository import (
 )
 from ats.infra.stubs_resume_repository import InMemoryResumeRepository
 from ats.infra.stubs_search import InMemorySynonymRepository
+from ats.infra.stubs_webhooks import (
+    InMemoryWebhookDeliveryRepository,
+    InMemoryWebhookSubscriptionRepository,
+)
 from ats.modules.ai_core.domain.gateway import AIGateway
 from ats.modules.ai_core.ports.provenance import ProvenanceLedger
 from ats.modules.ai_core.skills.generate_screening_criteria import (
@@ -96,6 +100,14 @@ from ats.modules.recruitment.ports.vacancy_repository import VacancyRepository
 from ats.modules.search.application.search_candidates import SearchCandidatesUseCase
 from ats.modules.search.ports.search_engine import SearchEngine
 from ats.modules.search.ports.synonym_repository import SynonymRepository
+from ats.modules.webhooks.application.webhook_use_cases import (
+    WebhookDispatcher,
+    WebhookManagementUseCase,
+)
+from ats.modules.webhooks.ports.webhook_repository import (
+    WebhookDeliveryRepository,
+    WebhookSubscriptionRepository,
+)
 
 
 @dataclass
@@ -118,6 +130,10 @@ class Container:
     audit_logger: AuditLogger
     audit_reader: AuditReader
     event_bus: InProcessEventBus
+    webhook_subscription_repository: WebhookSubscriptionRepository
+    webhook_delivery_repository: WebhookDeliveryRepository
+    webhook_management: WebhookManagementUseCase
+    webhook_dispatcher: WebhookDispatcher
     create_vacancy: CreateVacancyUseCase
     vacancy_crud: VacancyCrudUseCase
     requirement_set_use_case: RequirementSetUseCase
@@ -155,6 +171,8 @@ def build_container() -> Container:
         gateway: AIGateway = StubAIGateway()
         search_engine: SearchEngine = InMemorySearchEngine()
         synonym_repo: SynonymRepository = InMemorySynonymRepository()
+        webhook_sub_repo: WebhookSubscriptionRepository = InMemoryWebhookSubscriptionRepository()
+        webhook_deliv_repo: WebhookDeliveryRepository = InMemoryWebhookDeliveryRepository()
     else:
         from ats.infra.ai.litellm_gateway import LiteLLMGateway
         from ats.infra.db.repositories.provenance_repository import (
@@ -177,6 +195,8 @@ def build_container() -> Container:
         gateway = LiteLLMGateway(provenance)
         search_engine = PgVectorSearchEngine()
         synonym_repo = InMemorySynonymRepository()  # Pg-реализация в след. фазе
+        webhook_sub_repo: WebhookSubscriptionRepository = InMemoryWebhookSubscriptionRepository()
+        webhook_deliv_repo: WebhookDeliveryRepository = InMemoryWebhookDeliveryRepository()
 
     audit_logger: AuditLogger = InMemoryAuditLogger()
     audit_reader: AuditReader = InMemoryAuditReader()
@@ -205,6 +225,9 @@ def build_container() -> Container:
     candidate_crud = CandidateCrudUseCase(candidate_repo)
     bulk_import_candidates = BulkImportCandidatesUseCase(candidate_repo)
 
+    webhook_management = WebhookManagementUseCase(webhook_sub_repo, webhook_deliv_repo)
+    webhook_dispatcher = WebhookDispatcher(webhook_sub_repo, webhook_deliv_repo, webhook_management)
+
     return Container(
         vacancy_repository=vacancy_repo,
         candidate_repository=candidate_repo,
@@ -222,6 +245,10 @@ def build_container() -> Container:
         audit_logger=audit_logger,
         audit_reader=audit_reader,
         event_bus=event_bus,
+        webhook_subscription_repository=webhook_sub_repo,
+        webhook_delivery_repository=webhook_deliv_repo,
+        webhook_management=webhook_management,
+        webhook_dispatcher=webhook_dispatcher,
         create_vacancy=create_vacancy,
         vacancy_crud=vacancy_crud,
         requirement_set_use_case=requirement_set_use_case,
