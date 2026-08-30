@@ -19,7 +19,7 @@
 | JUGO-120..124 | E-12 | Вакансии и требования | ✅ DONE | #15 (closed) |
 | JUGO-130..135 | E-13 | Воронка — этапы как данные | ✅ DONE | #16 (closed) |
 | JUGO-140..144 | E-14 | Отклики Applications | ✅ DONE | #17 (closed) |
-| JUGO-160..165 | E-16 | EventBus outbox→Redis→SSE | ⬜ PENDING | #18 |
+| JUGO-160..165 | E-16 | EventBus outbox→Redis→SSE | ✅ DONE | #18 (closed) |
 | JUGO-170..172 | E-17 | Поиск детерминированный | ⬜ PENDING | #19 |
 | JUGO-190..194 | E-19 | Публичный API и вебхуки | ⬜ PENDING | #20 |
 | JUGO-200..202 | E-20 | Оргструктура | ⬜ PENDING | #21 |
@@ -34,7 +34,9 @@
 | E-12 (Вакансии) | 5 | 5/5 ✅ | 585 (+56) |
 | E-13 (Воронка) | 6 | 6/6 ✅ | 653 (+68) |
 | E-14 (Отклики) | 5 | 5/5 ✅ | 724 (+71) |
+| E-16 (EventBus) | 6 | 6/6 ✅ | 745 (+21) |
 | **Итого** | **27** | **27/27 ✅** | **724** |
+| **Итого с E-16** | **33** | **33/33 ✅** | **745** |
 
 ---
 
@@ -64,6 +66,22 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-160..165 — E-16: EventBus outbox→Redis→SSE — ✅ DONE
+- Коммит: `c191cdf` | Тесты: 745 (+21) | Issue #18 закрыт
+- Файлы:
+  - `contracts/events/` — 3 новые JSON-схемы (funnel.preset.published, application.funnel.transition, application.hm.decision); `registry.v1.json` обновлён: 20 событий (18 доменных + 2 AI stubs для Волны 2)
+  - `infra/events/bus.py` — InProcessEventBus: `subscribe_queue()`/`unsubscribe_queue()`/`publish_envelope()` для доставки конвертов в SSE через `asyncio.Queue` (non-blocking, drop при переполнении)
+  - `modules/events/api/router.py` — полная реализация SSE: heartbeat, фильтрация по `types`, reconnect по `Last-Event-ID`, in-process очередь (stub mode)
+  - `infra/events/consumer.py` — `replay(start_id, count, event_types)`: повторная обработка из Redis Stream (xrange) с фильтром
+  - `infra/events/relay.py` — метрики Prometheus: `outbox_failed_total`, `outbox_lag_seconds` (ленивый импорт, no-op fallback)
+  - `infra/metrics/registry.py` — добавлены `outbox_failed_total` (Counter) и `outbox_lag_seconds` (Gauge)
+  - `shared/events.py` — `_resolve_payload` конвертирует tuple/set → list (jsonschema compat); добавлен `version_id` в `_PAYLOAD_FIELDS`
+  - `modules/candidates/domain/resume.py` — `ResumeVersionCreated` получил поле `version_id` (aggregate resolution для resume)
+  - `tests/contracts/test_event_contracts.py` — 20 контрактных тестов для всех событий + проверка registry
+  - `tests/test_event_bus.py` — тесты SSE-очередей, replay, format_sse (+21 тест)
+- Тесты: 745 passed (+21)
+- Issue #18 закрыт
 
 ### [2026-08-30] JUGO-140..144 — E-14: Отклики Applications — ✅ DONE
 - Коммит: `3123c38` | Тесты: 724 (+71) | Issue #17 закрыт
