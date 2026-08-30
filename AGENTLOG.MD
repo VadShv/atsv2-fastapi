@@ -102,7 +102,7 @@
 ## История изменений
 
 ### [2026-08-30] JUGO-310..314 — E-31: Prompt Registry API — ✅ DONE
-- Коммит: `pending` | Тесты: 1111 (+17) | OpenAPI: 84 paths (+4), 120 schemas (+7)
+- Коммит: `0dc9738` | Тесты: 1111 (+17) | OpenAPI: 84 paths (+4), 120 schemas (+7)
 - **JUGO-310 — Prompt API: список промптов**:
   - `apps/api/src/ats/modules/ai_core/api/prompts_router.py` — `GET /prompts`: список всех зарегистрированных промптов (id, version, name, description, variables, output_schema, model_hint, temperature)
 - **JUGO-311 — Prompt API: детали промпта**:
