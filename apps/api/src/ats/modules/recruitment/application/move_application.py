@@ -15,6 +15,7 @@ from ats.modules.recruitment.domain.application import (
     InvalidTransitionError,
 )
 from ats.modules.recruitment.ports.application_repository import ApplicationRepository
+from ats.modules.recruitment.ports.vacancy_repository import VacancyRepository
 from ats.shared.ids import TenantId
 from ats.shared.result import ErrorCode, Result, is_error
 
@@ -38,8 +39,13 @@ class MoveApplicationInput:
 class MoveApplicationUseCase:
     """Перевести заявку на новую стадию пайплайна."""
 
-    def __init__(self, applications: ApplicationRepository) -> None:
+    def __init__(
+        self,
+        applications: ApplicationRepository,
+        vacancies: VacancyRepository | None = None,
+    ) -> None:
         self._applications = applications
+        self._vacancies = vacancies
 
     async def execute(
         self, tenant_id: TenantId, input_dto: MoveApplicationInput
@@ -64,6 +70,13 @@ class MoveApplicationUseCase:
                 str(exc),
                 {"from": app.stage.value, "to": input_dto.to_stage.value},
             )
+
+        # JUGO-124: инкремент hired_count при переходе на HIRED
+        if input_dto.to_stage == ApplicationStage.HIRED and self._vacancies is not None:
+            vacancy = await self._vacancies.get(tenant_id, app.vacancy_id)
+            if vacancy is not None:
+                vacancy.increment_hired()
+                await self._vacancies.save(vacancy)
 
         await self._applications.save(app)
         logger.info(

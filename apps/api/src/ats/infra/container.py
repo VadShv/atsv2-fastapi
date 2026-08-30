@@ -240,7 +240,7 @@ def build_container() -> Container:
     )
     hm_decision_use_case = HMDecisionUseCase(hm_decision_repo)
     create_application = CreateApplicationUseCase(application_repo)
-    move_application = MoveApplicationUseCase(application_repo)
+    move_application = MoveApplicationUseCase(application_repo, vacancy_repo)
     reject_application = RejectApplicationUseCase(application_repo)
     comment_use_case = CommentUseCase(comment_repo, application_repo)
     application_timeline = ApplicationTimelineUseCase(application_repo, comment_repo)
