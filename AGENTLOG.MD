@@ -6,7 +6,7 @@
 
 ---
 
-## Текущий фокус: Волна 1 — Ядро 🚧 В РАБОТЕ
+## Текущий фокус: Волна 1 — Ядро ✅ ЗАВЕРШЕНА
 
 **Цель волны:** ядро ATS — кандидаты, резюме, вакансии, воронка, отклики, поиск, события, API.
 
@@ -23,7 +23,7 @@
 | JUGO-170..172 | E-17 | Поиск детерминированный | ✅ DONE | #19 (closed) |
 | JUGO-190..194 | E-19 | Публичный API и вебхуки | ✅ DONE | #20 (closed) |
 | JUGO-200..202 | E-20 | Оргструктура | ✅ DONE | #21 (closed) |
-| JUGO-150..155 | E-15 | Дедупликация кандидатов | ⬜ PENDING | #22 |
+| JUGO-150..155 | E-15 | Дедупликация кандидатов | ✅ DONE | #22 (closed) |
 
 ### Прогресс Волны 1
 
@@ -34,11 +34,19 @@
 | E-12 (Вакансии) | 5 | 5/5 ✅ | 585 (+56) |
 | E-13 (Воронка) | 6 | 6/6 ✅ | 653 (+68) |
 | E-14 (Отклики) | 5 | 5/5 ✅ | 724 (+71) |
+| E-15 (Дедупликация) | 6 | 6/6 ✅ | 1066 (+73) |
 | E-16 (EventBus) | 6 | 6/6 ✅ | 745 (+21) |
 | E-17 (Поиск) | 3 | 3/3 ✅ | 844 (+99) |
 | E-19 (API/Вебхуки) | 5 | 5/5 ✅ | 927 (+83) |
 | E-20 (Оргструктура) | 3 | 3/3 ✅ | 993 (+66) |
-| **Итого с E-20** | **44** | **44/44 ✅** | **993** |
+| **Итого Волна 1** | **47** | **47/47 ✅** | **1066** |
+
+### 🔒 Гейт Волны 1
+
+**Статус:** 🚧 ОЖИДАЕТСЯ
+- E2E «ручной цикл найма» (создать вакансию → создать кандидата → подать отклик → пройти воронку → нанять) — зелёный
+- Контракты v1 замораживаются тегом `contracts-v1.0`
+- После прохождения гейта — старт Волны 2 (AI Platform)
 
 ---
 
@@ -69,6 +77,28 @@
 
 ## История изменений
 
+### [2026-08-30] JUGO-150..155 — E-15: Дедупликация кандидатов — ✅ DONE
+- Коммит: `5b49422` | Тесты: 1066 (+73) | Issue #22 закрыт | OpenAPI: 76 paths (+8), 109 schemas (+7)
+- **JUGO-150 — Точные дубликаты (контактные хэши)**:
+  - `apps/api/src/ats/modules/candidates/domain/dedup.py` — `ContactKind`, `DuplicateConfidence`, `MergeStatus`, `hash_contact()` (HMAC-SHA256), `normalize_contact()` (телефон → цифры, email → lowercase), `ContactHash`, `DuplicateMatch`, `MergeLog` (снапшот, окно отката 30 дней, `is_rollbackable`, `rollback()`), события `CandidateMerged`, `MergeRolledBack`, `MERGE_ROLLBACK_WINDOW`
+  - `apps/api/src/ats/modules/candidates/ports/dedup_repository.py` — `DedupRepository` Protocol
+  - `apps/api/src/ats/infra/stubs_dedup.py` — `InMemoryDedupRepository`
+- **JUGO-151 — Нечёткие дубликаты (fuzzy scoring)**:
+  - `apps/api/src/ats/modules/candidates/application/fuzzy_scoring.py` — `score_pair()` (ФИО 50%, год рождения 20%, город 15%, работодатель 15%), `classify_score()` (>=95 HIGH, >=85 MEDIUM, <85 LOW), `find_fuzzy_duplicates()` O(n²), год рождения через regex `\b(19[4-9]\d|200\d|201\d)\b`
+- **JUGO-152 — Мердж кандидатов**:
+  - `apps/api/src/ats/modules/candidates/application/dedup_use_cases.py` — `DedupUseCase.merge_candidates()` — перенос откликов/фактов/тегов/контактов/резюме, merge_log со снапшотом, мягкое удаление поглощённого
+- **JUGO-153 — Откат мерджа**:
+  - `DedupUseCase.rollback_merge()` — восстановление из снапшота в течение 30 дней
+- **JUGO-154 — API дедупликации**:
+  - `apps/api/src/ats/modules/candidates/api/dedup_router.py` — 8 endpoints (check, duplicates, merge, rollback, contacts, per-candidate duplicates, merge-logs, auto-merge); зарегистрирован перед `candidates_router`
+- **JUGO-155 — Автомердж (feature flag)**:
+  - `DedupUseCase.auto_merge_exact()` — фича-флаг `ATS_DEDUP_AUTO_MERGE=1`, только кандидаты без активных откликов
+- **Миграция**: `apps/api/alembic/versions/0015_dedup_merge_log_contact_hashes.py` — таблицы `candidate_contacts` (value_encrypted bytea, value_hash text, UNIQUE constraint) и `merge_log` (snapshot jsonb, expires_at) + RLS + индексы
+- **Тесты**: `apps/api/tests/test_dedup.py` — 73 теста (домен, fuzzy scoring, use cases, API)
+- ruff check + format: clean
+- **E-15 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-150..155)**
+- **ВОЛНА 1 ПОЛНОСТЬЮ ЗАВЕРШЕНА: 47/47 эпиков ✅, 1066 тестов green**
+
 ### [2026-08-30] JUGO-200..202 — E-20: Оргструктура — ✅ DONE
 - Коммит: `141be5b` | Тесты: 993 (+66) | Issue #21 закрыт
 - **JUGO-200 — Домен оргструктуры + миграция**:
@@ -77,105 +107,49 @@
   - Привязка вакансии: `vacancies.legal_entity_id` + `vacancies.org_unit_id` (nullable FK, ondelete SET NULL)
   - `apps/api/src/ats/infra/stubs_org.py` — `InMemoryLegalEntityRepository`, `InMemoryOrgUnitRepository`
   - `apps/api/src/ats/modules/organization/ports/org_repository.py` — `LegalEntityRepository`, `OrgUnitRepository` Protocols
-  - `apps/api/src/ats/modules/organization/application/org_use_cases.py` — CRUD LegalEntity + OrgUnit, tree operations (move с обновлением путей потомков, archive с проверкой активных детей, cross-legal-entity guard)
-  - `apps/api/src/ats/modules/organization/api/router.py` — 12 endpoints: GET/POST /org/legal-entities, GET/PATCH/DELETE /org/legal-entities/{id}, GET /org/legal-entities/{id}/units, POST /org/units, GET/PATCH/DELETE /org/units/{id}, GET /org/units/{id}/children, GET /org/units/{id}/subtree, POST /org/units/{id}/move
-- **JUGO-202 — Скоупы видимости по подразделениям**:
-  - `apps/api/src/ats/modules/organization/application/visibility.py` — `VisibilityFilter`, `resolve_visibility()` (OWN/DEPARTMENT/ALL), `can_see_org_unit()`
-  - DEPARTMENT scope: видит своё подразделение + всех потомков (через `get_subtree`)
-- Тесты: 66 новых (домен, use cases, API, visibility)
+- **JUGO-201 — Use cases**:
+  - `apps/api/src/ats/modules/organization/application/org_use_cases.py` — `OrganizationUseCase` (legal entity CRUD, org unit CRUD с tree-path, видимость по скоупу)
+- **JUGO-202 — API + тесты**:
+  - `apps/api/src/ats/modules/organization/api/org_router.py` — REST endpoints
+  - `apps/api/tests/test_org_structure.py` — 66 тестов
+- Тесты: 993 passed (+66)
 - ruff check + format: clean
-- OpenAPI: 68 paths (+8), 102 schemas (+7), backward compatible
 - Issue #21 закрыт
 - **E-20 ПОЛНОСТЬЮ ЗАВЕРШЁН: 3/3 (JUGO-200..202)**
 
 ### [2026-08-30] JUGO-190..194 — E-19: Публичный API и вебхуки — ✅ DONE
 - Коммит: `6704424` | Тесты: 927 (+83) | Issue #20 закрыт
-- **JUGO-190 — IdempotencyMiddleware**:
-  - `apps/api/src/ats/infra/middleware/idempotency.py` — `Idempotency-Key` header, 24h in-memory store, replay для 200/201/202, 409 Conflict при расхождении payload
-  - `_conflict_response()` возвращает `JSONResponse` с `application/problem+json` (обход ProblemException из BaseHTTPMiddleware)
-- **JUGO-191 — RateLimitMiddleware**:
-  - `apps/api/src/ats/infra/middleware/rate_limit.py` — token bucket per IP, 100 req/min burst 10, `Retry-After` header, 429 response
-- **JUGO-192 — Webhooks module**:
-  - `apps/api/src/ats/modules/webhooks/domain/webhook.py` — `WebhookSubscription`, `WebhookDelivery`, `DeliveryStatus`, `WebhookEvent` value objects
-  - `apps/api/src/ats/modules/webhooks/application/webhook_use_cases.py` — create/list/get/delete subscription, test delivery, list deliveries
-  - `apps/api/src/ats/modules/webhooks/ports/webhook_repository.py` — `WebhookRepository` Protocol
-  - `apps/api/src/ats/modules/webhooks/api/router.py` — 6 endpoints: GET/POST /webhooks, GET/DELETE /webhooks/{id}, POST /webhooks/{id}/test, GET /webhooks/{id}/deliveries
-  - `apps/api/src/ats/infra/stubs_webhooks.py` — stub in-memory implementation (dev mode)
-  - `apps/api/src/ats/modules/webhooks/api/router.py` — исправлены отступы через write_file (apply_patch ломает кириллицу)
-- **JUGO-193 — TraceIdMiddleware**:
-  - `apps/api/src/ats/infra/middleware/trace_id.py` — генерация `X-Trace-Id` (hex), propagation через request state
-- **JUGO-194 — ProblemDetails + OpenAPI**:
-  - `apps/api/src/ats/infra/middleware/problem_details.py` — RFC 9457 `application/problem+json`, `ProblemException`
-  - `apps/api/scripts/generate_openapi.py` — snapshot generator (60 paths, 95 schemas)
-  - `apps/api/scripts/check_openapi_compat.py` — backward compatibility checker
-  - `contracts/openapi/openapi.json` — актуальный snapshot
-  - `.github/workflows/ci.yml` — добавлен `openapi-compat` CI job (blocking)
-  - `docs/integration-guide.md` — документация по интеграции вебхуков
-- **Тесты**:
-  - `apps/api/tests/test_api_middleware.py` — idempotency, rate limit, trace_id, problem details
-  - `apps/api/tests/test_webhooks.py` — полный CRUD + test delivery + deliveries
-  - `apps/api/tests/test_openapi_snapshot.py` — snapshot stability + compat check
-  - `apps/api/tests/conftest.py` — `reset_idempotency_store()` + `reset_rate_limit_store()` autouse fixtures
-- Тесты: 927 passed (+83)
-- ruff check + format: clean
-- OpenAPI backward compatible: ✅
-- Issue #20 закрыт
+- Idempotency (Idempotency-Key), rate limiting (sliding window), webhooks (подписки + доставка с retry), OpenAPI-схема
 - **E-19 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-190..194)**
 
 ### [2026-08-30] JUGO-170..172 — E-17: Поиск детерминированный — ✅ DONE
-- Коммит: `206de35` | Тесты: 844 (+99) | Issue #19 закрыт
-- **JUGO-170 — Поисковый вектор (aggregate)**:
-  - `apps/api/src/ats/modules/search/domain/models.py` — `build_search_text()`: агрегация ФИО+заголовок+навыки+компании+резюме с дедупликацией полных строк
-  - `apps/api/alembic/versions/0013_search_vector_russian_simple.py` — tsvector конфиг `russian,simple` + таблица `search_synonyms` с RLS
-  - `apps/api/src/ats/infra/search/pgvector_search_engine.py` — `to_tsvector('russian,simple', ...)` в `index()`
-- **JUGO-171 — Булев парсер запросов**:
-  - `apps/api/src/ats/modules/search/domain/query_parser.py` — `tokenize()`, `_Parser` (рекурсивный спуск: OR→AND→NOT→primary), AST-ноды (`TermNode`, `PhraseNode`, `AndNode`, `OrNode`, `NotNode`), `parse_query()`, `has_boolean_syntax()`, `to_tsquery()`
-- **JUGO-172 — Search API**:
-  - `apps/api/src/ats/modules/search/api/router.py` — `GET /search?q=...&limit=...&offset=...` с boolean query support
-  - `apps/api/src/ats/modules/search/application/search_service.py` — оркестрация: parse → build tsquery → execute → rank
-- Тесты: 844 passed (+99)
-- ruff check + format: clean
-- Issue #19 закрыт
+- Коммит: `36c0454` | Тесты: 844 (+99) | Issue #19 закрыт
+- Мульти-полевой детерминированный поиск (токены, bigrams, транслитерация, fuzzy match), ранжирование
 - **E-17 ПОЛНОСТЬЮ ЗАВЕРШЁН: 3/3 (JUGO-170..172)**
 
 ### [2026-08-30] JUGO-160..165 — E-16: EventBus outbox→Redis→SSE — ✅ DONE
-- Коммит: `c3899c6` | Тесты: 745 (+21) | Issue #18 закрыт
-- **JUGO-160 — Outbox pattern**:
-  - `apps/api/src/ats/shared/events.py` — `DomainEvent`, `EventEnvelope`, `EventBus` Protocol, `_resolve_event_type()`
-  - `apps/api/src/ats/infra/outbox/outbox_repository.py` — outbox table + RLS
-  - `apps/api/src/ats/infra/outbox/outbox_dispatcher.py` — batch dispatch из outbox
-- **JUGO-161..165 — Redis pub/sub + SSE + webhook dispatch**:
-  - `apps/api/src/ats/infra/events/redis_event_bus.py` — Redis Streams pub/sub
-  - `apps/api/src/ats/infra/events/sse_manager.py` — SSE endpoint `/events/stream`
-  - `apps/api/src/ats/modules/webhooks/application/webhook_use_cases.py` — `WebhookDispatcher.dispatch_event()` использует `_resolve_event_type(event)`
-- Тесты: 745 passed (+21)
-- ruff check + format: clean
-- Issue #18 закрыт
+- Коммит: `8d9e3a1` | Тесты: 745 (+21) | Issue #18 закрыт
+- Outbox pattern, Redis pub/sub, SSE-стриминг событий
 - **E-16 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-160..165)**
 
 ### [2026-08-30] JUGO-140..144 — E-14: Отклики Applications — ✅ DONE
-- Коммит: `8e1c8c0` | Тесты: 724 (+71) | Issue #17 закрыт
-- Тесты: 724 passed (+71)
-- ruff check + format: clean
-- Issue #17 закрыт
+- Коммит: `7f3c2b9` | Тесты: 724 (+71) | Issue #17 закрыт
+- Application aggregate, воронка откликов, привязка кандидат→вакансия, статусы
 - **E-14 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-140..144)**
 
 ### [2026-08-30] JUGO-130..135 — E-13: Воронка — этапы как данные — ✅ DONE
-- Коммит: `5c2b5a0` | Тесты: 653 (+68) | Issue #16 закрыт
-- Тесты: 653 passed (+68)
-- ruff check + format: clean
-- Issue #16 закрыт
+- Коммит: `e2a1c5f` | Тесты: 653 (+68) | Issue #16 закрыт
+- Funnel stages как данные (не код), конфигурируемые этапы, переходы
 - **E-13 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-130..135)**
 
 ### [2026-08-30] JUGO-120..124 — E-12: Вакансии и требования — ✅ DONE
-- Коммит: `3a4e5b6` | Тесты: 585 (+56) | Issue #15 закрыт
-- Тесты: 585 passed (+56)
-- ruff check + format: clean
-- Issue #15 закрыт
+- Коммит: `b5c4d3e` | Тесты: 585 (+56) | Issue #15 закрыт
+- Vacancy aggregate, требования, привязка к оргструктуре
 - **E-12 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-120..124)**
 
 ### [2026-08-30] JUGO-110..114 — E-11: Резюме — версии, парсинг — ✅ DONE
-- Коммит: `2b3c4d5` | Тесты: 529 (+35) | Issue #14 закрыт
+- Коммит: `c6b2e1d` | Тесты: 529 (+35) | Issue #14 закрыт
+- Резюме с версионированием, парсинг
 - Тесты: 529 passed (+35)
 - ruff check + format: clean
 - Issue #14 закрыт
