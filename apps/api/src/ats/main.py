@@ -23,6 +23,7 @@ from ats.modules.events.api.router import router as events_router
 from ats.modules.funnel.api.router import router as funnel_router
 from ats.modules.identity.api.router import router as auth_router
 from ats.modules.identity.infra.csrf import CSRFMiddleware
+from ats.modules.organization.api.router import router as org_router
 from ats.modules.recruitment.api.applications_router import (
     router as applications_router,
 )
@@ -67,6 +68,7 @@ def create_app() -> FastAPI:
             {"name": "applications", "description": "Job applications and funnel transitions"},
             {"name": "events", "description": "SSE event stream and event log"},
             {"name": "funnel", "description": "Funnel presets and stage management"},
+            {"name": "organization", "description": "Legal entities and org units (tree)"},
         ],
     )
 
@@ -98,6 +100,7 @@ def create_app() -> FastAPI:
     app.include_router(events_router, prefix="/api/v1")
     app.include_router(funnel_router, prefix="/api/v1")
     app.include_router(webhooks_router, prefix="/api/v1")
+    app.include_router(org_router, prefix="/api/v1")
     # /metrics endpoint (JUGO-031)
     app.include_router(metrics_router)
 

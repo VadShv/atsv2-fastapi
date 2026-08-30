@@ -3552,6 +3552,603 @@
         }
       }
     },
+    "/api/v1/org/legal-entities": {
+      "get": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "List Legal Entities",
+        "operationId": "list_legal_entities_api_v1_org_legal_entities_get",
+        "parameters": [
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LegalEntityResponse"
+                  },
+                  "title": "Response List Legal Entities Api V1 Org Legal Entities Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Create Legal Entity",
+        "operationId": "create_legal_entity_api_v1_org_legal_entities_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLegalEntityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalEntityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/org/legal-entities/{legal_entity_id}": {
+      "get": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Get Legal Entity",
+        "operationId": "get_legal_entity_api_v1_org_legal_entities__legal_entity_id__get",
+        "parameters": [
+          {
+            "name": "legal_entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Legal Entity Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalEntityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Update Legal Entity",
+        "operationId": "update_legal_entity_api_v1_org_legal_entities__legal_entity_id__patch",
+        "parameters": [
+          {
+            "name": "legal_entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Legal Entity Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLegalEntityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalEntityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Archive Legal Entity",
+        "operationId": "archive_legal_entity_api_v1_org_legal_entities__legal_entity_id__delete",
+        "parameters": [
+          {
+            "name": "legal_entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Legal Entity Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/org/legal-entities/{legal_entity_id}/units": {
+      "get": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "List Root Units",
+        "operationId": "list_root_units_api_v1_org_legal_entities__legal_entity_id__units_get",
+        "parameters": [
+          {
+            "name": "legal_entity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Legal Entity Id"
+            }
+          },
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrgUnitResponse"
+                  },
+                  "title": "Response List Root Units Api V1 Org Legal Entities  Legal Entity Id  Units Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/org/units": {
+      "post": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Create Org Unit",
+        "operationId": "create_org_unit_api_v1_org_units_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrgUnitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgUnitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/org/units/{org_unit_id}": {
+      "get": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Get Org Unit",
+        "operationId": "get_org_unit_api_v1_org_units__org_unit_id__get",
+        "parameters": [
+          {
+            "name": "org_unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Unit Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgUnitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Update Org Unit",
+        "operationId": "update_org_unit_api_v1_org_units__org_unit_id__patch",
+        "parameters": [
+          {
+            "name": "org_unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Unit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrgUnitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgUnitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Archive Org Unit",
+        "operationId": "archive_org_unit_api_v1_org_units__org_unit_id__delete",
+        "parameters": [
+          {
+            "name": "org_unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Unit Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/org/units/{org_unit_id}/children": {
+      "get": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "List Children",
+        "operationId": "list_children_api_v1_org_units__org_unit_id__children_get",
+        "parameters": [
+          {
+            "name": "org_unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Unit Id"
+            }
+          },
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrgUnitResponse"
+                  },
+                  "title": "Response List Children Api V1 Org Units  Org Unit Id  Children Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/org/units/{org_unit_id}/subtree": {
+      "get": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Get Subtree",
+        "operationId": "get_subtree_api_v1_org_units__org_unit_id__subtree_get",
+        "parameters": [
+          {
+            "name": "org_unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Unit Id"
+            }
+          },
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Archived"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrgUnitResponse"
+                  },
+                  "title": "Response Get Subtree Api V1 Org Units  Org Unit Id  Subtree Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/org/units/{org_unit_id}/move": {
+      "post": {
+        "tags": [
+          "organization"
+        ],
+        "summary": "Move Org Unit",
+        "operationId": "move_org_unit_api_v1_org_units__org_unit_id__move_post",
+        "parameters": [
+          {
+            "name": "org_unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Unit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveOrgUnitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgUnitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -4581,6 +5178,70 @@
         "title": "CreateCandidateRequest",
         "description": "Запрос: создать кандидата вручную."
       },
+      "CreateLegalEntityRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Название юридического лица"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Тип: ooo, oao, zao, ip, inc, llc, other",
+            "default": "other"
+          },
+          "inn": {
+            "type": "string",
+            "title": "Inn",
+            "description": "ИНН",
+            "default": ""
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "description": "Полное наименование",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CreateLegalEntityRequest"
+      },
+      "CreateOrgUnitRequest": {
+        "properties": {
+          "legal_entity_id": {
+            "type": "string",
+            "title": "Legal Entity Id",
+            "description": "ID юридического лица"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Название подразделения"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "ID родительского подразделения"
+          }
+        },
+        "type": "object",
+        "required": [
+          "legal_entity_id",
+          "name"
+        ],
+        "title": "CreateOrgUnitRequest"
+      },
       "CreatePresetRequest": {
         "properties": {
           "name": {
@@ -5250,6 +5911,55 @@
         ],
         "title": "HitResponse"
       },
+      "LegalEntityResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "inn": {
+            "type": "string",
+            "title": "Inn"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "inn",
+          "full_name",
+          "is_archived",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "LegalEntityResponse"
+      },
       "LoginChallengeResponse": {
         "properties": {
           "challenge_token": {
@@ -5377,6 +6087,24 @@
         ],
         "title": "MoveApplicationRequest"
       },
+      "MoveOrgUnitRequest": {
+        "properties": {
+          "new_parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Parent Id",
+            "description": "ID нового родителя (None = корень)"
+          }
+        },
+        "type": "object",
+        "title": "MoveOrgUnitRequest"
+      },
       "OIDCCallbackAPIResponse": {
         "properties": {
           "token": {
@@ -5455,6 +6183,63 @@
           "code_verifier"
         ],
         "title": "OIDCStartResponse"
+      },
+      "OrgUnitResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "legal_entity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Legal Entity Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "legal_entity_id",
+          "name",
+          "path",
+          "is_archived",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OrgUnitResponse"
       },
       "RefreshResponse": {
         "properties": {
@@ -6562,6 +7347,73 @@
         "title": "UpdateCandidateRequest",
         "description": "Запрос: обновить поля кандидата (patch-семантика)."
       },
+      "UpdateLegalEntityRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "inn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inn"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "title": "UpdateLegalEntityRequest"
+      },
+      "UpdateOrgUnitRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "title": "UpdateOrgUnitRequest"
+      },
       "UpdateVacancyRequest": {
         "properties": {
           "title": {
@@ -6927,6 +7779,10 @@
     {
       "name": "funnel",
       "description": "Funnel presets and stage management"
+    },
+    {
+      "name": "organization",
+      "description": "Legal entities and org units (tree)"
     }
   ]
 }

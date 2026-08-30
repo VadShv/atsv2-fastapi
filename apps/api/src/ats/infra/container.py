@@ -22,6 +22,10 @@ from ats.infra.stubs_funnel_repositories import (
     InMemoryHMDecisionRepository,
     InMemoryStageTransitionRepository,
 )
+from ats.infra.stubs_org import (
+    InMemoryLegalEntityRepository,
+    InMemoryOrgUnitRepository,
+)
 from ats.infra.stubs_repositories import (
     InMemoryApplicationRepository,
     InMemoryCandidateRepository,
@@ -70,6 +74,14 @@ from ats.modules.funnel.ports.funnel_snapshot_repository import (
 from ats.modules.funnel.ports.funnel_transition_repository import (
     HMDecisionRepository,
     StageTransitionRepository,
+)
+from ats.modules.organization.application.org_use_cases import (
+    LegalEntityUseCase,
+    OrgUnitUseCase,
+)
+from ats.modules.organization.ports import (
+    LegalEntityRepository,
+    OrgUnitRepository,
 )
 from ats.modules.recruitment.application.application_timeline import (
     ApplicationTimelineUseCase,
@@ -150,6 +162,10 @@ class Container:
     search_candidates: SearchCandidatesUseCase
     candidate_crud: CandidateCrudUseCase
     bulk_import_candidates: BulkImportCandidatesUseCase
+    legal_entity_repository: LegalEntityRepository
+    org_unit_repository: OrgUnitRepository
+    legal_entity_use_case: LegalEntityUseCase
+    org_unit_use_case: OrgUnitUseCase
 
 
 def build_container() -> Container:
@@ -173,6 +189,8 @@ def build_container() -> Container:
         synonym_repo: SynonymRepository = InMemorySynonymRepository()
         webhook_sub_repo: WebhookSubscriptionRepository = InMemoryWebhookSubscriptionRepository()
         webhook_deliv_repo: WebhookDeliveryRepository = InMemoryWebhookDeliveryRepository()
+        legal_entity_repo: LegalEntityRepository = InMemoryLegalEntityRepository()
+        org_unit_repo: OrgUnitRepository = InMemoryOrgUnitRepository()
     else:
         from ats.infra.ai.litellm_gateway import LiteLLMGateway
         from ats.infra.db.repositories.provenance_repository import (
@@ -197,6 +215,8 @@ def build_container() -> Container:
         synonym_repo = InMemorySynonymRepository()  # Pg-реализация в след. фазе
         webhook_sub_repo: WebhookSubscriptionRepository = InMemoryWebhookSubscriptionRepository()
         webhook_deliv_repo: WebhookDeliveryRepository = InMemoryWebhookDeliveryRepository()
+        legal_entity_repo = InMemoryLegalEntityRepository()  # Pg-реализация в след. фазе
+        org_unit_repo = InMemoryOrgUnitRepository()  # Pg-реализация в след. фазе
 
     audit_logger: AuditLogger = InMemoryAuditLogger()
     audit_reader: AuditReader = InMemoryAuditReader()
@@ -227,6 +247,9 @@ def build_container() -> Container:
 
     webhook_management = WebhookManagementUseCase(webhook_sub_repo, webhook_deliv_repo)
     webhook_dispatcher = WebhookDispatcher(webhook_sub_repo, webhook_deliv_repo, webhook_management)
+
+    legal_entity_use_case = LegalEntityUseCase(legal_entity_repo)
+    org_unit_use_case = OrgUnitUseCase(org_unit_repo, legal_entity_repo)
 
     return Container(
         vacancy_repository=vacancy_repo,
@@ -265,4 +288,8 @@ def build_container() -> Container:
         search_candidates=search_candidates,
         candidate_crud=candidate_crud,
         bulk_import_candidates=bulk_import_candidates,
+        legal_entity_repository=legal_entity_repo,
+        org_unit_repository=org_unit_repo,
+        legal_entity_use_case=legal_entity_use_case,
+        org_unit_use_case=org_unit_use_case,
     )
