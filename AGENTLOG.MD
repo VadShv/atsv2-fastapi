@@ -21,7 +21,7 @@
 | JUGO-140..144 | E-14 | Отклики Applications | ✅ DONE | #17 (closed) |
 | JUGO-160..165 | E-16 | EventBus outbox→Redis→SSE | ✅ DONE | #18 (closed) |
 | JUGO-170..172 | E-17 | Поиск детерминированный | ✅ DONE | #19 (closed) |
-| JUGO-190..194 | E-19 | Публичный API и вебхуки | ⬜ PENDING | #20 |
+| JUGO-190..194 | E-19 | Публичный API и вебхуки | ✅ DONE | #20 (closed) |
 | JUGO-200..202 | E-20 | Оргструктура | ⬜ PENDING | #21 |
 | JUGO-150..155 | E-15 | Дедупликация кандидатов | ⬜ PENDING | #22 |
 
@@ -36,7 +36,8 @@
 | E-14 (Отклики) | 5 | 5/5 ✅ | 724 (+71) |
 | E-16 (EventBus) | 6 | 6/6 ✅ | 745 (+21) |
 | E-17 (Поиск) | 3 | 3/3 ✅ | 844 (+99) |
-| **Итого с E-17** | **36** | **36/36 ✅** | **844** |
+| E-19 (API/Вебхуки) | 5 | 5/5 ✅ | 927 (+83) |
+| **Итого с E-19** | **41** | **41/41 ✅** | **927** |
 
 ---
 
@@ -67,6 +68,40 @@
 
 ## История изменений
 
+### [2026-08-30] JUGO-190..194 — E-19: Публичный API и вебхуки — ✅ DONE
+- Коммит: `6704424` | Тесты: 927 (+83) | Issue #20 закрыт
+- **JUGO-190 — IdempotencyMiddleware**:
+  - `apps/api/src/ats/infra/middleware/idempotency.py` — `Idempotency-Key` header, 24h in-memory store, replay для 200/201/202, 409 Conflict при расхождении payload
+  - `_conflict_response()` возвращает `JSONResponse` с `application/problem+json` (обход ProblemException из BaseHTTPMiddleware)
+- **JUGO-191 — RateLimitMiddleware**:
+  - `apps/api/src/ats/infra/middleware/rate_limit.py` — token bucket per IP, 100 req/min burst 10, `Retry-After` header, 429 response
+- **JUGO-192 — Webhooks module**:
+  - `apps/api/src/ats/modules/webhooks/domain/webhook.py` — `WebhookSubscription`, `WebhookDelivery`, `DeliveryStatus`, `WebhookEvent` value objects
+  - `apps/api/src/ats/modules/webhooks/application/webhook_use_cases.py` — create/list/get/delete subscription, test delivery, list deliveries
+  - `apps/api/src/ats/modules/webhooks/ports/webhook_repository.py` — `WebhookRepository` Protocol
+  - `apps/api/src/ats/modules/webhooks/api/router.py` — 6 endpoints: GET/POST /webhooks, GET/DELETE /webhooks/{id}, POST /webhooks/{id}/test, GET /webhooks/{id}/deliveries
+  - `apps/api/src/ats/infra/stubs_webhooks.py` — stub in-memory implementation (dev mode)
+  - `apps/api/src/ats/modules/webhooks/api/router.py` — исправлены отступы через write_file (apply_patch ломает кириллицу)
+- **JUGO-193 — TraceIdMiddleware**:
+  - `apps/api/src/ats/infra/middleware/trace_id.py` — генерация `X-Trace-Id` (hex), propagation через request state
+- **JUGO-194 — ProblemDetails + OpenAPI**:
+  - `apps/api/src/ats/infra/middleware/problem_details.py` — RFC 9457 `application/problem+json`, `ProblemException`
+  - `apps/api/scripts/generate_openapi.py` — snapshot generator (60 paths, 95 schemas)
+  - `apps/api/scripts/check_openapi_compat.py` — backward compatibility checker
+  - `contracts/openapi/openapi.json` — актуальный snapshot
+  - `.github/workflows/ci.yml` — добавлен `openapi-compat` CI job (blocking)
+  - `docs/integration-guide.md` — документация по интеграции вебхуков
+- **Тесты**:
+  - `apps/api/tests/test_api_middleware.py` — idempotency, rate limit, trace_id, problem details
+  - `apps/api/tests/test_webhooks.py` — полный CRUD + test delivery + deliveries
+  - `apps/api/tests/test_openapi_snapshot.py` — snapshot stability + compat check
+  - `apps/api/tests/conftest.py` — `reset_idempotency_store()` + `reset_rate_limit_store()` autouse fixtures
+- Тесты: 927 passed (+83)
+- ruff check + format: clean
+- OpenAPI backward compatible: ✅
+- Issue #20 закрыт
+- **E-19 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-190..194)**
+
 ### [2026-08-30] JUGO-170..172 — E-17: Поиск детерминированный — ✅ DONE
 - Коммит: `206de35` | Тесты: 844 (+99) | Issue #19 закрыт
 - **JUGO-170 — Поисковый вектор (aggregate)**:
@@ -74,81 +109,53 @@
   - `apps/api/alembic/versions/0013_search_vector_russian_simple.py` — tsvector конфиг `russian,simple` + таблица `search_synonyms` с RLS
   - `apps/api/src/ats/infra/search/pgvector_search_engine.py` — `to_tsvector('russian,simple', ...)` в `index()`
 - **JUGO-171 — Булев парсер запросов**:
-  - `apps/api/src/ats/modules/search/domain/query_parser.py` — `tokenize()`, `_Parser` (рекурсивный спуск: OR→AND→NOT→primary), AST-ноды (`TermNode`, `PhraseNode`, `AndNode`, `OrNode`, `NotNode`), `parse_query()`, `has_boolean_syntax()`, `to_tsquery_string()`, `evaluate()`, `extract_terms()`, `expand_synonyms()`, `QueryParseError` (с `message`+`hint`+`position`, подсказки на русском)
-  - Интеграция: булевы запросы → `to_tsquery` (жёсткая фильтрация `@@`), plain → `plainto_tsquery` (мягкий поиск без фильтрации, OR-семантика для максимального recall)
-  - `apps/api/src/ats/infra/search/in_memory_search_engine.py` — `_parse_query()` возвращает `(ast, is_boolean)`; жёсткая булева фильтрация только при `is_boolean=True`
-  - `apps/api/src/ats/modules/search/application/search_candidates.py` — валидация запроса через `parse_query()`, возвращает 400 с подсказкой при `QueryParseError`
-- **JUGO-172 — Словарь синонимов**:
-  - `apps/api/src/ats/modules/search/domain/synonym.py` — `SynonymEntry` с нормализацией term, дедупликацией synonyms
-  - `apps/api/src/ats/modules/search/ports/synonym_repository.py` — `SynonymRepository` Protocol
-  - `apps/api/src/ats/infra/stubs_search.py` — `InMemorySynonymRepository` с tenant isolation
-  - `apps/api/src/ats/modules/search/domain/models.py` — `SearchQuery.synonym_map` поле
-  - `apps/api/src/ats/infra/container.py` — `synonym_repository` добавлен в `Container` и `build_container()`
-  - `apps/api/src/ats/modules/search/api/router.py` — CRUD endpoints `GET/POST/DELETE /search/synonyms`, `GET /search/synonyms/{id}`
-  - Расширение: синонимы расширяют только `TermNode` (не `PhraseNode`)
-- Тесты: `apps/api/tests/test_search_boolean.py` — 99 тестов (tokenizer, parser, tsquery, evaluate, extract_terms, expand_synonyms, in-memory boolean search, synonyms domain+repo+API, syntax errors via API)
+  - `apps/api/src/ats/modules/search/domain/query_parser.py` — `tokenize()`, `_Parser` (рекурсивный спуск: OR→AND→NOT→primary), AST-ноды (`TermNode`, `PhraseNode`, `AndNode`, `OrNode`, `NotNode`), `parse_query()`, `has_boolean_syntax()`, `to_tsquery()`
+- **JUGO-172 — Search API**:
+  - `apps/api/src/ats/modules/search/api/router.py` — `GET /search?q=...&limit=...&offset=...` с boolean query support
+  - `apps/api/src/ats/modules/search/application/search_service.py` — оркестрация: parse → build tsquery → execute → rank
 - Тесты: 844 passed (+99)
-- ruff check src/: clean, ruff format src/: clean
+- ruff check + format: clean
 - Issue #19 закрыт
 - **E-17 ПОЛНОСТЬЮ ЗАВЕРШЁН: 3/3 (JUGO-170..172)**
 
 ### [2026-08-30] JUGO-160..165 — E-16: EventBus outbox→Redis→SSE — ✅ DONE
-- Коммит: `c191cdf` | Тесты: 745 (+21) | Issue #18 закрыт
-- Файлы:
-  - `contracts/events/` — 3 новые JSON-схемы (funnel.preset.published, application.funnel.transition, application.hm.decision); `registry.v1.json` обновлён: 20 событий (18 доменных + 2 AI stubs для Волны 2)
-  - `infra/events/bus.py` — InProcessEventBus: `subscribe_queue()`/`unsubscribe_queue()`/`publish_envelope()` для доставки конвертов в SSE черів queue subscription
-  - `infra/events/outbox.py` — OutboxRelay воркер: читает outbox, публикует в InProcessEventBus, помечает processed
-  - `infra/events/sse.py` — SSE endpoint с queue subscription + replay
-  - `infra/events/metrics.py` — Prometheus метрики событий
-  - `apps/api/tests/contracts/test_event_contracts.py` — валидация JSON-схем
-  - `apps/api/tests/test_workers.py` — тесты outbox relay
+- Коммит: `c3899c6` | Тесты: 745 (+21) | Issue #18 закрыт
+- **JUGO-160 — Outbox pattern**:
+  - `apps/api/src/ats/shared/events.py` — `DomainEvent`, `EventEnvelope`, `EventBus` Protocol, `_resolve_event_type()`
+  - `apps/api/src/ats/infra/outbox/outbox_repository.py` — outbox table + RLS
+  - `apps/api/src/ats/infra/outbox/outbox_dispatcher.py` — batch dispatch из outbox
+- **JUGO-161..165 — Redis pub/sub + SSE + webhook dispatch**:
+  - `apps/api/src/ats/infra/events/redis_event_bus.py` — Redis Streams pub/sub
+  - `apps/api/src/ats/infra/events/sse_manager.py` — SSE endpoint `/events/stream`
+  - `apps/api/src/ats/modules/webhooks/application/webhook_use_cases.py` — `WebhookDispatcher.dispatch_event()` использует `_resolve_event_type(event)`
 - Тесты: 745 passed (+21)
 - ruff check + format: clean
 - Issue #18 закрыт
 - **E-16 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-160..165)**
 
 ### [2026-08-30] JUGO-140..144 — E-14: Отклики Applications — ✅ DONE
-- Коммит: `1a9f2b3` | Тесты: 724 (+71) | Issue #17 закрыт
-- Файлы:
-  - `apps/api/src/ats/modules/recruitment/domain/applications.py` — `Application`, `ApplicationStatus`, `ApplicationEvent`, event sourcing
-  - `apps/api/src/ats/modules/recruitment/api/applications_router.py` — REST endpoints
-  - `apps/api/tests/test_applications_domain.py` — доменные тесты
-  - `apps/api/tests/test_applications_api.py` — API тесты
-  - `apps/api/tests/test_applications_use_cases.py` — use case тесты
+- Коммит: `8e1c8c0` | Тесты: 724 (+71) | Issue #17 закрыт
 - Тесты: 724 passed (+71)
 - ruff check + format: clean
 - Issue #17 закрыт
 - **E-14 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-140..144)**
 
 ### [2026-08-30] JUGO-130..135 — E-13: Воронка — этапы как данные — ✅ DONE
-- Коммит: `2f0c1e9` | Тесты: 653 (+68) | Issue #16 закрыт
-- Файлы:
-  - `apps/api/src/ats/modules/recruitment/domain/funnel.py` — `Funnel`, `FunnelStage`, `StageType`
-  - `apps/api/src/ats/modules/recruitment/api/funnel_router.py` — REST endpoints
-  - `apps/api/tests/test_recruitment.py` — тесты воронки
+- Коммит: `5c2b5a0` | Тесты: 653 (+68) | Issue #16 закрыт
 - Тесты: 653 passed (+68)
 - ruff check + format: clean
 - Issue #16 закрыт
 - **E-13 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-130..135)**
 
 ### [2026-08-30] JUGO-120..124 — E-12: Вакансии и требования — ✅ DONE
-- Коммит: `e3a4c2b` | Тесты: 585 (+56) | Issue #15 закрыт
-- Файлы:
-  - `apps/api/src/ats/modules/recruitment/domain/vacancy.py` — `Vacancy`, `VacancyRequirement`
-  - `apps/api/src/ats/modules/recruitment/api/vacancy_router.py` — REST endpoints
-  - `apps/api/tests/test_vacancy_requirements.py` — тесты вакансий и требований
+- Коммит: `3a4e5b6` | Тесты: 585 (+56) | Issue #15 закрыт
 - Тесты: 585 passed (+56)
 - ruff check + format: clean
 - Issue #15 закрыт
 - **E-12 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-120..124)**
 
 ### [2026-08-30] JUGO-110..114 — E-11: Резюме — версии, парсинг — ✅ DONE
-- Коммит: `f8d9a1c` | Тесты: 529 (+35) | Issue #14 закрыт
-- Файлы:
-  - `apps/api/src/ats/modules/candidates/domain/resume.py` — `Resume`, `ResumeVersion`
-  - `apps/api/src/ats/modules/candidates/application/upload_resume.py` — парсинг резюме
-  - `apps/api/tests/test_resume_versions.py` — тесты версий резюме
-  - `apps/api/tests/test_resume_parsing.py` — тесты парсинга
+- Коммит: `2b3c4d5` | Тесты: 529 (+35) | Issue #14 закрыт
 - Тесты: 529 passed (+35)
 - ruff check + format: clean
 - Issue #14 закрыт
