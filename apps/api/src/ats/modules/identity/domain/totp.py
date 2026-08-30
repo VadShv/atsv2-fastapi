@@ -16,7 +16,6 @@ import hashlib
 import hmac
 import struct
 import time
-from typing import Protocol
 
 # Параметры TOTP по умолчанию (RFC 6238)
 DEFAULT_DIGITS = 6
@@ -168,9 +167,7 @@ def generate_backup_codes(count: int = 10) -> list[str]:
     for _ in range(count):
         raw = secrets.token_hex(8)  # 16 hex chars
         # Формат: XXXX-XXXX-XXXX-XXXX
-        formatted = "-".join(
-            raw[i : i + 4] for i in range(0, len(raw), 4)
-        )
+        formatted = "-".join(raw[i : i + 4] for i in range(0, len(raw), 4))
         codes.append(formatted)
     return codes
 

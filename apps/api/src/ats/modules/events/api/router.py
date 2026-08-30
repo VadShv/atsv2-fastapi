@@ -41,7 +41,7 @@ async def event_stream(
         types: фильтр по event_type через запятую
             (напр. "vacancy.created,application.created").
     """
-    wanted = set(t.strip() for t in types.split(",")) if types else None
+    set(t.strip() for t in types.split(",")) if types else None
 
     async def generate():
         while True:

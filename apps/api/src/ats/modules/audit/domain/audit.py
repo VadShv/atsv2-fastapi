@@ -7,7 +7,7 @@ AuditLog — append-only запись о действии субъекта на�
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 
@@ -39,7 +39,7 @@ class AuditEntry:
     ip_address: str = ""
     user_agent: str = ""
     trace_id: str = ""
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @classmethod
     def create(
@@ -65,5 +65,5 @@ class AuditEntry:
             ip_address=ip_address,
             user_agent=user_agent,
             trace_id=trace_id,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )

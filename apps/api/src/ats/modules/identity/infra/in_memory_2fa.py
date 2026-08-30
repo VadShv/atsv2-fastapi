@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from ats.modules.identity.domain.totp import (
@@ -63,9 +63,7 @@ class InMemoryTwoFactorStore:
             backup_codes=backup_codes,
         )
 
-    async def verify_and_enable(
-        self, user_id: UUID, code: str
-    ) -> bool:
+    async def verify_and_enable(self, user_id: UUID, code: str) -> bool:
         config = self._configs.get(user_id)
         if config is None:
             return False
@@ -79,7 +77,7 @@ class InMemoryTwoFactorStore:
             enabled=True,
             backup_code_hashes=config.backup_code_hashes,
             backup_codes_used=config.backup_codes_used,
-            enabled_at=datetime.now(timezone.utc),
+            enabled_at=datetime.now(UTC),
             created_at=config.created_at,
         )
         self._configs[user_id] = enabled_config
@@ -88,17 +86,13 @@ class InMemoryTwoFactorStore:
     async def get_config(self, user_id: UUID) -> TwoFactorConfig | None:
         return self._configs.get(user_id)
 
-    async def verify_code(
-        self, user_id: UUID, code: str
-    ) -> bool:
+    async def verify_code(self, user_id: UUID, code: str) -> bool:
         config = self._configs.get(user_id)
         if config is None or not config.enabled:
             return False
         return verify_totp(config.secret, code)
 
-    async def verify_backup_code(
-        self, user_id: UUID, code: str
-    ) -> bool:
+    async def verify_backup_code(self, user_id: UUID, code: str) -> bool:
         config = self._configs.get(user_id)
         if config is None or not config.enabled:
             return False
@@ -108,7 +102,7 @@ class InMemoryTwoFactorStore:
         if code_hash not in config.backup_code_hashes:
             return False
         # Помечаем как использованный
-        used = list(config.backup_codes_used) + [code_hash]
+        used = [*list(config.backup_codes_used), code_hash]
         updated = TwoFactorConfig(
             user_id=config.user_id,
             tenant_id=config.tenant_id,
@@ -138,25 +132,21 @@ class InMemoryTwoFactorStore:
             tenant_id=tenant_id,
             role_name=role_name,
             requires_2fa=True,
-            expires_at=datetime.now(timezone.utc) + _CHALLENGE_TTL,
+            expires_at=datetime.now(UTC) + _CHALLENGE_TTL,
         )
         self._challenges[token] = challenge
         return challenge
 
-    async def get_challenge(
-        self, challenge_token: str
-    ) -> TwoFactorChallenge | None:
+    async def get_challenge(self, challenge_token: str) -> TwoFactorChallenge | None:
         challenge = self._challenges.get(challenge_token)
         if challenge is None:
             return None
-        if datetime.now(timezone.utc) >= challenge.expires_at:
+        if datetime.now(UTC) >= challenge.expires_at:
             self._challenges.pop(challenge_token, None)
             return None
         return challenge
 
-    async def revoke_challenge(
-        self, challenge_token: str
-    ) -> None:
+    async def revoke_challenge(self, challenge_token: str) -> None:
         self._challenges.pop(challenge_token, None)
 
     def clear_all(self) -> None:

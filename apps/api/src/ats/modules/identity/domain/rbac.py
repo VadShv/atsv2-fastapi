@@ -9,11 +9,11 @@ require_permission("vacancy:update").
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 
 
-class VisibilityScope(str, Enum):
+class VisibilityScope(StrEnum):
     """Скоуп видимости данных (ТЗ §3.1)."""
 
     OWN = "own"  # свои вакансии/кандидаты
@@ -29,9 +29,7 @@ class Permission:
 
     def __post_init__(self) -> None:
         if ":" not in self.value:
-            raise ValueError(
-                f"Permission must be 'resource:action', got {self.value!r}"
-            )
+            raise ValueError(f"Permission must be 'resource:action', got {self.value!r}")
 
     @property
     def resource(self) -> str:
@@ -93,28 +91,49 @@ ADMIN_PERMISSIONS = _perms(
 )
 
 RECRUITER_PERMISSIONS = _perms(
-    "vacancy:create", "vacancy:read", "vacancy:update", "vacancy:delete",
-    "application:read", "application:update", "application:create",
-    "candidate:read", "candidate:create", "candidate:update",
-    "screening:run", "search:run", "scheduler:manage",
+    "vacancy:create",
+    "vacancy:read",
+    "vacancy:update",
+    "vacancy:delete",
+    "application:read",
+    "application:update",
+    "application:create",
+    "candidate:read",
+    "candidate:create",
+    "candidate:update",
+    "screening:run",
+    "search:run",
+    "scheduler:manage",
 )
 
 SOURCER_PERMISSIONS = _perms(
-    "vacancy:read", "candidate:read", "candidate:create",
-    "application:create", "search:run", "searchmap:read",
+    "vacancy:read",
+    "candidate:read",
+    "candidate:create",
+    "application:create",
+    "search:run",
+    "searchmap:read",
 )
 
 HIRING_MANAGER_PERMISSIONS = _perms(
-    "application:read", "application:decide",
-    "vacancy:read", "candidate:read",
+    "application:read",
+    "application:decide",
+    "vacancy:read",
+    "candidate:read",
 )
 
 VIEWER_PERMISSIONS = _perms(
-    "vacancy:read", "candidate:read", "application:read", "audit:read",
+    "vacancy:read",
+    "candidate:read",
+    "application:read",
+    "audit:read",
 )
 
 API_CLIENT_PERMISSIONS = _perms(
-    "candidate:read", "application:read", "application:write", "webhook:manage",
+    "candidate:read",
+    "application:read",
+    "application:write",
+    "webhook:manage",
 )
 
 
@@ -123,8 +142,13 @@ SYSTEM_ROLE_PRESETS: dict[str, tuple[frozenset[Permission], VisibilityScope]] = 
     "admin": (ADMIN_PERMISSIONS, VisibilityScope.ALL),
     "head_of_recruiting": (
         _perms(
-            "vacancy:read", "vacancy:update", "application:read", "application:update",
-            "candidate:read", "analytics:read", "pipeline:manage",
+            "vacancy:read",
+            "vacancy:update",
+            "application:read",
+            "application:update",
+            "candidate:read",
+            "analytics:read",
+            "pipeline:manage",
         ),
         VisibilityScope.ALL,
     ),

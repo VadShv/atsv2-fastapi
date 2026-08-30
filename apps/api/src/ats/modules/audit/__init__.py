@@ -13,12 +13,12 @@ from ats.modules.audit.ports.audit_logger import AuditLogger
 from ats.modules.audit.ports.audit_reader import AuditQuery, AuditReader
 
 __all__ = [
+    "AuditActions",
     "AuditEntry",
     "AuditLogger",
-    "AuditReader",
     "AuditQuery",
+    "AuditReader",
     "InMemoryAuditLogger",
     "InMemoryAuditReader",
     "audit",
-    "AuditActions",
 ]

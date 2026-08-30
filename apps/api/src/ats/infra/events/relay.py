@@ -13,9 +13,9 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ats.infra.db.models.events import OutboxMessageORM
@@ -74,19 +74,23 @@ class OutboxRelay:
         stats = RelayStats()
         async with self._session_factory() as session:
             rows = (
-                await session.execute(
-                    select(OutboxMessageORM)
-                    .where(OutboxMessageORM.processed_at.is_(None))
-                    .order_by(OutboxMessageORM.created_at)
-                    .limit(self._batch_size)
-                    .with_for_update(skip_locked=True)
+                (
+                    await session.execute(
+                        select(OutboxMessageORM)
+                        .where(OutboxMessageORM.processed_at.is_(None))
+                        .order_by(OutboxMessageORM.created_at)
+                        .limit(self._batch_size)
+                        .with_for_update(skip_locked=True)
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
 
             if not rows:
                 return stats
 
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             for row in rows:
                 topic = topic_for(row.event_type)
                 try:
@@ -94,9 +98,7 @@ class OutboxRelay:
                     row.processed_at = now
                     stats.processed += 1
                 except Exception as exc:
-                    logger.exception(
-                        "Failed to publish outbox %s (%s)", row.id, row.event_type
-                    )
+                    logger.exception("Failed to publish outbox %s (%s)", row.id, row.event_type)
                     row.attempts += 1
                     row.last_error = str(exc)[:500]
                     stats.failed += 1
@@ -125,14 +127,20 @@ class OutboxRelay:
     async def run(self) -> None:
         """Бесконечный цикл релея. Для prod-воркера."""
         self._running = True
-        logger.info("Outbox relay started (batch=%d, interval=%.1fs)", self._batch_size, self._poll_interval)
+        logger.info(
+            "Outbox relay started (batch=%d, interval=%.1fs)",
+            self._batch_size,
+            self._poll_interval,
+        )
         while self._running:
             try:
                 stats = await self.relay_once()
                 if stats.processed or stats.failed:
                     logger.info(
                         "Relay cycle: processed=%d failed=%d lag=%.1fs",
-                        stats.processed, stats.failed, stats.lag_seconds,
+                        stats.processed,
+                        stats.failed,
+                        stats.lag_seconds,
                     )
             except Exception:
                 logger.exception("Relay cycle crashed")

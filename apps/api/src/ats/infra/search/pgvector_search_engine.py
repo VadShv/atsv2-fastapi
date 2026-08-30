@@ -19,7 +19,6 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ats.infra.db.session import get_session_factory
 from ats.modules.search.domain.models import (
@@ -185,16 +184,13 @@ class PgVectorSearchEngine(SearchEngine):
                     """
                 )
                 rows = (
-                    await session.execute(
-                        sql, {"field": field, "tenant_id": str(query.tenant_id)}
-                    )
+                    await session.execute(sql, {"field": field, "tenant_id": str(query.tenant_id)})
                 ).fetchall()
                 result.append(
                     Facet(
                         field=field,
                         values=[
-                            FacetValue(value=str(r.facet_value), count=int(r.cnt))
-                            for r in rows
+                            FacetValue(value=str(r.facet_value), count=int(r.cnt)) for r in rows
                         ],
                     )
                 )
@@ -204,28 +200,21 @@ class PgVectorSearchEngine(SearchEngine):
         return self._session_factory()
 
 
-def _build_filter_sql(
-    filters: list[SearchFilter], params: dict[str, Any]
-) -> list[str]:
+def _build_filter_sql(filters: list[SearchFilter], params: dict[str, Any]) -> list[str]:
     clauses: list[str] = []
     for i, f in enumerate(filters):
         key = f"filter_{i}"
         if f.operator in ("any", "all"):
             op = "?|" if f.operator == "any" else "?&"
             clauses.append(
-                f"COALESCE(metadata->'{f.field}', '[]'::jsonb) {op} "
-                f"CAST(:{key} AS jsonb)"
+                f"COALESCE(metadata->'{f.field}', '[]'::jsonb) {op} CAST(:{key} AS jsonb)"
             )
             params[key] = _json_to_pg(f.values)
         elif f.operator == "gte":
-            clauses.append(
-                f"(metadata->>'{f.field}')::float >= :{key}"
-            )
+            clauses.append(f"(metadata->>'{f.field}')::float >= :{key}")
             params[key] = float(f.values[0]) if f.values else 0.0
         elif f.operator == "lte":
-            clauses.append(
-                f"(metadata->>'{f.field}')::float <= :{key}"
-            )
+            clauses.append(f"(metadata->>'{f.field}')::float <= :{key}")
             params[key] = float(f.values[0]) if f.values else 0.0
     return clauses
 

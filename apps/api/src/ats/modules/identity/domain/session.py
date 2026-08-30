@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from uuid import UUID, uuid4
+from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 DEFAULT_SESSION_TTL = timedelta(hours=8)
 
@@ -29,7 +29,7 @@ class Session:
 
     @property
     def is_expired(self) -> bool:
-        return datetime.now(timezone.utc) >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
     @classmethod
     def create(
@@ -42,7 +42,7 @@ class Session:
         csrf_token: str = "",
         metadata: dict[str, str] | None = None,
     ) -> Session:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return cls(
             token=_generate_token(),
             user_id=user_id,

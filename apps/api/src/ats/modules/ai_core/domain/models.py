@@ -6,9 +6,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, AsyncIterator, Generic, TypeVar
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any, Generic, TypeVar
 from uuid import UUID, uuid4
 
 from ats.shared.ids import ProvenanceId, TenantId
@@ -16,7 +16,7 @@ from ats.shared.ids import ProvenanceId, TenantId
 T = TypeVar("T")
 
 
-class MessageRole(str, Enum):
+class MessageRole(StrEnum):
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
@@ -157,7 +157,7 @@ class ProvenanceRecord:
             tokens_in=tokens_in,
             tokens_out=tokens_out,
             cost_usd=cost_usd,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             human_verified=False,
             reasoning_trace=reasoning_trace,
             non_ai=non_ai,

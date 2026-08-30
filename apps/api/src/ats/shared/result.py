@@ -7,13 +7,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
 
-class ErrorCode(str, Enum):
+class ErrorCode(StrEnum):
     """Канонические коды ошибок домена."""
 
     # Общие

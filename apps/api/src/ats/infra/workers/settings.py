@@ -12,9 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class RedisSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="ATS_REDIS_", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="ATS_REDIS_", env_file=".env", extra="ignore")
 
     url: str = Field(
         default="redis://localhost:6379/0",

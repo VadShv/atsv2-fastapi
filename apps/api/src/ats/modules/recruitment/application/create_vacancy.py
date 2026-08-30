@@ -114,9 +114,7 @@ class CreateVacancyUseCase:
         if is_error(criteria_result):
             err = criteria_result.error
             criteria_error = err.message
-            logger.warning(
-                "Vacancy %s created without AI criteria: %s", vacancy.id, err
-            )
+            logger.warning("Vacancy %s created without AI criteria: %s", vacancy.id, err)
         else:
             parsed, provenance_id = criteria_result.value
             vacancy.attach_screening_criteria(provenance_id)

@@ -84,16 +84,12 @@ def validate_extension(
 
     ext = Path(filename).suffix.lower()
     if not ext:
-        raise FileValidationError(
-            f"Файл без расширения не разрешён: {filename}"
-        )
+        raise FileValidationError(f"Файл без расширения не разрешён: {filename}")
 
     entry = _ALLOWED_TYPES.get(ext)
     if entry is None:
         allowed = ", ".join(get_allowed_extensions())
-        raise FileValidationError(
-            f"Недопустимое расширение '{ext}'. Разрешены: {allowed}"
-        )
+        raise FileValidationError(f"Недопустимое расширение '{ext}'. Разрешены: {allowed}")
 
     mime, allowed_categories = entry
 
@@ -101,8 +97,7 @@ def validate_extension(
     if allowed_categories and category not in allowed_categories:
         cat_names = ", ".join(c.value for c in allowed_categories)
         raise FileValidationError(
-            f"Тип '{ext}' разрешён только для категорий: {cat_names}, "
-            f"не для '{category.value}'"
+            f"Тип '{ext}' разрешён только для категорий: {cat_names}, не для '{category.value}'"
         )
 
     return mime
@@ -121,9 +116,7 @@ def validate_size(size_bytes: int, max_size: int) -> None:
         FileValidationError: если размер превышает лимит или отрицательный.
     """
     if size_bytes <= 0:
-        raise FileValidationError(
-            f"Размер файла должен быть положительным, получено: {size_bytes}"
-        )
+        raise FileValidationError(f"Размер файла должен быть положительным, получено: {size_bytes}")
     if size_bytes > max_size:
         max_mb = max_size / (1024 * 1024)
         actual_mb = size_bytes / (1024 * 1024)

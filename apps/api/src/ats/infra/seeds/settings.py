@@ -10,9 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class SeedSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="ATS_SEED_", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="ATS_SEED_", env_file=".env", extra="ignore")
 
     # Seed для воспроизводимости (детерминированный генератор)
     random_seed: int = Field(

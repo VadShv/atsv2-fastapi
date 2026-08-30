@@ -54,7 +54,7 @@ def restore_trace_context(headers: dict[str, Any] | None) -> str | None:
             from opentelemetry.propagate import extract
 
             ctx = extract(headers)
-            token = trace.use_context(ctx)  # type: ignore[union-attr]
+            trace.use_context(ctx)  # type: ignore[union-attr]
             # Токен сохраняется в текущем контексте; не нужно явно detach
             # т.к. контекст воркера изолирован
             return trace_id

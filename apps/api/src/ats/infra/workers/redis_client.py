@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -49,9 +50,7 @@ async def close_redis() -> None:
     """Закрыть соединение с Redis при shutdown."""
     global _client, _initialized
     if _client is not None:
-        try:
+        with contextlib.suppress(Exception):
             await _client.aclose()
-        except Exception:
-            pass
     _client = None
     _initialized = False

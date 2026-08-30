@@ -11,9 +11,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class LogSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="ATS_LOG_", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="ATS_LOG_", env_file=".env", extra="ignore")
 
     level: str = Field(default="INFO", description="Уровень логирования (DEBUG/INFO/WARNING/ERROR)")
     json_format: bool = Field(

@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +83,7 @@ class EventConsumer:
         if self._redis is not None and await self._seen(event_id):
             stats.deduplicated += 1
             if self._redis is not None:
-                await self._redis.xack(
-                    self._config.stream, self._config.group, msg_id
-                )
+                await self._redis.xack(self._config.stream, self._config.group, msg_id)
             return stats
 
         handlers = self._handlers.get(event_type, [])
@@ -106,9 +104,7 @@ class EventConsumer:
             stats.dlq += 1
         return stats
 
-    async def _run_handlers(
-        self, handlers: list[EventHandler], payload: dict
-    ) -> bool:
+    async def _run_handlers(self, handlers: list[EventHandler], payload: dict) -> bool:
         """Выполнить хендлеры с ретраями. True если все успешны."""
         for handler in handlers:
             ok = False
@@ -120,12 +116,12 @@ class EventConsumer:
                 except Exception:
                     logger.exception(
                         "Handler %s failed (attempt %d/%d)",
-                        handler.__name__, attempt, self._config.max_retries,
+                        handler.__name__,
+                        attempt,
+                        self._config.max_retries,
                     )
                     if attempt < self._config.max_retries:
-                        await asyncio.sleep(
-                            self._config.retry_base_delay * (2 ** (attempt - 1))
-                        )
+                        await asyncio.sleep(self._config.retry_base_delay * (2 ** (attempt - 1)))
             if not ok:
                 return False
         return True
@@ -160,10 +156,12 @@ class EventConsumer:
             logger.warning("Consumer %s: no Redis, not starting", self._config.consumer_name)
             return
         # Создать группу, если нет
-        try:
-            await self._redis.xgroup_create(self._config.stream, self._config.group, id="0", mkstream=True)
-        except Exception:  # группа уже существует
-            pass
+        import contextlib
+
+        with contextlib.suppress(Exception):  # группа уже существует
+            await self._redis.xgroup_create(
+                self._config.stream, self._config.group, id="0", mkstream=True
+            )
 
         logger.info("Consumer %s started on %s", self._config.consumer_name, self._config.stream)
         while self._running:

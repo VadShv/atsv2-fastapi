@@ -79,7 +79,5 @@ async def upload_resume(
     )
 
     if is_error(result):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=result.error.message
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result.error.message)
     return _to_response(result.value)

@@ -7,14 +7,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 # Роли, для которых 2FA обязателен
-ROLES_REQUIRING_2FA: frozenset[str] = frozenset({
-    "admin",
-    "head_of_recruiting",
-})
+ROLES_REQUIRING_2FA: frozenset[str] = frozenset(
+    {
+        "admin",
+        "head_of_recruiting",
+    }
+)
 
 
 def role_requires_2fa(role_name: str) -> bool:
@@ -39,9 +41,7 @@ class TwoFactorConfig:
     backup_code_hashes: list[str] = field(default_factory=list)
     backup_codes_used: list[str] = field(default_factory=list)
     enabled_at: datetime | None = None
-    created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @property
     def has_unused_backup_codes(self) -> bool:
@@ -75,14 +75,14 @@ class TwoFactorChallenge:
     tenant_id: UUID
     role_name: str
     requires_2fa: bool = True
-    expires_at: datetime = field(default_factory=lambda: datetime.now(
-        timezone.utc
-    ).replace(microsecond=0) + __import__("datetime").timedelta(minutes=5))
+    expires_at: datetime = field(
+        default_factory=lambda: (
+            datetime.now(UTC).replace(microsecond=0) + __import__("datetime").timedelta(minutes=5)
+        )
+    )
 
 
-def is_2fa_required_for_user(
-    role_name: str, config: TwoFactorConfig | None
-) -> bool:
+def is_2fa_required_for_user(role_name: str, config: TwoFactorConfig | None) -> bool:
     """Определить, требуется ли 2FA для пользователя.
 
     SECURE FIRST: 2FA требуется, если:

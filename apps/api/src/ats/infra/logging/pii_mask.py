@@ -15,9 +15,7 @@ _EMAIL_RE = re.compile(log_settings.pii_email_pattern)
 _PHONE_RE = re.compile(log_settings.pii_phone_pattern)
 
 
-def mask_pii_processor(
-    logger: Any, method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+def mask_pii_processor(logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     """structlog processor: маскирование ПД во всех строковых значениях."""
     if not log_settings.mask_pii:
         return event_dict

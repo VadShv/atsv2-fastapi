@@ -33,36 +33,140 @@ except ImportError:
 # ──────────────────────────────────────────────────────────────
 
 _FIRST_NAMES_M = [
-    "Александр", "Дмитрий", "Максим", "Сергей", "Андрей", "Алексей",
-    "Артём", "Илья", "Кирилл", "Михаил", "Никита", "Иван", "Роман",
-    "Егор", "Владимир", "Денис", "Павел", "Антон", "Виктор", "Глеб",
+    "Александр",
+    "Дмитрий",
+    "Максим",
+    "Сергей",
+    "Андрей",
+    "Алексей",
+    "Артём",
+    "Илья",
+    "Кирилл",
+    "Михаил",
+    "Никита",
+    "Иван",
+    "Роман",
+    "Егор",
+    "Владимир",
+    "Денис",
+    "Павел",
+    "Антон",
+    "Виктор",
+    "Глеб",
 ]
 
 _FIRST_NAMES_F = [
-    "Анна", "Мария", "Елена", "Ольга", "Наталья", "Татьяна", "Юлия",
-    "Ирина", "Светлана", "Екатерина", "Алёна", "Виктория", "Дарья",
-    "Ксения", "Полина", "Алина", "Софья", "Валерия", "Маргарита", "Надежда",
+    "Анна",
+    "Мария",
+    "Елена",
+    "Ольга",
+    "Наталья",
+    "Татьяна",
+    "Юлия",
+    "Ирина",
+    "Светлана",
+    "Екатерина",
+    "Алёна",
+    "Виктория",
+    "Дарья",
+    "Ксения",
+    "Полина",
+    "Алина",
+    "Софья",
+    "Валерия",
+    "Маргарита",
+    "Надежда",
 ]
 
 _LAST_NAMES = [
-    "Иванов", "Петров", "Сидоров", "Кузнецов", "Смирнов", "Попов",
-    "Васильев", "Соколов", "Михайлов", "Новиков", "Фёдоров", "Морозов",
-    "Волков", "Алексеев", "Лебедев", "Семёнов", "Егоров", "Павлов",
-    "Козлов", "Степанов", "Николаев", "Орлов", "Андреев", "Макаров",
-    "Никитин", "Захаров", "Зайцев", "Соловьёв", "Борисов", "Яковлев",
+    "Иванов",
+    "Петров",
+    "Сидоров",
+    "Кузнецов",
+    "Смирнов",
+    "Попов",
+    "Васильев",
+    "Соколов",
+    "Михайлов",
+    "Новиков",
+    "Фёдоров",
+    "Морозов",
+    "Волков",
+    "Алексеев",
+    "Лебедев",
+    "Семёнов",
+    "Егоров",
+    "Павлов",
+    "Козлов",
+    "Степанов",
+    "Николаев",
+    "Орлов",
+    "Андреев",
+    "Макаров",
+    "Никитин",
+    "Захаров",
+    "Зайцев",
+    "Соловьёв",
+    "Борисов",
+    "Яковлев",
 ]
 
 _SOURCES = ["direct", "referral", "job_board", "database", "agency", "linkedin"]
 
 _SKILLS = [
-    "Python", "FastAPI", "Django", "Flask", "PostgreSQL", "Redis", "Docker",
-    "Kubernetes", "AWS", "GCP", "JavaScript", "TypeScript", "React", "Vue",
-    "Angular", "Node.js", "Go", "Rust", "Java", "Spring", "Kotlin", "Swift",
-    "SQL", "MongoDB", "Kafka", "RabbitMQ", "GraphQL", "REST", "gRPC",
-    "Machine Learning", "TensorFlow", "PyTorch", "Data Science", "Pandas",
-    "NumPy", "CI/CD", "Git", "Linux", "Nginx", "Elasticsearch", "Terraform",
-    "Ansible", "Jenkins", "Microservices", "System Design", "Agile", "Scrum",
-    "Kanban", "Jira", "Confluence", "Product Management", "UX/UI", "Figma",
+    "Python",
+    "FastAPI",
+    "Django",
+    "Flask",
+    "PostgreSQL",
+    "Redis",
+    "Docker",
+    "Kubernetes",
+    "AWS",
+    "GCP",
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Vue",
+    "Angular",
+    "Node.js",
+    "Go",
+    "Rust",
+    "Java",
+    "Spring",
+    "Kotlin",
+    "Swift",
+    "SQL",
+    "MongoDB",
+    "Kafka",
+    "RabbitMQ",
+    "GraphQL",
+    "REST",
+    "gRPC",
+    "Machine Learning",
+    "TensorFlow",
+    "PyTorch",
+    "Data Science",
+    "Pandas",
+    "NumPy",
+    "CI/CD",
+    "Git",
+    "Linux",
+    "Nginx",
+    "Elasticsearch",
+    "Terraform",
+    "Ansible",
+    "Jenkins",
+    "Microservices",
+    "System Design",
+    "Agile",
+    "Scrum",
+    "Kanban",
+    "Jira",
+    "Confluence",
+    "Product Management",
+    "UX/UI",
+    "Figma",
 ]
 
 _VACANCY_TITLES = [
@@ -94,9 +198,21 @@ _VACANCY_TITLES = [
 ]
 
 _TEAMS = [
-    "Platform", "Payments", "Growth", "Infrastructure", "Data Platform",
-    "Mobile", "Web", "Security", "ML Platform", "Core Services",
-    "Customer Success", "FinTech", "Marketplace", "Analytics", "DevOps",
+    "Platform",
+    "Payments",
+    "Growth",
+    "Infrastructure",
+    "Data Platform",
+    "Mobile",
+    "Web",
+    "Security",
+    "ML Platform",
+    "Core Services",
+    "Customer Success",
+    "FinTech",
+    "Marketplace",
+    "Analytics",
+    "DevOps",
 ]
 
 _REQUIREMENTS_POOL = [
@@ -269,10 +385,7 @@ def _get_role_perms(role_name: str) -> list[str]:
 
 def _build_role_permissions_json() -> dict[str, str]:
     """Построить карту: имя роли → JSON-строка разрешений."""
-    return {
-        role: json.dumps(sorted(_get_role_perms(role)))
-        for role in _SYSTEM_ROLES
-    }
+    return {role: json.dumps(sorted(_get_role_perms(role))) for role in _SYSTEM_ROLES}
 
 
 _ROLE_PERMISSIONS_JSON: dict[str, str] = _build_role_permissions_json()
@@ -407,10 +520,7 @@ class SeedGenerator:
     def _generate_email(self, full_name: str, slug: str) -> str:
         """Сгенерировать email на основе ФИО и slug тенанта."""
         parts = full_name.lower().split()
-        if len(parts) >= 2:
-            local = f"{parts[0]}.{parts[1]}"
-        else:
-            local = parts[0] if parts else "user"
+        local = f"{parts[0]}.{parts[1]}" if len(parts) >= 2 else parts[0] if parts else "user"
         # Транслитерация (упрощённая)
         local = self._translit(local)
         num = self._rng.randint(1, 99)
@@ -420,12 +530,39 @@ class SeedGenerator:
     def _translit(text: str) -> str:
         """Простая транслитерация кириллицы в латиницу."""
         mapping = {
-            "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e",
-            "ё": "e", "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k",
-            "л": "l", "м": "m", "н": "n", "о": "o", "п": "p", "р": "r",
-            "с": "s", "т": "t", "у": "u", "ф": "f", "х": "h", "ц": "ts",
-            "ч": "ch", "ш": "sh", "щ": "sch", "ъ": "", "ы": "y", "ь": "",
-            "э": "e", "ю": "yu", "я": "ya",
+            "а": "a",
+            "б": "b",
+            "в": "v",
+            "г": "g",
+            "д": "d",
+            "е": "e",
+            "ё": "e",
+            "ж": "zh",
+            "з": "z",
+            "и": "i",
+            "й": "y",
+            "к": "k",
+            "л": "l",
+            "м": "m",
+            "н": "n",
+            "о": "o",
+            "п": "p",
+            "р": "r",
+            "с": "s",
+            "т": "t",
+            "у": "u",
+            "ф": "f",
+            "х": "h",
+            "ц": "ts",
+            "ч": "ch",
+            "ш": "sh",
+            "щ": "sch",
+            "ъ": "",
+            "ы": "y",
+            "ь": "",
+            "э": "e",
+            "ю": "yu",
+            "я": "ya",
         }
         return "".join(mapping.get(c, c) for c in text)
 
@@ -451,23 +588,17 @@ class SeedGenerator:
         seniority = self._rng.choice(["Junior", "Middle", "Senior", "Lead"])
         return f"{seniority} {primary} Developer"
 
-    def _generate_vacancy(
-        self, tenant_id: UUID, title: str, seniority: str
-    ) -> SeedVacancy:
+    def _generate_vacancy(self, tenant_id: UUID, title: str, seniority: str) -> SeedVacancy:
         """Сгенерировать вакансию с описанием роли и требованиями."""
         team = self._rng.choice(_TEAMS)
         num_req = self._rng.randint(5, 10)
         requirements = [
-            self._rng.choice(_REQUIREMENTS_POOL).format(
-                skill=self._rng.choice(_SKILLS)
-            )
+            self._rng.choice(_REQUIREMENTS_POOL).format(skill=self._rng.choice(_SKILLS))
             for _ in range(num_req)
         ]
         num_nice = self._rng.randint(2, 4)
         nice_to_have = [
-            self._rng.choice(_NICE_TO_HAVE_POOL).format(
-                skill=self._rng.choice(_SKILLS)
-            )
+            self._rng.choice(_NICE_TO_HAVE_POOL).format(skill=self._rng.choice(_SKILLS))
             for _ in range(num_nice)
         ]
         role_description = (

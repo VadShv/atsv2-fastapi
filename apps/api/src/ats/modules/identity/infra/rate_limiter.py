@@ -55,9 +55,7 @@ class LoginRateLimiter:
             return False
         now = time.monotonic()
         # Очистка старых попыток
-        record.attempts = [
-            t for t in record.attempts if now - t < self._window_seconds
-        ]
+        record.attempts = [t for t in record.attempts if now - t < self._window_seconds]
         return len(record.attempts) >= self._max_attempts
 
     def record_attempt(self, ip: str) -> None:
@@ -74,9 +72,7 @@ class LoginRateLimiter:
         if record is None:
             return self._max_attempts
         now = time.monotonic()
-        record.attempts = [
-            t for t in record.attempts if now - t < self._window_seconds
-        ]
+        record.attempts = [t for t in record.attempts if now - t < self._window_seconds]
         return max(0, self._max_attempts - len(record.attempts))
 
     def reset(self, ip: str) -> None:

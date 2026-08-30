@@ -28,12 +28,14 @@ CSRF_HEADER_NAME = "X-CSRF-Token"
 _UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
 # Пути, исключённые из CSRF (логин сам устанавливает CSRF-токен)
-_EXEMPT_PATHS = frozenset({
-    "/api/v1/auth/login",
-    "/api/v1/auth/refresh",
-    "/health",
-    "/metrics",
-})
+_EXEMPT_PATHS = frozenset(
+    {
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh",
+        "/health",
+        "/metrics",
+    }
+)
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
@@ -81,9 +83,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             )
 
         if cookie_token != header_token:
-            logger.warning(
-                "CSRF: token mismatch for %s %s", method, path
-            )
+            logger.warning("CSRF: token mismatch for %s %s", method, path)
             return JSONResponse(
                 status_code=403,
                 content={"detail": "Недействительный CSRF-токен"},

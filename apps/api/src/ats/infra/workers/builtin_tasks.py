@@ -26,11 +26,9 @@ class OutboxRelayTask(BaseTask):
 
     name = "outbox_relay"
 
-    async def execute(
-        self, ctx: TaskContext, **params: Any
-    ) -> dict[str, Any] | None:
-        from ats.infra.events.relay import OutboxRelay
+    async def execute(self, ctx: TaskContext, **params: Any) -> dict[str, Any] | None:
         from ats.infra.db.session import get_session_factory
+        from ats.infra.events.relay import OutboxRelay
 
         redis = ctx.redis or await get_redis()
         session_factory = get_session_factory()
@@ -53,9 +51,7 @@ class EventConsumerTask(BaseTask):
 
     name = "event_consumer"
 
-    async def execute(
-        self, ctx: TaskContext, **params: Any
-    ) -> dict[str, Any] | None:
+    async def execute(self, ctx: TaskContext, **params: Any) -> dict[str, Any] | None:
         from ats.infra.events.consumer import ConsumerConfig, EventConsumer
 
         redis = ctx.redis or await get_redis()

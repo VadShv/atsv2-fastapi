@@ -8,8 +8,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from ats.shared.aggregate import AggregateRoot
@@ -17,7 +17,7 @@ from ats.shared.events import DomainEvent
 from ats.shared.ids import CandidateId, TenantId, VacancyId
 
 
-class ApplicationStage(str, Enum):
+class ApplicationStage(StrEnum):
     """Стадии пайплайна (базовый набор, как Huntflow)."""
 
     NEW = "new"
@@ -104,8 +104,8 @@ class Application(AggregateRoot):
     transitions: list[StageTransition] = field(default_factory=list)
     score_provenance: UUID | None = None
     score: float | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     _events: list[DomainEvent] = field(default_factory=list, repr=False)
 
     @classmethod
@@ -125,7 +125,7 @@ class Application(AggregateRoot):
         app._record(
             ApplicationCreated(
                 event_id=uuid4(),
-                occurred_at=datetime.now(timezone.utc),
+                occurred_at=datetime.now(UTC),
                 tenant_id=tenant_id.value,
                 payload={
                     "candidate_id": str(candidate_id.value),
@@ -157,7 +157,7 @@ class Application(AggregateRoot):
 
         from_stage = self.stage
         self.stage = to_stage
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
         self.transitions.append(
             StageTransition(
                 from_stage=from_stage,
@@ -186,7 +186,7 @@ class Application(AggregateRoot):
         """Установить AI-скоринг заявки (whitebox: ссылка на provenance)."""
         self.score = score
         self.score_provenance = provenance
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     @property
     def is_terminal(self) -> bool:

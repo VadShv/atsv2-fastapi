@@ -80,9 +80,7 @@ class PgProvenanceLedger(ProvenanceLedger):
                 return None
             return _orm_to_record(row)
 
-    async def mark_verified(
-        self, tenant_id: TenantId, provenance_id: ProvenanceId
-    ) -> None:
+    async def mark_verified(self, tenant_id: TenantId, provenance_id: ProvenanceId) -> None:
         async with tenant_session(tenant_id.value) as session:
             stmt = (
                 update(ProvenanceORM)

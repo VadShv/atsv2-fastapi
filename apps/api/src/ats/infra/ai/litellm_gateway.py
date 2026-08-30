@@ -31,7 +31,7 @@ from ats.modules.ai_core.domain.models import (
     StructuredResponse,
 )
 from ats.modules.ai_core.ports.provenance import ProvenanceLedger
-from ats.shared.ids import ProvenanceId, TenantId
+from ats.shared.ids import ProvenanceId
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -106,7 +106,8 @@ class LiteLLMGateway(AIGateway):
         if len(embedding) > index_dim:
             logger.debug(
                 "Truncating embedding %d → %d for pgvector index",
-                len(embedding), index_dim,
+                len(embedding),
+                index_dim,
             )
             embedding = embedding[:index_dim]
         return embedding
@@ -148,9 +149,7 @@ class LiteLLMGateway(AIGateway):
                 provenance_id=provenance_id,
             )
 
-    async def structured(
-        self, request: AIRequest, schema: type[T]
-    ) -> StructuredResponse[T]:
+    async def structured(self, request: AIRequest, schema: type[T]) -> StructuredResponse[T]:
         model = request.model or ai_settings.default_model
 
         # Кэш structured-вызовов
@@ -166,23 +165,20 @@ class LiteLLMGateway(AIGateway):
         latency_ms = int((time.monotonic() - start) * 1000)
 
         # Парсинг с ремонтом (устойчивость/whitebox)
-        parsed, cleaned, repaired = parse_structured(response.raw_output, schema)
-        if parsed is None:
-            # Fallback: попробовать fallback-модель
-            if ai_settings.fallback_model and model != ai_settings.fallback_model:
-                logger.warning(
-                    "JSON parse failed on %s, retrying with fallback %s",
-                    model,
-                    ai_settings.fallback_model,
-                )
-                request = _with_model(request, ai_settings.fallback_model)
-                response = await self._call_with_retry(request, ai_settings.fallback_model)
-                parsed, cleaned, repaired = parse_structured(response.raw_output, schema)
+        parsed, _cleaned, repaired = parse_structured(response.raw_output, schema)
+        # Fallback: попробовать fallback-модель
+        if parsed is None and (ai_settings.fallback_model and model != ai_settings.fallback_model):
+            logger.warning(
+                "JSON parse failed on %s, retrying with fallback %s",
+                model,
+                ai_settings.fallback_model,
+            )
+            request = _with_model(request, ai_settings.fallback_model)
+            response = await self._call_with_retry(request, ai_settings.fallback_model)
+            parsed, _cleaned, repaired = parse_structured(response.raw_output, schema)
 
         if parsed is None:
-            raise AIOutputError(
-                f"Failed to parse structured output for prompt={request.prompt_id}"
-            )
+            raise AIOutputError(f"Failed to parse structured output for prompt={request.prompt_id}")
 
         return StructuredResponse(
             provenance_id=response.provenance_id,
@@ -203,9 +199,7 @@ class LiteLLMGateway(AIGateway):
                 (litellm.APIConnectionError, litellm.RateLimitError, TimeoutError)
             ),
             stop=stop_after_attempt(ai_settings.max_retries),
-            wait=wait_exponential(
-                multiplier=ai_settings.retry_base_delay, max=10.0
-            ),
+            wait=wait_exponential(multiplier=ai_settings.retry_base_delay, max=10.0),
             reraise=True,
         )
         async def _call() -> AIResponse:
@@ -358,9 +352,7 @@ class LiteLLMGateway(AIGateway):
             tokens_in=usage.tokens_in,
             tokens_out=usage.tokens_out,
             cost_usd=usage.cost_usd,
-            timestamp=__import__("datetime").datetime.now(
-                __import__("datetime").timezone.utc
-            ),
+            timestamp=__import__("datetime").datetime.now(__import__("datetime").timezone.utc),
             human_verified=False,
             reasoning_trace="",
             non_ai=False,
@@ -368,9 +360,7 @@ class LiteLLMGateway(AIGateway):
         await self._provenance.append(record)
         return record.provenance_id
 
-    def _non_ai_fallback(
-        self, request: AIRequest, model: str, exc: Exception
-    ) -> AIResponse:
+    def _non_ai_fallback(self, request: AIRequest, model: str, exc: Exception) -> AIResponse:
         """Graceful degradation: LLM недоступен — возвращаем заглушку с пометкой non_ai.
 
         Конкретные скиллы могут переопределять fallback-логику.

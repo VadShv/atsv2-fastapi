@@ -113,9 +113,7 @@ async def search_candidates(request: SearchRequest) -> SearchResponse:
     )
 
     if is_error(result):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=result.error.message
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result.error.message)
 
     sr = result.value
     return SearchResponse(
@@ -124,10 +122,7 @@ async def search_candidates(request: SearchRequest) -> SearchResponse:
         facets=[
             FacetResponse(
                 field=f.field,
-                values=[
-                    FacetValueResponse(value=v.value, count=v.count)
-                    for v in f.values
-                ],
+                values=[FacetValueResponse(value=v.value, count=v.count) for v in f.values],
             )
             for f in sr.facets
         ],

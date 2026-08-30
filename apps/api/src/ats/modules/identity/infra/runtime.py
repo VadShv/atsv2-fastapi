@@ -10,20 +10,20 @@ account lockout), чтобы state корректно сохранялся ме�
 
 from __future__ import annotations
 
+from ats.modules.identity.infra.in_memory_2fa import InMemoryTwoFactorStore
+from ats.modules.identity.infra.in_memory_api_key import InMemoryApiKeyStore
 from ats.modules.identity.infra.in_memory_auth import (
     InMemoryAuthenticator,
     InMemorySessionStore,
 )
-from ats.modules.identity.infra.in_memory_api_key import InMemoryApiKeyStore
-from ats.modules.identity.infra.in_memory_2fa import InMemoryTwoFactorStore
+from ats.modules.identity.infra.oidc_settings import OIDCSettings
 from ats.modules.identity.infra.rate_limiter import (
     AccountLockout,
     LoginRateLimiter,
 )
-from ats.modules.identity.ports.auth import Authenticator, SessionStore
-from ats.modules.identity.infra.oidc_settings import OIDCSettings
 from ats.modules.identity.infra.stub_identity_provider import StubIdentityProvider
 from ats.modules.identity.ports.api_key import ApiKeyStore
+from ats.modules.identity.ports.auth import Authenticator, SessionStore
 from ats.modules.identity.ports.identity_provider import IdentityProvider
 from ats.modules.identity.ports.two_factor import TwoFactorStore
 

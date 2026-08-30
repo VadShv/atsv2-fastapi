@@ -25,8 +25,6 @@ class ProvenanceLedger(Protocol):
         """Получить запись провенанса для объяснения решения."""
         ...
 
-    async def mark_verified(
-        self, tenant_id: TenantId, provenance_id: ProvenanceId
-    ) -> None:
+    async def mark_verified(self, tenant_id: TenantId, provenance_id: ProvenanceId) -> None:
         """Отметить как проверенное человеком (human_verified)."""
         ...

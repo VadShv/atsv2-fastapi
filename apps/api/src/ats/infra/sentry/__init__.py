@@ -21,13 +21,13 @@ from ats.infra.sentry.setup import (
 )
 
 __all__ = [
-    "setup_sentry",
-    "is_sentry_enabled",
     "SentryMiddleware",
     "capture_exception",
     "capture_message",
-    "set_user_context",
+    "is_sentry_enabled",
     "send_alert",
     "send_alert_sync",
     "sentry_settings",
+    "set_user_context",
+    "setup_sentry",
 ]

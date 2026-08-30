@@ -15,7 +15,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 # Префикс для ключей (ТЗ §15)
@@ -66,9 +66,7 @@ class ApiKey:
     key_hash: str
     name: str  # человекочитаемое название (напр. "Slack integration")
     scopes: frozenset[str] = field(default_factory=frozenset)  # permissions
-    created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime | None = None
     revoked_at: datetime | None = None
     created_by: UUID | None = None
@@ -82,7 +80,7 @@ class ApiKey:
     def is_expired(self) -> bool:
         if self.expires_at is None:
             return False
-        return datetime.now(timezone.utc) >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
     @property
     def is_active(self) -> bool:
@@ -103,7 +101,7 @@ class ApiKey:
         ttl: timedelta | None = DEFAULT_KEY_TTL,
         created_by: UUID | None = None,
     ) -> ApiKey:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires = now + ttl if ttl is not None else None
         return cls(
             id=uuid4(),

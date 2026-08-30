@@ -7,6 +7,7 @@ USERFRIENDLY: рекрутер переводит кандидата в один
 from __future__ import annotations
 
 import logging
+from uuid import UUID
 
 from ats.modules.recruitment.domain.application import (
     Application,
@@ -16,7 +17,6 @@ from ats.modules.recruitment.domain.application import (
 from ats.modules.recruitment.ports.application_repository import ApplicationRepository
 from ats.shared.ids import TenantId
 from ats.shared.result import ErrorCode, Result, is_error
-from uuid import UUID
 
 logger = logging.getLogger(__name__)
 

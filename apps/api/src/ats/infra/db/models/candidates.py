@@ -9,7 +9,8 @@ from __future__ import annotations
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ats.infra.db.base import Base, TenantMixin
@@ -20,9 +21,7 @@ class CandidateORM(Base, TenantMixin):
 
     __tablename__ = "candidates"
 
-    id: Mapped[UUID] = mapped_column(
-        PgUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid4)
     full_name: Mapped[str] = mapped_column(String(500), nullable=False)
     source: Mapped[str] = mapped_column(String(50), nullable=False)
     pii_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -57,6 +56,4 @@ class CandidateSearchORM(Base):
     search_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
     search_tsv: Mapped[str] = Column(TSVECTOR, nullable=False)
     embedding: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_: Mapped[dict] = mapped_column(
-        "metadata", JSONB, default=dict, nullable=False
-    )
+    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict, nullable=False)

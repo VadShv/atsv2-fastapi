@@ -9,11 +9,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any, Protocol
 from uuid import UUID, uuid4
-
 
 # ---------------------------------------------------------------------------
 # Типизированные доменные события (in-process)
@@ -33,7 +32,7 @@ class DomainEvent:
     def now(cls, tenant_id: UUID, payload: dict[str, Any] | None = None) -> DomainEvent:
         return cls(
             event_id=uuid4(),
-            occurred_at=datetime.now(timezone.utc),
+            occurred_at=datetime.now(UTC),
             tenant_id=tenant_id,
             payload=payload or {},
         )
@@ -44,7 +43,7 @@ class DomainEvent:
 # ---------------------------------------------------------------------------
 
 
-class ActorType(str, Enum):
+class ActorType(StrEnum):
     """Кто инициировал изменение."""
 
     USER = "user"
@@ -213,8 +212,7 @@ def _extract_aggregate_id(event: DomainEvent, aggregate_type: str) -> str:
     if alt is not None:
         return str(alt)
     raise ValueError(
-        f"Не удалось определить id агрегата {aggregate_type!r} "
-        f"для события {type(event).__name__}"
+        f"Не удалось определить id агрегата {aggregate_type!r} для события {type(event).__name__}"
     )
 
 

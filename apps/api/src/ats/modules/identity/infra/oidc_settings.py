@@ -22,9 +22,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class OIDCSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="ATS_OIDC_", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="ATS_OIDC_", env_file=".env", extra="ignore")
 
     enabled: bool = Field(
         default=False,

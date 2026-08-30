@@ -11,7 +11,6 @@ from __future__ import annotations
 import logging
 import os
 import re
-
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -20,7 +19,6 @@ from pydantic import BaseModel, field_validator
 from ats.modules.identity.api.deps import get_current_user
 from ats.modules.identity.domain.rbac import User
 from ats.modules.identity.domain.two_factor import is_2fa_required_for_user
-from ats.modules.identity.domain.api_key import is_api_key
 from ats.modules.identity.infra.csrf import CSRF_COOKIE_NAME
 from ats.modules.identity.infra.runtime import (
     get_account_lockout,
@@ -61,6 +59,7 @@ class LoginResponse(BaseModel):
 
 class LoginChallengeResponse(BaseModel):
     """Ответ при логине, когда требуется 2FA."""
+
     challenge_token: str
     requires_2fa: bool = True
     message: str = "Требуется 2FA-код"
@@ -114,9 +113,7 @@ def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def _set_session_cookie(
-    response: Response, token: str, csrf_token: str
-) -> None:
+def _set_session_cookie(response: Response, token: str, csrf_token: str) -> None:
     """Установить cookies: ats_session (HttpOnly) + ats_csrf (JS-readable)."""
     secure = os.getenv("ATS_STUB_MODE", "1") != "1"
     response.set_cookie(
@@ -249,12 +246,13 @@ async def verify_2fa_challenge(
     # 2FA подтверждена — отзываем challenge, создаём сессию
     await two_factor_store.revoke_challenge(body.challenge_token)
 
+    from uuid import UUID
+
     from ats.modules.identity.domain.rbac import (
         Role,
         permissions_for_role,
         scope_for_role,
     )
-    from uuid import UUID
 
     role_name = challenge.role_name
     role = Role(
@@ -300,9 +298,7 @@ async def verify_backup_code(
             detail="Challenge не найден или истёк",
         )
 
-    if not await two_factor_store.verify_backup_code(
-        challenge.user_id, body.backup_code
-    ):
+    if not await two_factor_store.verify_backup_code(challenge.user_id, body.backup_code):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Неверный или уже использованный backup-код",
@@ -310,12 +306,13 @@ async def verify_backup_code(
 
     await two_factor_store.revoke_challenge(body.challenge_token)
 
+    from uuid import UUID
+
     from ats.modules.identity.domain.rbac import (
         Role,
         permissions_for_role,
         scope_for_role,
     )
-    from uuid import UUID
 
     role_name = challenge.role_name
     role = Role(
@@ -346,9 +343,7 @@ async def verify_backup_code(
 
 
 @router.post("/refresh", response_model=RefreshResponse)
-async def refresh(
-    request: Request, response: Response
-) -> RefreshResponse:
+async def refresh(request: Request, response: Response) -> RefreshResponse:
     """Продлить сессию: token rotation (старый токен отзывается).
 
     SECURE FIRST: старый токен становится недействительным,
@@ -378,9 +373,7 @@ async def refresh(
 
     _set_session_cookie(response, new_session.token, new_session.csrf_token)
 
-    logger.info(
-        "Session refreshed: user_id=%s", new_session.user_id
-    )
+    logger.info("Session refreshed: user_id=%s", new_session.user_id)
 
     return RefreshResponse(
         token=new_session.token,
@@ -391,9 +384,7 @@ async def refresh(
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(
-    request: Request, response: Response
-) -> None:
+async def logout(request: Request, response: Response) -> None:
     """Отозвать сессию (logout)."""
     session_store = get_session_store()
 
@@ -466,12 +457,8 @@ async def enable_2fa(
     config = await two_factor_store.get_config(user.id)
     return TwoFactorStatusResponse(
         enabled=True,
-        required=is_2fa_required_for_user(
-            user.role.name if user.role else "viewer", config
-        ),
-        remaining_backup_codes=config.remaining_backup_codes()
-        if config
-        else 0,
+        required=is_2fa_required_for_user(user.role.name if user.role else "viewer", config),
+        remaining_backup_codes=config.remaining_backup_codes() if config else 0,
     )
 
 
@@ -486,9 +473,7 @@ async def status_2fa(
     return TwoFactorStatusResponse(
         enabled=config.enabled if config else False,
         required=is_2fa_required_for_user(role_name, config),
-        remaining_backup_codes=config.remaining_backup_codes()
-        if config
-        else 0,
+        remaining_backup_codes=config.remaining_backup_codes() if config else 0,
     )
 
 
@@ -568,9 +553,7 @@ async def create_api_key(
         key_id=str(result.api_key.id),
         name=result.api_key.name,
         scopes=sorted(result.api_key.scopes),
-        expires_at=result.api_key.expires_at.isoformat()
-        if result.api_key.expires_at
-        else "",
+        expires_at=result.api_key.expires_at.isoformat() if result.api_key.expires_at else "",
     )
 
 
@@ -589,9 +572,7 @@ async def list_api_keys(
             created_at=k.created_at.isoformat(),
             expires_at=k.expires_at.isoformat() if k.expires_at else None,
             revoked_at=k.revoked_at.isoformat() if k.revoked_at else None,
-            last_used_at=k.last_used_at.isoformat()
-            if k.last_used_at
-            else None,
+            last_used_at=k.last_used_at.isoformat() if k.last_used_at else None,
             is_active=k.is_active,
         )
         for k in keys
@@ -613,7 +594,7 @@ async def revoke_api_key(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Некорректный key_id",
-        )
+        ) from None
     success = await store.revoke_key(kid)
     if not success:
         raise HTTPException(
@@ -697,7 +678,7 @@ async def oidc_callback(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"OIDC error: {e}",
-        )
+        ) from e
 
     # Создаём локальную сессию для SSO-пользователя
     from ats.modules.identity.domain.rbac import (
@@ -709,8 +690,7 @@ async def oidc_callback(
     role_name = result.user_info.roles[0] if result.user_info.roles else "viewer"
     role = Role(
         id=UUID("00000000-0000-0000-0000-000000000001"),
-        tenant_id=result.user_info.tenant_id
-        or UUID("00000000-0000-0000-0000-000000000001"),
+        tenant_id=result.user_info.tenant_id or UUID("00000000-0000-0000-0000-000000000001"),
         name=role_name,
         permissions=permissions_for_role(role_name),
         scope=scope_for_role(role_name),
@@ -718,8 +698,7 @@ async def oidc_callback(
     )
     user = User(
         id=UUID("00000000-0000-0000-0000-000000000020"),
-        tenant_id=result.user_info.tenant_id
-        or UUID("00000000-0000-0000-0000-000000000001"),
+        tenant_id=result.user_info.tenant_id or UUID("00000000-0000-0000-0000-000000000001"),
         email=result.user_info.email,
         role=role,
     )

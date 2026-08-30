@@ -11,8 +11,8 @@ import logging
 from uuid import UUID
 
 from ats.infra.storage.in_memory_storage import (
-    FileScanError,
     FileNotFoundError,
+    FileScanError,
     StorageError,
 )
 from ats.infra.storage.models import (
@@ -68,9 +68,7 @@ class S3FileStorage:
     def _get_session(self) -> object:
         """Получить aioboto3-сессию (lazy init)."""
         if not _HAS_AIOBOTO3:
-            raise StorageError(
-                "aioboto3 не установлен. Установите: pip install aioboto3"
-            )
+            raise StorageError("aioboto3 не установлен. Установите: pip install aioboto3")
         if self._session is None:
             self._session = aioboto3.Session(  # type: ignore[union-attr]
                 aws_access_key_id=self._settings.access_key or None,
@@ -116,9 +114,7 @@ class S3FileStorage:
 
         # 5. Загрузка в S3
         if not _HAS_AIOBOTO3:
-            raise StorageError(
-                "aioboto3 не установлен. Установите: pip install aioboto3"
-            )
+            raise StorageError("aioboto3 не установлен. Установите: pip install aioboto3")
 
         session = self._get_session()
         try:
@@ -156,9 +152,7 @@ class S3FileStorage:
     async def download(self, metadata: FileMetadata) -> DownloadResult:
         """Скачать содержимое файла из S3."""
         if not _HAS_AIOBOTO3:
-            raise StorageError(
-                "aioboto3 не установлен. Установите: pip install aioboto3"
-            )
+            raise StorageError("aioboto3 не установлен. Установите: pip install aioboto3")
 
         session = self._get_session()
         try:
@@ -221,9 +215,7 @@ class S3FileStorage:
     async def delete(self, metadata: FileMetadata) -> None:
         """Удалить файл из S3."""
         if not _HAS_AIOBOTO3:
-            raise StorageError(
-                "aioboto3 не установлен. Установите: pip install aioboto3"
-            )
+            raise StorageError("aioboto3 не установлен. Установите: pip install aioboto3")
 
         session = self._get_session()
         try:

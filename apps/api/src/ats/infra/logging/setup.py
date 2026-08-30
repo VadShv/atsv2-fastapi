@@ -62,7 +62,7 @@ def _setup_structlog(level: int) -> None:
         renderer = structlog.dev.ConsoleRenderer(colors=sys.stderr.isatty())
 
     structlog.configure(
-        processors=shared_processors + [renderer],
+        processors=[*shared_processors, renderer],
         wrapper_class=structlog.make_filtering_bound_logger(level),
         logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
         cache_logger_on_first_use=True,
@@ -99,9 +99,7 @@ def _setup_stdlib(level: int) -> None:
     if log_settings.json_format:
         handler.setFormatter(_JsonFormatter())
     else:
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s")
-        )
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s"))
     handler.addFilter(_ContextFilter())
     root.addHandler(handler)
     root.setLevel(level)
@@ -150,36 +148,28 @@ def get_all_context_safe() -> dict[str, str | None]:
     return result
 
 
-def _add_tenant_id(
-    logger: Any, method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+def _add_tenant_id(logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     val = get_log_context("tenant_id")
     if val:
         event_dict["tenant_id"] = val
     return event_dict
 
 
-def _add_trace_id(
-    logger: Any, method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+def _add_trace_id(logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     val = get_log_context("trace_id")
     if val:
         event_dict["trace_id"] = val
     return event_dict
 
 
-def _add_user_id(
-    logger: Any, method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+def _add_user_id(logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     val = get_log_context("user_id")
     if val:
         event_dict["user_id"] = val
     return event_dict
 
 
-def _add_request_id(
-    logger: Any, method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+def _add_request_id(logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     val = get_log_context("request_id")
     if val:
         event_dict["request_id"] = val

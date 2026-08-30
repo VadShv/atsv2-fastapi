@@ -22,8 +22,6 @@ from ats.modules.identity.domain.rbac import (
     permissions_for_role,
     scope_for_role,
 )
-from ats.modules.identity.domain.session import Session
-
 
 # Демо-пользователь для stub-режима
 _DEMO_TENANT = UUID("00000000-0000-0000-0000-000000000001")
@@ -48,9 +46,7 @@ def _stub_user() -> User:
     )
 
 
-def _extract_token(
-    request: Request | None, authorization: str | None
-) -> str | None:
+def _extract_token(request: Request | None, authorization: str | None) -> str | None:
     """Извлечь opaque-токен или API-ключ из cookie или Authorization: Bearer."""
     # 1. Cookie (только session token, не API key)
     if request is not None:

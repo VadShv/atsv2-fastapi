@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from ats.modules.audit.domain.audit import AuditEntry
-from ats.modules.audit.ports.audit_logger import AuditLogger
 
 
 class InMemoryAuditLogger:

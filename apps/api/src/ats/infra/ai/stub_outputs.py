@@ -15,7 +15,9 @@ def stub_screening_criteria() -> str:
     """Реалистичный stub ScreeningCriteriaOutput."""
     return json.dumps(
         {
-            "summary": "Идеальный кандидат — middle Python-разработчик с опытом FastAPI и PostgreSQL.",
+            "summary": (
+                "Идеальный кандидат — middle Python-разработчик с опытом FastAPI и PostgreSQL."
+            ),
             "groups": [
                 {
                     "category": "hard_skill",
@@ -82,8 +84,14 @@ def stub_screening_criteria() -> str:
                     ],
                 },
             ],
-            "scoring_logic": "Финальный балл = взвешенная сумма по критериям; any must_have fail → reject.",
-            "reasoning": "Критерии выведены из описания роли: ключевые hard skills взяты из требований, опыт и red flags добавлены для качества скрининга.",
+            "scoring_logic": (
+                "Финальный балл = взвешенная сумма по критериям; any must_have fail → reject."
+            ),
+            "reasoning": (
+                "Критерии выведены из описания роли: ключевые hard skills "
+                "взяты из требований, опыт и red flags добавлены "
+                "для качества скрининга."
+            ),
         },
         ensure_ascii=False,
     )
@@ -153,7 +161,7 @@ def stub_embed(text: str, dimension: int = 1536) -> list[float]:
 
 
 # Диспетчер: prompt_id → stub JSON
-STUB_OUTPUTS: dict[str, "callable[[], str]"] = {
+STUB_OUTPUTS: dict[str, callable[[], str]] = {
     "screening_criteria": stub_screening_criteria,
     "parse_resume": stub_parsed_resume,
 }

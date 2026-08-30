@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from ats.modules.identity.domain.api_key import (
@@ -14,7 +14,6 @@ from ats.modules.identity.domain.api_key import (
     ApiKeyInfo,
     generate_api_key,
 )
-from ats.modules.identity.ports.api_key import ApiKeyStore
 
 
 class InMemoryApiKeyStore:
@@ -73,7 +72,7 @@ class InMemoryApiKeyStore:
             scopes=key.scopes,
             created_at=key.created_at,
             expires_at=key.expires_at,
-            revoked_at=datetime.now(timezone.utc),
+            revoked_at=datetime.now(UTC),
             created_by=key.created_by,
             last_used_at=key.last_used_at,
         )
@@ -94,7 +93,7 @@ class InMemoryApiKeyStore:
             expires_at=key.expires_at,
             revoked_at=key.revoked_at,
             created_by=key.created_by,
-            last_used_at=datetime.now(timezone.utc),
+            last_used_at=datetime.now(UTC),
         )
         self._keys[key_id] = updated
 

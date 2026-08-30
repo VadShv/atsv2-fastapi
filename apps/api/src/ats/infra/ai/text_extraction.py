@@ -92,4 +92,4 @@ def _extract_docx(content: bytes) -> str:
     except ImportError:
         raise UnsupportedFormatError(
             "Поддержка DOCX требует python-docx. Установите: pip install python-docx"
-        )
+        ) from None

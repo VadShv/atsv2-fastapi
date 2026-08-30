@@ -102,9 +102,7 @@ def build_container() -> Container:
     create_vacancy = CreateVacancyUseCase(vacancy_repo, screening_skill)
     create_application = CreateApplicationUseCase(application_repo)
     move_application = MoveApplicationUseCase(application_repo)
-    upload_resume = UploadResumeUseCase(
-        candidate_repo, parse_skill, search_engine, gateway
-    )
+    upload_resume = UploadResumeUseCase(candidate_repo, parse_skill, search_engine, gateway)
     search_candidates = SearchCandidatesUseCase(search_engine, gateway)
 
     return Container(

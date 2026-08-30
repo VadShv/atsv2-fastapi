@@ -22,7 +22,8 @@ class InMemoryAuditReader(AuditReader):
     async def query(self, query: AuditQuery) -> list[AuditEntry]:
         """Фильтровать записи по параметрам запроса."""
         results = [
-            e for e in self._entries
+            e
+            for e in self._entries
             if e.tenant_id == query.tenant_id
             and (query.actor_id is None or e.actor_id == query.actor_id)
             and (query.action is None or e.action == query.action)

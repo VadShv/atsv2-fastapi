@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import hashlib
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 PROMPTS_DIR = Path(__file__).parent
 
 
-class OutputFormat(str, Enum):
+class OutputFormat(StrEnum):
     TEXT = "text"
     JSON = "json"
 
@@ -36,9 +36,7 @@ class PromptSpec(BaseModel):
     temperature: float = Field(default=0.0, description="0 для детерминизма")
     # Pydantic-схема для structured output (имя класса-модели, резолвится в runtime)
     output_schema: str | None = Field(default=None)
-    variables: list[str] = Field(
-        default_factory=list, description="Имена переменных шаблона"
-    )
+    variables: list[str] = Field(default_factory=list, description="Имена переменных шаблона")
 
     def load_template(self) -> str:
         return (PROMPTS_DIR / self.template_file).read_text(encoding="utf-8")
@@ -52,9 +50,7 @@ class PromptSpec(BaseModel):
             if placeholder in rendered:
                 rendered = rendered.replace(placeholder, variables.get(key, ""))
         # Хэш входа для провенанса (воспроизводимость)
-        input_hash = hashlib.sha256(
-            (self.system + rendered).encode("utf-8")
-        ).hexdigest()
+        input_hash = hashlib.sha256((self.system + rendered).encode("utf-8")).hexdigest()
         return rendered, input_hash
 
 

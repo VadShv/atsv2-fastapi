@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
-
 from uuid import UUID
 
 from ats.modules.identity.domain.two_factor import (
@@ -35,9 +34,7 @@ class TwoFactorStore(Protocol):
         """
         ...
 
-    async def verify_and_enable(
-        self, user_id: UUID, code: str
-    ) -> bool:
+    async def verify_and_enable(self, user_id: UUID, code: str) -> bool:
         """Проверить TOTP-код и включить 2FA (enabled=True).
 
         Returns:
@@ -49,9 +46,7 @@ class TwoFactorStore(Protocol):
         """Получить конфигурацию 2FA пользователя (или None)."""
         ...
 
-    async def verify_code(
-        self, user_id: UUID, code: str
-    ) -> bool:
+    async def verify_code(self, user_id: UUID, code: str) -> bool:
         """Проверить TOTP-код (для входа). Конфиг должен быть enabled.
 
         Returns:
@@ -59,9 +54,7 @@ class TwoFactorStore(Protocol):
         """
         ...
 
-    async def verify_backup_code(
-        self, user_id: UUID, code: str
-    ) -> bool:
+    async def verify_backup_code(self, user_id: UUID, code: str) -> bool:
         """Проверить backup-код (одноразовый).
 
         SECURE FIRST: код помечается как использованный, повторное
@@ -85,14 +78,10 @@ class TwoFactorStore(Protocol):
         """
         ...
 
-    async def get_challenge(
-        self, challenge_token: str
-    ) -> TwoFactorChallenge | None:
+    async def get_challenge(self, challenge_token: str) -> TwoFactorChallenge | None:
         """Получить challenge по токену. None — не найден или истёк."""
         ...
 
-    async def revoke_challenge(
-        self, challenge_token: str
-    ) -> None:
+    async def revoke_challenge(self, challenge_token: str) -> None:
         """Отозвать challenge (после успешного 2FA или logout)."""
         ...

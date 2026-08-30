@@ -24,18 +24,18 @@ from ats.infra.workers.worker_settings import (
 )
 
 __all__ = [
-    "BaseTask",
-    "TaskContext",
-    "TaskResult",
-    "EventConsumerTask",
-    "OutboxRelayTask",
-    "get_redis",
-    "close_redis",
-    "redis_settings",
     "QUEUE_REGISTRY",
     "AIWorkerSettings",
-    "IndexWorkerSettings",
-    "WebhooksWorkerSettings",
     "AnalyticsWorkerSettings",
+    "BaseTask",
+    "EventConsumerTask",
+    "IndexWorkerSettings",
+    "OutboxRelayTask",
     "SchedulerWorkerSettings",
+    "TaskContext",
+    "TaskResult",
+    "WebhooksWorkerSettings",
+    "close_redis",
+    "get_redis",
+    "redis_settings",
 ]

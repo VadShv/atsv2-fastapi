@@ -74,13 +74,9 @@ class SearchCandidatesUseCase:
         query_embedding: list[float] | None = None
         if not input_dto.skip_embedding:
             try:
-                query_embedding = await self._ai_gateway.embed(
-                    tenant_id, input_dto.query
-                )
+                query_embedding = await self._ai_gateway.embed(tenant_id, input_dto.query)
             except Exception as exc:
-                logger.warning(
-                    "Query embedding failed, falling back to BM25-only: %s", exc
-                )
+                logger.warning("Query embedding failed, falling back to BM25-only: %s", exc)
 
         search_query = SearchQuery(
             tenant_id=tenant_id.value,

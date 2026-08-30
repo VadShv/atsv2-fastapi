@@ -19,9 +19,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class SentrySettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="ATS_SENTRY_", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="ATS_SENTRY_", env_file=".env", extra="ignore")
 
     dsn: str = Field(
         default="",

@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 import re
 import time
-from collections import Counter, defaultdict
+from collections import Counter
 from typing import Any
 from uuid import UUID
 
@@ -51,9 +51,7 @@ class InMemorySearchEngine(SearchEngine):
 
     async def search(self, query: SearchQuery) -> SearchResult:
         start = time.monotonic()
-        tenant_docs = [
-            d for d in self._docs.values() if d.tenant_id == query.tenant_id
-        ]
+        tenant_docs = [d for d in self._docs.values() if d.tenant_id == query.tenant_id]
 
         if not tenant_docs:
             return SearchResult(hits=[], total=0, query=query.query)
@@ -117,9 +115,7 @@ class InMemorySearchEngine(SearchEngine):
             query=query.query,
         )
 
-    def _bm25(
-        self, docs: list[SearchableDocument], q_tokens: list[str]
-    ) -> dict[UUID, float]:
+    def _bm25(self, docs: list[SearchableDocument], q_tokens: list[str]) -> dict[UUID, float]:
         """BM25 по Okapi. Классическая формула ранжирования."""
         if not q_tokens:
             return {d.id: 0.0 for d in docs}
@@ -179,10 +175,7 @@ def _match_one(field_val: Any, f: SearchFilter) -> bool:
     if field_val is None:
         return False
     if f.operator in ("any", "all"):
-        if isinstance(field_val, list):
-            values = [str(v) for v in field_val]
-        else:
-            values = [str(field_val)]
+        values = [str(v) for v in field_val] if isinstance(field_val, list) else [str(field_val)]
         if f.operator == "any":
             return any(v in values for v in f.values)
         return all(v in values for v in f.values)
@@ -217,9 +210,7 @@ def _snippet(text: str, q_tokens: list[str], max_len: int = 160) -> str:
     return prefix + snippet + suffix
 
 
-def _compute_facets(
-    docs: list[SearchableDocument], fields: list[str]
-) -> list[Facet]:
+def _compute_facets(docs: list[SearchableDocument], fields: list[str]) -> list[Facet]:
     result: list[Facet] = []
     for field in fields:
         counter: Counter[str] = Counter()
@@ -235,10 +226,7 @@ def _compute_facets(
         result.append(
             Facet(
                 field=field,
-                values=[
-                    FacetValue(value=v, count=c)
-                    for v, c in counter.most_common()
-                ],
+                values=[FacetValue(value=v, count=c) for v, c in counter.most_common()],
             )
         )
     return result

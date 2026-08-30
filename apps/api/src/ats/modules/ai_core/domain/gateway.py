@@ -34,9 +34,7 @@ class AIGateway(Protocol):
         """Стриминг ответа. Provenance_id известен с первого чанка."""
         ...
 
-    async def structured(
-        self, request: AIRequest, schema: type[T]
-    ) -> StructuredResponse[T]:
+    async def structured(self, request: AIRequest, schema: type[T]) -> StructuredResponse[T]:
         """Structured output: JSON по схеме + слой ремонта (устойчивость/whitebox)."""
         ...
 

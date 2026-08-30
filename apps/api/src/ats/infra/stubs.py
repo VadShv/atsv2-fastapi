@@ -38,18 +38,14 @@ class InMemoryVacancyRepository(VacancyRepository):
         self._store[key] = vacancy
         return vacancy.id
 
-    async def get(
-        self, tenant_id: TenantId, vacancy_id: VacancyId
-    ) -> Vacancy | None:
+    async def get(self, tenant_id: TenantId, vacancy_id: VacancyId) -> Vacancy | None:
         key = f"{tenant_id.value}:{vacancy_id.value}"
         return self._store.get(key)
 
     async def list_by_tenant(
         self, tenant_id: TenantId, limit: int = 50, offset: int = 0
     ) -> list[Vacancy]:
-        items = [
-            v for k, v in self._store.items() if k.startswith(f"{tenant_id.value}:")
-        ]
+        items = [v for k, v in self._store.items() if k.startswith(f"{tenant_id.value}:")]
         return items[offset : offset + limit]
 
 
@@ -68,9 +64,7 @@ class InMemoryProvenanceLedger(ProvenanceLedger):
     ) -> ProvenanceRecord | None:
         return self._store.get(str(provenance_id))
 
-    async def mark_verified(
-        self, tenant_id: TenantId, provenance_id: ProvenanceId
-    ) -> None:
+    async def mark_verified(self, tenant_id: TenantId, provenance_id: ProvenanceId) -> None:
         record = self._store.get(str(provenance_id))
         if record is not None:
             object.__setattr__(record, "human_verified", True)
@@ -105,9 +99,7 @@ class StubAIGateway(AIGateway):
     async def stream(self, request: AIRequest):  # type: ignore[override]
         yield AIChunk(delta="[stub] ", provenance_id=ProvenanceId.generate())
 
-    async def structured(
-        self, request: AIRequest, schema: type[T]
-    ) -> StructuredResponse[T]:
+    async def structured(self, request: AIRequest, schema: type[T]) -> StructuredResponse[T]:
         raw = _stub_for(request.prompt_id, schema)
         parsed = schema.model_validate_json(raw)
         return StructuredResponse(

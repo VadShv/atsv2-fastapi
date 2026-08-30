@@ -1,5 +1,7 @@
 # ATS Core
 
+![CI](https://github.com/VadShv/atsv2-fastapi/actions/workflows/ci.yml/badge.svg)
+
 AI-native ATS (Applicant Tracking System). Референс по функциональности — Huntflow.
 
 ## Принципы

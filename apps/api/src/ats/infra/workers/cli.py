@@ -56,9 +56,7 @@ async def _run_worker(queue_name: str) -> None:
     try:
         from arq.worker import Worker
     except ImportError as exc:
-        raise SystemExit(
-            "arq is not installed. Install with: pip install arq"
-        ) from exc
+        raise SystemExit("arq is not installed. Install with: pip install arq") from exc
 
     settings_cls = QUEUE_REGISTRY[queue_name]
     worker = Worker(

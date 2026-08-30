@@ -14,6 +14,7 @@ SECURE FIRST: span-атрибуты не содержат ПД (только ID 
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -124,24 +125,16 @@ def _build_sampler() -> Any:
         elif sampler_name == "traceidratio":
             ratio = 1.0
             if tracing_settings.traces_sampler_arg:
-                try:
-                    ratio = float(
-                        tracing_settings.traces_sampler_arg.replace("ratio=", "")
-                    )
-                except ValueError:
-                    pass
+                with contextlib.suppress(ValueError):
+                    ratio = float(tracing_settings.traces_sampler_arg.replace("ratio=", ""))
             return TraceIdRatioBased(ratio)
         elif sampler_name == "parentbased_always_on":
             return ParentBased(root=ALWAYS_ON)
         elif sampler_name == "parentbased_traceidratio":
             ratio = 1.0
             if tracing_settings.traces_sampler_arg:
-                try:
-                    ratio = float(
-                        tracing_settings.traces_sampler_arg.replace("ratio=", "")
-                    )
-                except ValueError:
-                    pass
+                with contextlib.suppress(ValueError):
+                    ratio = float(tracing_settings.traces_sampler_arg.replace("ratio=", ""))
             return ParentBased(root=TraceIdRatioBased(ratio))
         else:
             return ParentBased(root=ALWAYS_ON)

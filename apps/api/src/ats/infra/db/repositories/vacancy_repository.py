@@ -47,9 +47,7 @@ class PgVacancyRepository(VacancyRepository):
             await session.commit()
         return vacancy.id
 
-    async def get(
-        self, tenant_id: TenantId, vacancy_id: VacancyId
-    ) -> Vacancy | None:
+    async def get(self, tenant_id: TenantId, vacancy_id: VacancyId) -> Vacancy | None:
         async with tenant_session(tenant_id.value) as session:
             stmt = select(VacancyORM).where(VacancyORM.id == vacancy_id.value)
             result = await session.execute(stmt)

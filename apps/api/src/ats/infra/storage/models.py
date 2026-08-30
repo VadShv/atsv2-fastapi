@@ -8,12 +8,12 @@ WHITEBOX AI: каждый файл привязан к tenant_id (изоляци
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 
-class FileCategory(str, Enum):
+class FileCategory(StrEnum):
     """Категория файла — для организации ключей и метаданных."""
 
     RESUME = "resume"
@@ -23,7 +23,7 @@ class FileCategory(str, Enum):
     OTHER = "other"
 
 
-class ScanStatus(str, Enum):
+class ScanStatus(StrEnum):
     """Результат антивирусного сканирования."""
 
     CLEAN = "clean"
@@ -56,7 +56,7 @@ class FileMetadata:
     size_bytes: int
     category: FileCategory = FileCategory.OTHER
     scan_status: ScanStatus = ScanStatus.SKIPPED
-    uploaded_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    uploaded_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @classmethod
     def create(
@@ -80,7 +80,7 @@ class FileMetadata:
             size_bytes=size_bytes,
             category=category,
             scan_status=scan_status,
-            uploaded_at=datetime.now(timezone.utc),
+            uploaded_at=datetime.now(UTC),
         )
 
 
@@ -109,7 +109,7 @@ class ScanResult:
 
     status: ScanStatus
     threat_name: str = ""
-    scanned_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    scanned_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass(frozen=True)

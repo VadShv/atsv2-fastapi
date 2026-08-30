@@ -153,8 +153,10 @@ async def _write_to_db(data: object, settings: SeedSettings) -> None:
                     "VALUES (:id, :tid, :name, :perms)"
                 ),
                 {
-                    "id": str(r.id), "tid": str(r.tenant_id),
-                    "name": r.name, "perms": r.permissions,
+                    "id": str(r.id),
+                    "tid": str(r.tenant_id),
+                    "name": r.name,
+                    "perms": r.permissions,
                 },
             )
 
@@ -166,8 +168,10 @@ async def _write_to_db(data: object, settings: SeedSettings) -> None:
                     "VALUES (:id, :tid, :email, :fname, true)"
                 ),
                 {
-                    "id": str(u.id), "tid": str(u.tenant_id),
-                    "email": u.email, "fname": u.full_name,
+                    "id": str(u.id),
+                    "tid": str(u.tenant_id),
+                    "email": u.email,
+                    "fname": u.full_name,
                 },
             )
 

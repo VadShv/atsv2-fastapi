@@ -121,9 +121,7 @@ class UploadResumeUseCase:
         Graceful degradation: если эмбеддинг недоступен, индексируем только
         текстовый поиск (BM25). Ошибка индексации не блокирует создание кандидата.
         """
-        text = searchable_text or " ".join(
-            [candidate.headline, *candidate.skills]
-        ).strip()
+        text = searchable_text or " ".join([candidate.headline, *candidate.skills]).strip()
         if not text:
             text = candidate.full_name
 
@@ -152,6 +150,4 @@ class UploadResumeUseCase:
         try:
             await self._search_engine.index(document)
         except Exception as exc:
-            logger.warning(
-                "Search indexing failed for candidate %s: %s", candidate.id, exc
-            )
+            logger.warning("Search indexing failed for candidate %s: %s", candidate.id, exc)

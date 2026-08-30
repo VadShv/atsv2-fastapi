@@ -12,9 +12,7 @@ from ats.shared.ids import TenantId, VacancyId
 class VacancyRepository(Protocol):
     async def save(self, vacancy: Vacancy) -> VacancyId: ...
 
-    async def get(
-        self, tenant_id: TenantId, vacancy_id: VacancyId
-    ) -> Vacancy | None: ...
+    async def get(self, tenant_id: TenantId, vacancy_id: VacancyId) -> Vacancy | None: ...
 
     async def list_by_tenant(
         self, tenant_id: TenantId, limit: int = 50, offset: int = 0

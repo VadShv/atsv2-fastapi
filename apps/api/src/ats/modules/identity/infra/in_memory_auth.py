@@ -9,14 +9,12 @@ from __future__ import annotations
 from uuid import UUID
 
 from ats.modules.identity.domain.rbac import (
-    Permission,
     Role,
     User,
     permissions_for_role,
     scope_for_role,
 )
 from ats.modules.identity.domain.session import Session, new_csrf_token
-from ats.modules.identity.ports.auth import Authenticator, SessionStore
 
 
 class InMemoryAuthenticator:

@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-from uuid import UUID
-
 from ats.infra.db.models.recruitment import VacancyORM
 from ats.modules.recruitment.domain.vacancy import (
     RoleDescription,

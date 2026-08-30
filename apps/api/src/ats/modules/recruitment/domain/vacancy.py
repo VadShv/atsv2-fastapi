@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from ats.shared.aggregate import AggregateRoot
@@ -16,14 +16,14 @@ from ats.shared.events import DomainEvent
 from ats.shared.ids import ProvenanceId, TenantId, VacancyId
 
 
-class VacancyStatus(str, Enum):
+class VacancyStatus(StrEnum):
     DRAFT = "draft"
     ACTIVE = "active"
     ON_HOLD = "on_hold"
     CLOSED = "closed"
 
 
-class Seniority(str, Enum):
+class Seniority(StrEnum):
     INTERN = "intern"
     JUNIOR = "junior"
     MIDDLE = "middle"
@@ -78,8 +78,8 @@ class Vacancy(AggregateRoot):
     # default поля — после
     status: VacancyStatus = VacancyStatus.DRAFT
     screening_criteria_provenance: ProvenanceId | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     _events: list[DomainEvent] = field(default_factory=list, repr=False)
 
     @classmethod
@@ -93,7 +93,7 @@ class Vacancy(AggregateRoot):
         vacancy._record(
             VacancyCreated(
                 event_id=uuid4(),
-                occurred_at=datetime.now(timezone.utc),
+                occurred_at=datetime.now(UTC),
                 tenant_id=tenant_id.value,
                 payload={"title": role.title, "seniority": role.seniority.value},
                 vacancy_id=vacancy.id.value,
@@ -108,11 +108,11 @@ class Vacancy(AggregateRoot):
     def attach_screening_criteria(self, provenance_id: ProvenanceId) -> None:
         """Привязать сгенерированные критерии скрининга (по provenance)."""
         self.screening_criteria_provenance = provenance_id
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
         self._record(
             ScreeningCriteriaGenerated(
                 event_id=uuid4(),
-                occurred_at=datetime.now(timezone.utc),
+                occurred_at=datetime.now(UTC),
                 tenant_id=self.tenant_id.value,
                 payload={"vacancy_id": str(self.id.value)},
                 vacancy_id=self.id.value,
@@ -124,7 +124,7 @@ class Vacancy(AggregateRoot):
         if not self.role.description.strip():
             raise ValueError("Cannot activate vacancy without role description")
         self.status = VacancyStatus.ACTIVE
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(UTC)
 
     def to_payload(self) -> dict[str, str]:
         return {

@@ -85,9 +85,7 @@ async def create_application(req: CreateApplicationRequest) -> ApplicationRespon
         idempotency_key=IdempotencyKey(f"app-{req.candidate_id}-{req.vacancy_id}"),
     )
     if is_error(result):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=result.error.message
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result.error.message)
     return _to_response(result.value)
 
 
@@ -115,9 +113,7 @@ async def move_application(
             "conflict": status.HTTP_409_CONFLICT,
         }
         raise HTTPException(
-            status_code=code_map.get(
-                result.error.code.value, status.HTTP_400_BAD_REQUEST
-            ),
+            status_code=code_map.get(result.error.code.value, status.HTTP_400_BAD_REQUEST),
             detail=result.error.message,
         )
     return _to_response(result.value)

@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ats.infra.db.models.events import AuditLogORM
 from ats.modules.audit.domain.audit import AuditEntry
-from ats.modules.audit.ports.audit_logger import AuditLogger
 
 logger = logging.getLogger(__name__)
 

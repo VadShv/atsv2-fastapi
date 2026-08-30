@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from ats.shared.aggregate import AggregateRoot
@@ -16,7 +16,7 @@ from ats.shared.events import DomainEvent
 from ats.shared.ids import CandidateId, TenantId
 
 
-class CandidateSource(str, Enum):
+class CandidateSource(StrEnum):
     """Источник кандидата (как в Huntflow: разные каналы привлечения)."""
 
     REFERRAL = "referral"
@@ -55,7 +55,7 @@ class Candidate(AggregateRoot):
     headline: str = ""
     skills: list[str] = field(default_factory=list)
     resume_provenance: UUID | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     _events: list[DomainEvent] = field(default_factory=list, repr=False)
 
     @classmethod
@@ -82,16 +82,14 @@ class Candidate(AggregateRoot):
         candidate._record(
             CandidateCreated(
                 event_id=uuid4(),
-                occurred_at=datetime.now(timezone.utc),
+                occurred_at=datetime.now(UTC),
                 tenant_id=tenant_id.value,
                 payload={"full_name": candidate.full_name, "source": source.value},
                 candidate_id=candidate.id.value,
                 full_name=candidate.full_name,
                 source=source.value,
                 resume_provenance_id=(
-                    str(candidate.resume_provenance)
-                    if candidate.resume_provenance
-                    else None
+                    str(candidate.resume_provenance) if candidate.resume_provenance else None
                 ),
             )
         )

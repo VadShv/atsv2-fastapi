@@ -12,9 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AISettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="ATS_AI_", env_file=".env", extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_prefix="ATS_AI_", env_file=".env", extra="ignore")
 
     # --- Провайдер: Cloud.ru (OpenAI-совместимый) ---
     # base_url Cloud.ru (например https://llm.api.cloud.ru/v1)

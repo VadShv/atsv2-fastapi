@@ -19,7 +19,7 @@ from ats.infra.storage.models import (
 )
 from ats.infra.storage.protocol import AntivirusScanner
 from ats.infra.storage.settings import StorageSettings
-from ats.infra.storage.whitelist import FileValidationError, validate_extension, validate_size
+from ats.infra.storage.whitelist import validate_extension, validate_size
 
 logger = logging.getLogger(__name__)
 
@@ -128,10 +128,7 @@ class InMemoryFileStorage:
         Здесь — mock-URL для совместимости интерфейса.
         """
         expiry = expires_in or self._settings.presigned_url_expiry_seconds
-        return (
-            f"memory://files/{metadata.key}"
-            f"?expires_in={expiry}"
-        )
+        return f"memory://files/{metadata.key}?expires_in={expiry}"
 
     async def delete(self, metadata: FileMetadata) -> None:
         """Удалить файл из in-memory хранилища."""

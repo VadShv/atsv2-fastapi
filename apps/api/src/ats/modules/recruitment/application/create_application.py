@@ -10,7 +10,7 @@ import logging
 from ats.modules.recruitment.domain.application import Application
 from ats.modules.recruitment.ports.application_repository import ApplicationRepository
 from ats.shared.ids import CandidateId, IdempotencyKey, TenantId, VacancyId
-from ats.shared.result import ErrorCode, Result
+from ats.shared.result import Result
 
 logger = logging.getLogger(__name__)
 

@@ -11,12 +11,11 @@ OIDC-провайдера соответствует одному интерфе
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 
 
-class OIDCProvider(str, Enum):
+class OIDCProvider(StrEnum):
     """Поддерживаемые identity-провайдеры."""
 
     STUB = "stub"  # для dev/тестов

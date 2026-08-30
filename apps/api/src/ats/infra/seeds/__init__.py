@@ -29,18 +29,19 @@ from ats.infra.seeds.generator import (
     SeedUser,
     SeedVacancy,
 )
-from ats.infra.seeds.settings import SeedSettings, settings as seed_settings
+from ats.infra.seeds.settings import SeedSettings
+from ats.infra.seeds.settings import settings as seed_settings
 
 __all__ = [
-    "SeedSettings",
-    "seed_settings",
-    "SeedGenerator",
-    "SeedData",
-    "SeedTenant",
-    "SeedRole",
-    "SeedUser",
-    "SeedCandidate",
-    "SeedVacancy",
-    "SeedPipelineStage",
     "SeedApplication",
+    "SeedCandidate",
+    "SeedData",
+    "SeedGenerator",
+    "SeedPipelineStage",
+    "SeedRole",
+    "SeedSettings",
+    "SeedTenant",
+    "SeedUser",
+    "SeedVacancy",
+    "seed_settings",
 ]

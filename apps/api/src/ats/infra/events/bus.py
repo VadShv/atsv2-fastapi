@@ -45,7 +45,5 @@ class InProcessEventBus:
             try:
                 handler(event)
             except Exception:
-                logger.exception(
-                    "Handler %s failed for event %s", handler.__name__, event_type
-                )
+                logger.exception("Handler %s failed for event %s", handler.__name__, event_type)
         logger.debug("Published %s to %d handler(s)", event_type, len(handlers))

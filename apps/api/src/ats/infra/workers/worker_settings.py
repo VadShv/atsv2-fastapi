@@ -74,9 +74,7 @@ async def on_shutdown(ctx: dict[str, Any]) -> None:
 
 async def handle_exception(ctx: dict[str, Any], exc: Exception) -> None:
     """Глобальный обработчик ошибок (observability)."""
-    logger.exception(
-        "Job %s failed permanently: %s", ctx.get("job_id", "?"), exc
-    )
+    logger.exception("Job %s failed permanently: %s", ctx.get("job_id", "?"), exc)
 
 
 class _WorkerSettingsBase:
@@ -93,35 +91,40 @@ class _WorkerSettingsBase:
 
 class AIWorkerSettings(_WorkerSettingsBase):
     """Очередь ai: AI-задачи (генерация критериев, парсинг резюме)."""
-    functions = [event_consumer]
+
+    functions: list = [event_consumer]  # noqa: RUF012
     queue_name = redis_cfg.queue_ai
     max_jobs = 10
 
 
 class IndexWorkerSettings(_WorkerSettingsBase):
     """Очередь index: индексация, outbox-relay."""
-    functions = [outbox_relay]
+
+    functions: list = [outbox_relay]  # noqa: RUF012
     queue_name = redis_cfg.queue_index
     max_jobs = 5
 
 
 class WebhooksWorkerSettings(_WorkerSettingsBase):
     """Очередь webhooks: отправка внешних вебхуков."""
-    functions: list = []
+
+    functions: list = []  # noqa: RUF012
     queue_name = redis_cfg.queue_webhooks
 
 
 class AnalyticsWorkerSettings(_WorkerSettingsBase):
     """Очередь analytics: агрегация метрик, отчёты."""
-    functions: list = []
+
+    functions: list = []  # noqa: RUF012
     queue_name = redis_cfg.queue_analytics
     max_jobs = 3
 
 
 class SchedulerWorkerSettings(_WorkerSettingsBase):
     """Очередь scheduler: cron-задачи (напоминания, эскалация)."""
-    functions: list = []
-    cron_jobs: list = []
+
+    functions: list = []  # noqa: RUF012
+    cron_jobs: list = []  # noqa: RUF012
     queue_name = redis_cfg.queue_scheduler
     max_jobs = 2
 

@@ -20,18 +20,14 @@ class InMemoryCandidateRepository(CandidateRepository):
         self._store[key] = candidate
         return candidate.id
 
-    async def get(
-        self, tenant_id: TenantId, candidate_id: CandidateId
-    ) -> Candidate | None:
+    async def get(self, tenant_id: TenantId, candidate_id: CandidateId) -> Candidate | None:
         key = f"{tenant_id.value}:{candidate_id.value}"
         return self._store.get(key)
 
     async def list_by_tenant(
         self, tenant_id: TenantId, limit: int = 50, offset: int = 0
     ) -> list[Candidate]:
-        items = [
-            v for k, v in self._store.items() if k.startswith(f"{tenant_id.value}:")
-        ]
+        items = [v for k, v in self._store.items() if k.startswith(f"{tenant_id.value}:")]
         return items[offset : offset + limit]
 
 
@@ -53,9 +49,7 @@ class InMemoryApplicationRepository(ApplicationRepository):
     ) -> list[Application]:
         prefix = f"{tenant_id.value}:"
         return [
-            v
-            for k, v in self._store.items()
-            if k.startswith(prefix) and v.vacancy_id == vacancy_id
+            v for k, v in self._store.items() if k.startswith(prefix) and v.vacancy_id == vacancy_id
         ]
 
     async def find_by_candidate_and_vacancy(
@@ -63,6 +57,10 @@ class InMemoryApplicationRepository(ApplicationRepository):
     ) -> Application | None:
         prefix = f"{tenant_id.value}:"
         for k, v in self._store.items():
-            if k.startswith(prefix) and v.candidate_id == candidate_id and v.vacancy_id == vacancy_id:
+            if (
+                k.startswith(prefix)
+                and v.candidate_id == candidate_id
+                and v.vacancy_id == vacancy_id
+            ):
                 return v
         return None

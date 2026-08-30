@@ -14,8 +14,8 @@ from ats.infra.sentry import SentryMiddleware, setup_sentry
 from ats.infra.tracing import TracingMiddleware, setup_tracing
 from ats.modules.candidates.api.router import router as candidates_router
 from ats.modules.events.api.router import router as events_router
-from ats.modules.identity.infra.csrf import CSRFMiddleware
 from ats.modules.identity.api.router import router as auth_router
+from ats.modules.identity.infra.csrf import CSRFMiddleware
 from ats.modules.recruitment.api.applications_router import (
     router as applications_router,
 )

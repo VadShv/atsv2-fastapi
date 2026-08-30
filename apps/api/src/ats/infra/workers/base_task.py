@@ -17,7 +17,6 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -174,8 +173,6 @@ class BaseTask(ABC):
         return None
 
     @abstractmethod
-    async def execute(
-        self, ctx: TaskContext, **params: Any
-    ) -> dict[str, Any] | None:
+    async def execute(self, ctx: TaskContext, **params: Any) -> dict[str, Any] | None:
         """Основная логика задачи. Должна быть идемпотентной."""
         ...

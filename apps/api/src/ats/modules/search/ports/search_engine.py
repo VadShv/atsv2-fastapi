@@ -10,8 +10,8 @@ from typing import Protocol, runtime_checkable
 
 from ats.modules.search.domain.models import (
     SearchableDocument,
-    SearchResult,
     SearchQuery,
+    SearchResult,
 )
 
 
