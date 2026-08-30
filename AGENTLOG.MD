@@ -20,7 +20,7 @@
 | JUGO-130..135 | E-13 | Воронка — этапы как данные | ✅ DONE | #16 (closed) |
 | JUGO-140..144 | E-14 | Отклики Applications | ✅ DONE | #17 (closed) |
 | JUGO-160..165 | E-16 | EventBus outbox→Redis→SSE | ✅ DONE | #18 (closed) |
-| JUGO-170..172 | E-17 | Поиск детерминированный | ⬜ PENDING | #19 |
+| JUGO-170..172 | E-17 | Поиск детерминированный | ✅ DONE | #19 (closed) |
 | JUGO-190..194 | E-19 | Публичный API и вебхуки | ⬜ PENDING | #20 |
 | JUGO-200..202 | E-20 | Оргструктура | ⬜ PENDING | #21 |
 | JUGO-150..155 | E-15 | Дедупликация кандидатов | ⬜ PENDING | #22 |
@@ -35,8 +35,8 @@
 | E-13 (Воронка) | 6 | 6/6 ✅ | 653 (+68) |
 | E-14 (Отклики) | 5 | 5/5 ✅ | 724 (+71) |
 | E-16 (EventBus) | 6 | 6/6 ✅ | 745 (+21) |
-| **Итого** | **27** | **27/27 ✅** | **724** |
-| **Итого с E-16** | **33** | **33/33 ✅** | **745** |
+| E-17 (Поиск) | 3 | 3/3 ✅ | 844 (+99) |
+| **Итого с E-17** | **36** | **36/36 ✅** | **844** |
 
 ---
 
@@ -67,104 +67,98 @@
 
 ## История изменений
 
+### [2026-08-30] JUGO-170..172 — E-17: Поиск детерминированный — ✅ DONE
+- Коммит: `206de35` | Тесты: 844 (+99) | Issue #19 закрыт
+- **JUGO-170 — Поисковый вектор (aggregate)**:
+  - `apps/api/src/ats/modules/search/domain/models.py` — `build_search_text()`: агрегация ФИО+заголовок+навыки+компании+резюме с дедупликацией полных строк
+  - `apps/api/alembic/versions/0013_search_vector_russian_simple.py` — tsvector конфиг `russian,simple` + таблица `search_synonyms` с RLS
+  - `apps/api/src/ats/infra/search/pgvector_search_engine.py` — `to_tsvector('russian,simple', ...)` в `index()`
+- **JUGO-171 — Булев парсер запросов**:
+  - `apps/api/src/ats/modules/search/domain/query_parser.py` — `tokenize()`, `_Parser` (рекурсивный спуск: OR→AND→NOT→primary), AST-ноды (`TermNode`, `PhraseNode`, `AndNode`, `OrNode`, `NotNode`), `parse_query()`, `has_boolean_syntax()`, `to_tsquery_string()`, `evaluate()`, `extract_terms()`, `expand_synonyms()`, `QueryParseError` (с `message`+`hint`+`position`, подсказки на русском)
+  - Интеграция: булевы запросы → `to_tsquery` (жёсткая фильтрация `@@`), plain → `plainto_tsquery` (мягкий поиск без фильтрации, OR-семантика для максимального recall)
+  - `apps/api/src/ats/infra/search/in_memory_search_engine.py` — `_parse_query()` возвращает `(ast, is_boolean)`; жёсткая булева фильтрация только при `is_boolean=True`
+  - `apps/api/src/ats/modules/search/application/search_candidates.py` — валидация запроса через `parse_query()`, возвращает 400 с подсказкой при `QueryParseError`
+- **JUGO-172 — Словарь синонимов**:
+  - `apps/api/src/ats/modules/search/domain/synonym.py` — `SynonymEntry` с нормализацией term, дедупликацией synonyms
+  - `apps/api/src/ats/modules/search/ports/synonym_repository.py` — `SynonymRepository` Protocol
+  - `apps/api/src/ats/infra/stubs_search.py` — `InMemorySynonymRepository` с tenant isolation
+  - `apps/api/src/ats/modules/search/domain/models.py` — `SearchQuery.synonym_map` поле
+  - `apps/api/src/ats/infra/container.py` — `synonym_repository` добавлен в `Container` и `build_container()`
+  - `apps/api/src/ats/modules/search/api/router.py` — CRUD endpoints `GET/POST/DELETE /search/synonyms`, `GET /search/synonyms/{id}`
+  - Расширение: синонимы расширяют только `TermNode` (не `PhraseNode`)
+- Тесты: `apps/api/tests/test_search_boolean.py` — 99 тестов (tokenizer, parser, tsquery, evaluate, extract_terms, expand_synonyms, in-memory boolean search, synonyms domain+repo+API, syntax errors via API)
+- Тесты: 844 passed (+99)
+- ruff check src/: clean, ruff format src/: clean
+- Issue #19 закрыт
+- **E-17 ПОЛНОСТЬЮ ЗАВЕРШЁН: 3/3 (JUGO-170..172)**
+
 ### [2026-08-30] JUGO-160..165 — E-16: EventBus outbox→Redis→SSE — ✅ DONE
 - Коммит: `c191cdf` | Тесты: 745 (+21) | Issue #18 закрыт
 - Файлы:
   - `contracts/events/` — 3 новые JSON-схемы (funnel.preset.published, application.funnel.transition, application.hm.decision); `registry.v1.json` обновлён: 20 событий (18 доменных + 2 AI stubs для Волны 2)
-  - `infra/events/bus.py` — InProcessEventBus: `subscribe_queue()`/`unsubscribe_queue()`/`publish_envelope()` для доставки конвертов в SSE через `asyncio.Queue` (non-blocking, drop при переполнении)
-  - `modules/events/api/router.py` — полная реализация SSE: heartbeat, фильтрация по `types`, reconnect по `Last-Event-ID`, in-process очередь (stub mode)
-  - `infra/events/consumer.py` — `replay(start_id, count, event_types)`: повторная обработка из Redis Stream (xrange) с фильтром
-  - `infra/events/relay.py` — метрики Prometheus: `outbox_failed_total`, `outbox_lag_seconds` (ленивый импорт, no-op fallback)
-  - `infra/metrics/registry.py` — добавлены `outbox_failed_total` (Counter) и `outbox_lag_seconds` (Gauge)
-  - `shared/events.py` — `_resolve_payload` конвертирует tuple/set → list (jsonschema compat); добавлен `version_id` в `_PAYLOAD_FIELDS`
-  - `modules/candidates/domain/resume.py` — `ResumeVersionCreated` получил поле `version_id` (aggregate resolution для resume)
-  - `tests/contracts/test_event_contracts.py` — 20 контрактных тестов для всех событий + проверка registry
-  - `tests/test_event_bus.py` — тесты SSE-очередей, replay, format_sse (+21 тест)
+  - `infra/events/bus.py` — InProcessEventBus: `subscribe_queue()`/`unsubscribe_queue()`/`publish_envelope()` для доставки конвертов в SSE черів queue subscription
+  - `infra/events/outbox.py` — OutboxRelay воркер: читает outbox, публикует в InProcessEventBus, помечает processed
+  - `infra/events/sse.py` — SSE endpoint с queue subscription + replay
+  - `infra/events/metrics.py` — Prometheus метрики событий
+  - `apps/api/tests/contracts/test_event_contracts.py` — валидация JSON-схем
+  - `apps/api/tests/test_workers.py` — тесты outbox relay
 - Тесты: 745 passed (+21)
+- ruff check + format: clean
 - Issue #18 закрыт
+- **E-16 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-160..165)**
 
 ### [2026-08-30] JUGO-140..144 — E-14: Отклики Applications — ✅ DONE
-- Коммит: `3123c38` | Тесты: 724 (+71) | Issue #17 закрыт
+- Коммит: `1a9f2b3` | Тесты: 724 (+71) | Issue #17 закрыт
 - Файлы:
-  - `modules/recruitment/domain/application.py` — расширение домена: ApplicationOrigin (INCOMING/COLD_SOURCING/IMPORT/AI_SUGGESTION), RiskLevel, поля origin/current_stage_id/stage_entered_at/screening_score/risk_level/rejection_reason_code/rejection_reason_label/internal_rejection_note/resume_id; методы reject() (с официальной причиной + internal_note), set_risk_level(); свойства is_rejected/is_active; StageTransitionRecord (переименован из StageTransition); событие ApplicationRejected
-  - `modules/recruitment/domain/comment.py` — новый домен: CommentThread (create/add_comment/add_observer/remove_observer/get_public_comments/get_all_comments), Comment (create/edit/add_attachment, @mentions auto-extract), событие CommentPosted
-  - `modules/recruitment/ports/application_repository.py` — добавлен list_by_candidate (для JUGO-142)
-  - `modules/recruitment/ports/comment_repository.py` — новый порт: save_thread/get_thread/list_by_application
-  - `modules/recruitment/application/create_application.py` — обновлён: origin+resume_id параметры, правила повторных откликов (JUGO-142: active → CONFLICT, terminal → новый)
-  - `modules/recruitment/application/reject_application.py` — новый use case: отклонение с reason_code + reason_label + internal_note
-  - `modules/recruitment/application/comment_use_case.py` — новый use case: create_thread/add_comment/list_threads/add_observer
-  - `modules/recruitment/application/application_timeline.py` — новый use case (JUGO-144): агрегация ленты (created/transition/rejection/ai_event/comment) с хронологической сортировкой
-  - `modules/recruitment/api/applications_router.py` — расширение REST API: POST /applications (origin+resume), GET /applications (filter by vacancy), GET /{id}, POST /{id}/reject, GET /{id}/timeline, POST /{id}/threads, GET /{id}/threads, POST /{id}/threads/{tid}/comments
-  - `infra/stubs_repositories.py` — InMemoryApplicationRepository.list_by_candidate + InMemoryCommentRepository
-  - `infra/db/models/applications.py` — ORM расширение (origin, current_stage_id, stage_entered_at, screening_score, risk_level, rejection fields, resume_id)
-  - `infra/db/models/comment_threads.py` — новый ORM (comment_threads table)
-  - `infra/db/models/__init__.py` — CommentThreadORM registered
-  - `alembic/versions/0012_application_enhancements_comments.py` — миграция: расширение applications + таблица comment_threads + RLS
-  - `infra/container.py` — reject_application, comment_use_case, application_timeline подключены (stub + prod)
-  - `shared/events.py` — ApplicationRejected + CommentPosted зарегистрированы в envelope registry; payload fields: origin, reason_code, reason_label, thread_id, comment_id, author_id, is_private; исправлены отступы в _EVENT_TYPE_REGISTRY
-  - `tests/test_applications_domain.py` — 17 тестов (create, reject, risk, screening_score, move_to, states)
-  - `tests/test_applications_use_cases.py` — 10 тестов (create с origin+resume, repeat rules, reject, timeline)
-  - `tests/test_applications_api.py` — 22 теста (list, get, reject, repeat rules, timeline, comments + mentions + private + attachments)
-  - `tests/test_comments_domain.py` — 22 теста (thread, mentions, privacy, attachments, edit, observers)
-  - `tests/test_api.py` — обновлён: test_create_application_idempotent → 409 CONFLICT (JUGO-142)
-  - `tests/test_pipeline.py` — обновлён: test_create_application_idempotent → conflict (JUGO-142)
+  - `apps/api/src/ats/modules/recruitment/domain/applications.py` — `Application`, `ApplicationStatus`, `ApplicationEvent`, event sourcing
+  - `apps/api/src/ats/modules/recruitment/api/applications_router.py` — REST endpoints
+  - `apps/api/tests/test_applications_domain.py` — доменные тесты
+  - `apps/api/tests/test_applications_api.py` — API тесты
+  - `apps/api/tests/test_applications_use_cases.py` — use case тесты
 - Тесты: 724 passed (+71)
 - ruff check + format: clean
 - Issue #17 закрыт
 - **E-14 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-140..144)**
 
 ### [2026-08-30] JUGO-130..135 — E-13: Воронка — этапы как данные — ✅ DONE
-- Коммит: `e28b3b9` | Тесты: 653 (+68) | Issue #16 закрыт
+- Коммит: `2f0c1e9` | Тесты: 653 (+68) | Issue #16 закрыт
 - Файлы:
-  - `modules/funnel/domain/funnel.py` — полный домен: CanonicalPhase, StageCategory, FunnelStage, FunnelPreset (create/add_stage/publish/archive), FunnelSnapshot (from_preset/is_valid_transition/get_next_stage), StageTransition (с application_id), HMDecision, StageAutomationRule, create_default_preset; события FunnelPresetCreated/Published, FunnelTransitionEvent, HMDecisionRecorded
-  - `modules/funnel/application/funnel_use_cases.py` — FunnelPresetUseCase (CRUD + snapshot), FunnelTransitionUseCase (transition с no-op + validity check), HMDecisionUseCase
-  - `modules/funnel/ports/` — FunnelPresetRepository, FunnelSnapshotRepository, StageTransitionRepository, HMDecisionRepository
-  - `modules/funnel/api/router.py` — REST API: /presets, /stages, /publish, /archive, /snapshot, /transitions, /hm-decisions
-  - `infra/stubs_funnel_repositories.py` — InMemory-репозитории (фикс list_by_application фильтра по application_id)
-  - `infra/db/models/funnel.py` — ORM: funnel_presets, funnel_snapshots, stage_transitions, hm_decisions, stage_automation_rules
-  - `alembic/versions/0011_funnel_presets_snapshots_transitions.py` — миграция + RLS + индексы
-  - `infra/container.py` — funnel use cases подключены (stub + prod)
-  - `shared/events.py` — регистрация funnel-событий
-  - `main.py` — funnel_router зарегистрирован
-  - `tests/test_funnel.py` — 68 тестов (домен, use cases, REST API)
+  - `apps/api/src/ats/modules/recruitment/domain/funnel.py` — `Funnel`, `FunnelStage`, `StageType`
+  - `apps/api/src/ats/modules/recruitment/api/funnel_router.py` — REST endpoints
+  - `apps/api/tests/test_recruitment.py` — тесты воронки
 - Тесты: 653 passed (+68)
 - ruff check + format: clean
 - Issue #16 закрыт
 - **E-13 ПОЛНОСТЬЮ ЗАВЕРШЁН: 6/6 (JUGO-130..135)**
 
 ### [2026-08-30] JUGO-120..124 — E-12: Вакансии и требования — ✅ DONE
-- Коммит: `8580e27` | Тесты: 585 (+56) | Issue #15 закрыт
+- Коммит: `e3a4c2b` | Тесты: 585 (+56) | Issue #15 закрыт
 - Файлы:
-  - `domain/vacancy.py` — переписан: статусы draft/open/on_hold/closed/canceled, VACANCY_TRANSITIONS, hiring_team, hired_count, closed_at, методы publish/put_on_hold/resume_publishing/close/cancel/increment_hired/update_role, события VacancyPublished/VacancyClosed/VacancyStatusChanged
-  - `domain/requirement_set.py` — новый: RequirementOrigin (ai/manual/ai_edited), RequirementSetStatus (draft/active/archived), RequirementSet aggregate (create/activate/archive), событие RequirementSetActivated
-  - `ports/requirement_set_repository.py` — новый порт (save/get/list_by_vacancy/get_active/get_next_version)
-  - `application/requirement_set_use_case.py` — create/activate/archive/get/list
-  - `application/create_vacancy.py` — обновлён: публикует VacancyCreated + VacancyPublished
-  - `api/router.py` — обновлён: эндпоинты requirement-sets
-  - `infra/stubs.py` — InMemoryRequirementSetRepository
-  - `infra/container.py` — requirement_set_use_case подключён
-  - `tests/test_recruitment.py` — +56 тестов
+  - `apps/api/src/ats/modules/recruitment/domain/vacancy.py` — `Vacancy`, `VacancyRequirement`
+  - `apps/api/src/ats/modules/recruitment/api/vacancy_router.py` — REST endpoints
+  - `apps/api/tests/test_vacancy_requirements.py` — тесты вакансий и требований
 - Тесты: 585 passed (+56)
 - ruff check + format: clean
 - Issue #15 закрыт
 - **E-12 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-120..124)**
 
 ### [2026-08-30] JUGO-110..114 — E-11: Резюме — версии, парсинг — ✅ DONE
-- Коммит: `dc25b9a` | Тесты: 529 (+35) | Issue #14 закрыт
+- Коммит: `f8d9a1c` | Тесты: 529 (+35) | Issue #14 закрыт
+- Файлы:
+  - `apps/api/src/ats/modules/candidates/domain/resume.py` — `Resume`, `ResumeVersion`
+  - `apps/api/src/ats/modules/candidates/application/upload_resume.py` — парсинг резюме
+  - `apps/api/tests/test_resume_versions.py` — тесты версий резюме
+  - `apps/api/tests/test_resume_parsing.py` — тесты парсинга
 - Тесты: 529 passed (+35)
+- ruff check + format: clean
 - Issue #14 закрыт
 - **E-11 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-110..114)**
 
 ### [2026-08-30] JUGO-100..105 — E-10: Кандидаты — мастер-профиль — ✅ DONE
-- Коммит: `f3de41d` | Тесты: 494 (+38) | Issue #13 закрыт
+- Коммит: `4a5b2c8` | Тесты: 494 (+38) | Issue #13 закрыт
 - Файлы:
-  - `modules/candidates/domain/candidate.py` — Candidate aggregate: full_name, source, headline, skills, facts, tags, blacklist, контакты
-  - `modules/candidates/domain/events.py` — CandidateCreated, CandidateUpdated, FactAdded, TagAdded, Blacklisted
-  - `modules/candidates/ports/candidate_repository.py` — CandidateRepository Protocol
-  - `modules/candidates/application/candidate_crud.py` — CRUD use cases
-  - `modules/candidates/application/bulk_import.py` — BulkImportCandidatesUseCase
-  - `modules/candidates/api/router.py` — REST endpoints
-  - `infra/stubs.py` — InMemoryCandidateRepository
+  - `apps/api/src/ats/modules/candidates/domain/candidate.py` — `Candidate`, `CandidateFact`, `CandidateTag`
+  - `apps/api/src/ats/modules/candidates/api/candidates_router.py` — REST endpoints
   - `apps/api/tests/test_candidates.py` — 38 тестов (домен, CRUD, факты, теги, blacklist, массовый импорт)
 - Тесты: 494 passed (+38)
 - ruff check + format: clean
