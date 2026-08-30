@@ -20,9 +20,12 @@ from ats.modules.candidates.api.schemas import (
     CreateCandidateRequest,
     FactListResponse,
     FactResponse,
+    ResumeVersionListResponse,
+    ResumeVersionResponse,
     TagListResponse,
     TagResponse,
     UpdateCandidateRequest,
+    UploadResumeResponse,
 )
 from ats.modules.candidates.application.candidate_crud import (
     AddBlacklistInput,
@@ -32,7 +35,11 @@ from ats.modules.candidates.application.candidate_crud import (
     CreateCandidateInput,
     UpdateCandidateInput,
 )
+from ats.modules.candidates.application.upload_candidate_resume import (
+    UploadCandidateResumeInput,
+)
 from ats.modules.candidates.domain.candidate import CandidateSource
+from ats.modules.candidates.domain.resume import ResumeSourceKind
 from ats.shared.ids import CandidateId, IdempotencyKey, TenantId, UserId
 from ats.shared.result import is_error
 
@@ -41,7 +48,7 @@ router = APIRouter(prefix="/candidates", tags=["candidates"])
 _DEFAULT_TENANT = TenantId.from_string("00000000-0000-0000-0000-000000000001")
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
-ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx"}
+ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".html", ".htm"}
 
 
 def _to_response(candidate) -> CandidateResponse:
@@ -77,6 +84,23 @@ def _tag_to_response(tag) -> TagResponse:
         name=tag.name,
         color=tag.color,
         created_by=tag.created_by.value if tag.created_by else None,
+    )
+
+
+def _resume_version_to_response(version) -> ResumeVersionResponse:
+    return ResumeVersionResponse(
+        id=version.id,
+        candidate_id=version.candidate_id.value,
+        version_number=version.version_number,
+        content_hash=version.content_hash,
+        file_type=version.file_type.value,
+        original_filename=version.original_filename,
+        status=version.status.value,
+        parser_version=version.parser_version,
+        provenance_id=version.provenance_id,
+        parsed_data=version.parsed_data,
+        parse_error=version.parse_error,
+        created_at=version.created_at,
     )
 
 
@@ -420,7 +444,79 @@ async def bulk_import(req: BulkImportRequest) -> BulkImportResultResponse:
 
 
 # ---------------------------------------------------------------------------
-# Upload resume (existing)
+# Resume versions (JUGO-110..114)
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/{candidate_id}/resumes",
+    response_model=UploadResumeResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Загрузить резюме к кандидату (версия + AI-парсинг + автофакты)",
+)
+async def upload_candidate_resume(
+    candidate_id: UUID,
+    file: UploadFile,
+    source_kind: ResumeSourceKind = ResumeSourceKind.UPLOAD,
+    source_label: str = "",
+    external_id: str | None = None,
+) -> UploadResumeResponse:
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Неподдерживаемый формат. Допустимо: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
+        )
+
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Файл слишком большой (макс {MAX_FILE_SIZE // (1024 * 1024)} МБ)",
+        )
+
+    container = get_container()
+    dto = UploadCandidateResumeInput(
+        candidate_id=CandidateId(candidate_id),
+        content=content,
+        filename=file.filename or "resume.txt",
+        source_kind=source_kind,
+        source_label=source_label,
+        external_id=external_id,
+    )
+    result = await container.upload_candidate_resume.execute(_DEFAULT_TENANT, dto)
+    if is_error(result):
+        raise HTTPException(
+            status_code=_err_status(result.error.code.value), detail=result.error.message
+        )
+
+    res = result.value
+    return UploadResumeResponse(
+        version=_resume_version_to_response(res.version),
+        candidate_id=res.candidate.id.value,
+        facts_created=res.facts_created,
+        deduplicated=res.deduplicated,
+    )
+
+
+@router.get(
+    "/{candidate_id}/resumes",
+    response_model=ResumeVersionListResponse,
+    summary="Список версий резюме кандидата",
+)
+async def list_candidate_resumes(candidate_id: UUID) -> ResumeVersionListResponse:
+    container = get_container()
+    versions = await container.resume_repository.list_versions(
+        _DEFAULT_TENANT, CandidateId(candidate_id)
+    )
+    return ResumeVersionListResponse(
+        items=[_resume_version_to_response(v) for v in versions],
+        total=len(versions),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Upload resume (existing — creates new candidate)
 # ---------------------------------------------------------------------------
 
 

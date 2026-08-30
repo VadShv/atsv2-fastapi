@@ -1,4 +1,4 @@
-"""ORM-модели candidates: кандидат (CRM 360) + таблица поиска + факты + теги + blacklist.
+"""ORM-модели candidates: кандидат (CRM 360) + таблица поиска + факты + теги + blacklist + резюме.
 
 Candidate — обезличенный профиль (PII в PII-vault). candidates_search —
 денормализованный индекс для гибридного поиска (tsvector + pgvector).
@@ -6,6 +6,8 @@ Candidate — обезличенный профиль (PII в PII-vault). candid
 candidate_facts — структурированные факты (опыт, навыки, образование, языки).
 candidate_tags — пользовательские теги/метки для группировки.
 candidate_blacklist — жёсткий список блокировок (SECURE FIRST).
+resume_sources — каналы привлечения резюме.
+resume_versions — версии резюме с content-hash, статусом парсинга, parsed_data.
 """
 
 from __future__ import annotations
@@ -123,3 +125,58 @@ class CandidateBlacklistORM(Base, TenantMixin):
     reason: Mapped[str] = mapped_column(String(50), nullable=False)
     note: Mapped[str] = mapped_column(Text, default="", nullable=False)
     created_by: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+
+
+class ResumeSourceORM(Base, TenantMixin):
+    """Источник резюме (канал привлечения)."""
+
+    __tablename__ = "resume_sources"
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid4)
+    candidate_id: Mapped[UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("candidates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    kind: Mapped[str] = mapped_column(String(50), nullable=False)
+    label: Mapped[str] = mapped_column(String(200), default="", nullable=False)
+    external_id: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+
+class ResumeVersionORM(Base, TenantMixin):
+    """Версия резюме кандидата.
+
+    content_hash — SHA-256 для дедупликации (дебаунс 10 мин).
+    parsed_data — структурированный результат AI-парсинга (JSONB).
+    provenance_id — ссылка на AI-вызов (whitebox).
+    """
+
+    __tablename__ = "resume_versions"
+
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid4)
+    candidate_id: Mapped[UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("candidates.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    source_id: Mapped[UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("resume_sources.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    version_number: Mapped[int] = mapped_column(default=1, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    file_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    file_storage_key: Mapped[str] = mapped_column(String(1000), default="", nullable=False)
+    original_filename: Mapped[str] = mapped_column(String(500), default="", nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default="pending", nullable=False)
+    parser_version: Mapped[str] = mapped_column(String(50), default="", nullable=False)
+    provenance_id: Mapped[UUID | None] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("provenance.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    parsed_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    parse_error: Mapped[str | None] = mapped_column(Text, nullable=True)

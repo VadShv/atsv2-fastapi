@@ -128,6 +128,10 @@ def stub_parsed_resume() -> str:
                     "end_date": "2022",
                 }
             ],
+            "languages": [
+                {"language": "Русский", "level": "родной"},
+                {"language": "Английский", "level": "B2"},
+            ],
             "total_years": 5.5,
             "summary": (
                 "Python-разработчик с 5+ годами опыта. "

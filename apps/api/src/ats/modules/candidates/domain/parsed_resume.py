@@ -28,6 +28,13 @@ class Education(BaseModel):
     end_date: str = ""
 
 
+class LanguageSkill(BaseModel):
+    """Владение языком — одна запись."""
+
+    language: str = Field(description="Название языка")
+    level: str = Field(default="", description="Уровень владения (A1–C2, родной)")
+
+
 class ParsedResume(BaseModel):
     """Структурированный результат AI-парсинга резюме.
 
@@ -40,6 +47,9 @@ class ParsedResume(BaseModel):
     skills: list[str] = Field(default_factory=list)
     experience: list[WorkExperience] = Field(default_factory=list)
     education: list[Education] = Field(default_factory=list)
+    languages: list[LanguageSkill] = Field(
+        default_factory=list, description="Языки и уровни владения"
+    )
     total_years: float = Field(default=0.0, description="Суммарный опыт в годах")
     summary: str = Field(default="", description="Краткое саммари профиля")
     # Семантический текст для эмбеддинга/поиска (без PII)

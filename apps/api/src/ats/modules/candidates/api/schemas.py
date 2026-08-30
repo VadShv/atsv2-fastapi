@@ -15,6 +15,39 @@ from ats.modules.candidates.domain.facts import FactSource, FactType
 from ats.modules.candidates.domain.tags import BlacklistReason
 
 
+class ResumeVersionResponse(BaseModel):
+    """Ответ: версия резюме кандидата."""
+
+    id: UUID
+    candidate_id: UUID
+    version_number: int
+    content_hash: str
+    file_type: str
+    original_filename: str = ""
+    status: str
+    parser_version: str = ""
+    provenance_id: UUID | None = None
+    parsed_data: dict | None = None
+    parse_error: str | None = None
+    created_at: datetime | None = None
+
+
+class ResumeVersionListResponse(BaseModel):
+    """Ответ: список версий резюме кандидата."""
+
+    items: list[ResumeVersionResponse]
+    total: int
+
+
+class UploadResumeResponse(BaseModel):
+    """Ответ: результат загрузки резюме к кандидату."""
+
+    version: ResumeVersionResponse
+    candidate_id: UUID
+    facts_created: int = 0
+    deduplicated: bool = False
+
+
 class CandidateResponse(BaseModel):
     """Ответ: карточка кандидата (обезличенная)."""
 

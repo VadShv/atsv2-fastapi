@@ -98,6 +98,7 @@ _EVENT_TYPE_REGISTRY: dict[str, tuple[str, int, str]] = {
     "CandidateCreated": ("candidate.created", 1, "candidate"),
     "CandidateUpdated": ("candidate.updated", 1, "candidate"),
     "ResumeAttached": ("candidate.resume.attached", 1, "candidate"),
+    "ResumeVersionCreated": ("resume.version.created", 1, "resume"),
     "ApplicationCreated": ("application.created", 1, "application"),
     "StageChanged": ("application.stage.changed", 1, "application"),
 }
@@ -195,6 +196,10 @@ _PAYLOAD_FIELDS = (
     "resume_provenance_id",
     "full_name",
     "fields_changed",
+    "version_number",
+    "content_hash",
+    "source_kind",
+    "file_type",
     "title",
     "seniority",
     "team",
@@ -214,6 +219,10 @@ def _extract_aggregate_id(event: DomainEvent, aggregate_type: str) -> str:
     alt = getattr(event, "application_id", None)
     if alt is not None:
         return str(alt)
+    # Для resume — id версии (не candidate_id)
+    alt2 = getattr(event, "version_id", None)
+    if alt2 is not None:
+        return str(alt2)
     raise ValueError(
         f"Не удалось определить id агрегата {aggregate_type!r} для события {type(event).__name__}"
     )
