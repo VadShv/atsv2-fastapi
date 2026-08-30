@@ -105,6 +105,10 @@ _EVENT_TYPE_REGISTRY: dict[str, tuple[str, int, str]] = {
     "ResumeVersionCreated": ("resume.version.created", 1, "resume"),
     "ApplicationCreated": ("application.created", 1, "application"),
     "StageChanged": ("application.stage.changed", 1, "application"),
+    "FunnelPresetCreated": ("funnel.preset.created", 1, "funnel"),
+    "FunnelPresetPublished": ("funnel.preset.published", 1, "funnel"),
+    "FunnelTransitionEvent": ("application.funnel.transition", 1, "application"),
+    "HMDecisionRecorded": ("application.hm.decision", 1, "application"),
 }
 
 
@@ -212,6 +216,10 @@ _PAYLOAD_FIELDS = (
     "team",
     "reason",
     "hired_count",
+    "preset_id",
+    "actor_type",
+    "decision",
+    "stage_id",
 )
 
 
@@ -231,6 +239,10 @@ def _extract_aggregate_id(event: DomainEvent, aggregate_type: str) -> str:
     alt2 = getattr(event, "version_id", None)
     if alt2 is not None:
         return str(alt2)
+    # Для funnel — preset_id
+    alt3 = getattr(event, "preset_id", None)
+    if alt3 is not None:
+        return str(alt3)
     raise ValueError(
         f"Не удалось определить id агрегата {aggregate_type!r} для события {type(event).__name__}"
     )

@@ -16,6 +16,12 @@ from ats.infra.stubs import (
     InMemoryVacancyRepository,
     StubAIGateway,
 )
+from ats.infra.stubs_funnel_repositories import (
+    InMemoryFunnelPresetRepository,
+    InMemoryFunnelSnapshotRepository,
+    InMemoryHMDecisionRepository,
+    InMemoryStageTransitionRepository,
+)
 from ats.infra.stubs_repositories import (
     InMemoryApplicationRepository,
     InMemoryCandidateRepository,
@@ -44,6 +50,21 @@ from ats.modules.candidates.application.upload_candidate_resume import (
 from ats.modules.candidates.application.upload_resume import UploadResumeUseCase
 from ats.modules.candidates.ports.candidate_repository import CandidateRepository
 from ats.modules.candidates.ports.resume_repository import ResumeRepository
+from ats.modules.funnel.application.funnel_use_cases import (
+    FunnelPresetUseCase,
+    FunnelTransitionUseCase,
+    HMDecisionUseCase,
+)
+from ats.modules.funnel.ports.funnel_preset_repository import (
+    FunnelPresetRepository,
+)
+from ats.modules.funnel.ports.funnel_snapshot_repository import (
+    FunnelSnapshotRepository,
+)
+from ats.modules.funnel.ports.funnel_transition_repository import (
+    HMDecisionRepository,
+    StageTransitionRepository,
+)
 from ats.modules.recruitment.application.create_application import (
     CreateApplicationUseCase,
 )
@@ -75,6 +96,10 @@ class Container:
     application_repository: ApplicationRepository
     resume_repository: ResumeRepository
     requirement_set_repository: RequirementSetRepository
+    funnel_preset_repository: FunnelPresetRepository
+    funnel_snapshot_repository: FunnelSnapshotRepository
+    stage_transition_repository: StageTransitionRepository
+    hm_decision_repository: HMDecisionRepository
     provenance_ledger: ProvenanceLedger
     ai_gateway: AIGateway
     search_engine: SearchEngine
@@ -84,6 +109,9 @@ class Container:
     create_vacancy: CreateVacancyUseCase
     vacancy_crud: VacancyCrudUseCase
     requirement_set_use_case: RequirementSetUseCase
+    funnel_preset_use_case: FunnelPresetUseCase
+    funnel_transition_use_case: FunnelTransitionUseCase
+    hm_decision_use_case: HMDecisionUseCase
     create_application: CreateApplicationUseCase
     move_application: MoveApplicationUseCase
     upload_resume: UploadResumeUseCase
@@ -103,6 +131,10 @@ def build_container() -> Container:
         application_repo: ApplicationRepository = InMemoryApplicationRepository()
         resume_repo: ResumeRepository = InMemoryResumeRepository()
         req_set_repo: RequirementSetRepository = InMemoryRequirementSetRepository()
+        funnel_preset_repo: FunnelPresetRepository = InMemoryFunnelPresetRepository()
+        funnel_snapshot_repo: FunnelSnapshotRepository = InMemoryFunnelSnapshotRepository()
+        stage_transition_repo: StageTransitionRepository = InMemoryStageTransitionRepository()
+        hm_decision_repo: HMDecisionRepository = InMemoryHMDecisionRepository()
         provenance: ProvenanceLedger = InMemoryProvenanceLedger()
         gateway: AIGateway = StubAIGateway()
         search_engine: SearchEngine = InMemorySearchEngine()
@@ -119,6 +151,10 @@ def build_container() -> Container:
         application_repo = InMemoryApplicationRepository()
         resume_repo = InMemoryResumeRepository()  # Pg-реализация в след. фазе
         req_set_repo = InMemoryRequirementSetRepository()  # Pg-реализация в след. фазе
+        funnel_preset_repo = InMemoryFunnelPresetRepository()
+        funnel_snapshot_repo = InMemoryFunnelSnapshotRepository()
+        stage_transition_repo = InMemoryStageTransitionRepository()
+        hm_decision_repo = InMemoryHMDecisionRepository()
         provenance = PgProvenanceLedger()
         gateway = LiteLLMGateway(provenance)
         search_engine = PgVectorSearchEngine()
@@ -132,6 +168,11 @@ def build_container() -> Container:
     create_vacancy = CreateVacancyUseCase(vacancy_repo, screening_skill)
     vacancy_crud = VacancyCrudUseCase(vacancy_repo)
     requirement_set_use_case = RequirementSetUseCase(req_set_repo, vacancy_repo)
+    funnel_preset_use_case = FunnelPresetUseCase(funnel_preset_repo, funnel_snapshot_repo)
+    funnel_transition_use_case = FunnelTransitionUseCase(
+        funnel_snapshot_repo, stage_transition_repo
+    )
+    hm_decision_use_case = HMDecisionUseCase(hm_decision_repo)
     create_application = CreateApplicationUseCase(application_repo)
     move_application = MoveApplicationUseCase(application_repo)
     upload_resume = UploadResumeUseCase(candidate_repo, parse_skill, search_engine, gateway)
@@ -148,6 +189,10 @@ def build_container() -> Container:
         application_repository=application_repo,
         resume_repository=resume_repo,
         requirement_set_repository=req_set_repo,
+        funnel_preset_repository=funnel_preset_repo,
+        funnel_snapshot_repository=funnel_snapshot_repo,
+        stage_transition_repository=stage_transition_repo,
+        hm_decision_repository=hm_decision_repo,
         provenance_ledger=provenance,
         ai_gateway=gateway,
         search_engine=search_engine,
@@ -157,6 +202,9 @@ def build_container() -> Container:
         create_vacancy=create_vacancy,
         vacancy_crud=vacancy_crud,
         requirement_set_use_case=requirement_set_use_case,
+        funnel_preset_use_case=funnel_preset_use_case,
+        funnel_transition_use_case=funnel_transition_use_case,
+        hm_decision_use_case=hm_decision_use_case,
         create_application=create_application,
         move_application=move_application,
         upload_resume=upload_resume,

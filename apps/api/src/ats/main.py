@@ -14,6 +14,7 @@ from ats.infra.sentry import SentryMiddleware, setup_sentry
 from ats.infra.tracing import TracingMiddleware, setup_tracing
 from ats.modules.candidates.api.router import router as candidates_router
 from ats.modules.events.api.router import router as events_router
+from ats.modules.funnel.api.router import router as funnel_router
 from ats.modules.identity.api.router import router as auth_router
 from ats.modules.identity.infra.csrf import CSRFMiddleware
 from ats.modules.recruitment.api.applications_router import (
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(candidates_router, prefix="/api/v1")
     app.include_router(search_router, prefix="/api/v1")
     app.include_router(events_router, prefix="/api/v1")
+    app.include_router(funnel_router, prefix="/api/v1")
     # /metrics endpoint (JUGO-031)
     app.include_router(metrics_router)
 
