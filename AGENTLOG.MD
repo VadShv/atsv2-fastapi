@@ -15,7 +15,7 @@
 | JUGO | Эпик | Описание | Статус | Issue |
 |------|------|----------|--------|-------|
 | JUGO-100..105 | E-10 | Кандидаты — мастер-профиль | ✅ DONE | #13 (closed) |
-| JUGO-110..114 | E-11 | Резюме — версии, парсинг | ⬜ PENDING | #14 |
+| JUGO-110..114 | E-11 | Резюме — версии, парсинг | ✅ DONE | #14 (closed) |
 | JUGO-120..124 | E-12 | Вакансии и требования | ⬜ PENDING | #15 |
 | JUGO-130..135 | E-13 | Воронка — этапы как данные | ⬜ PENDING | #16 |
 | JUGO-140..144 | E-14 | Отклики Applications | ⬜ PENDING | #17 |
@@ -30,7 +30,8 @@
 | Эпик | Задач | Готово | Тестов |
 |------|-------|--------|--------|
 | E-10 (Кандидаты) | 6 | 6/6 ✅ | 494 (+38) |
-| **Итого** | **6** | **6/6 ✅** | **494** |
+| E-11 (Резюме) | 5 | 5/5 ✅ | 529 (+35) |
+| **Итого** | **11** | **11/11 ✅** | **529** |
 
 ---
 
@@ -61,10 +62,27 @@
 
 ## История изменений
 
-### [2026-08-30] Волна 1 — старт
-- Создан milestone «Волна 1 — Ядро» (#2) на GitHub
-- Созданы 10 issues (#13–#22) для всех задач Волны 1
-- Карта зависимостей зафиксирована
+### [2026-08-30] JUGO-110..114 — E-11: Резюме — версии, парсинг — ✅ DONE
+- Коммит: `268f516` | Тесты: 529 (+35) | Issue #14 закрыт
+- Файлы:
+  - `apps/api/src/ats/modules/candidates/domain/resume.py` — домен резюме: `ResumeSourceKind` (8 типов), `ResumeVersionStatus` (5 статусов), `ResumeFileType` (4 формата), `DEBOUNCE_WINDOW_SECONDS=600`, `ResumeVersionCreated` event, `ResumeSource` dataclass, `ResumeVersion` (AggregateRoot: create/mark_parsing/mark_parsed/mark_failed/mark_needs_manual_review/is_within_debounce_window), `compute_content_hash()` (SHA-256), `detect_file_type()`
+  - `apps/api/src/ats/shared/events.py` — регистр: `ResumeVersionCreated` + поля `version_number`, `content_hash`, `source_kind`, `file_type` + fallback `_extract_aggregate_id` на `version_id`
+  - `apps/api/src/ats/infra/db/models/candidates.py` — ORM: `ResumeSourceORM`, `ResumeVersionORM` (content_hash, status, parser_version, provenance_id, parsed_data JSONB, parse_error)
+  - `apps/api/alembic/versions/0009_resume_sources_versions.py` — миграция: таблицы `resume_sources` + `resume_versions` с RLS + уникальный индекс `ux_resume_versions_candidate_hash` для дедупликации
+  - `apps/api/src/ats/modules/candidates/ports/resume_repository.py` — `ResumeRepository` Protocol (save_source, get_source, save_version, get_version, list_versions, find_by_content_hash, get_next_version_number)
+  - `apps/api/src/ats/infra/stubs_resume_repository.py` — `InMemoryResumeRepository` (полная реализация порта)
+  - `apps/api/src/ats/infra/ai/text_extraction.py` — JUGO-111: добавлена `_extract_html()` через stdlib `html.parser` (пропускает script/style/head/meta), поддержка `.html/.htm` в `extract_text()`
+  - `apps/api/src/ats/modules/candidates/domain/parsed_resume.py` — JUGO-112: добавлена `LanguageSkill` модель + поле `languages: list[LanguageSkill]` в `ParsedResume`
+  - `apps/api/src/ats/infra/ai/stub_outputs.py` — stub-вывод `parse_resume` расширен: `languages` (Русский/родной, Английский/B2)
+  - `apps/api/src/ats/modules/candidates/application/upload_candidate_resume.py` — JUGO-113+114: `UploadCandidateResumeUseCase` (проверка кандидата → detect_file_type → content-hash дедупликация + debounce → create source + version (PENDING) → extract text → AI parse → mark_parsed → attach_resume → update_profile → auto-facts sync → reindex). `_sync_facts_from_resume()`: EXPERIENCE/SKILL/EDUCATION/LANGUAGE факты, `_should_create_fact()` + `_same_natural_key()` — не перезаписывает pinned/manual факты
+  - `apps/api/src/ats/infra/container.py` — `resume_repository` (InMemoryResumeRepository) + `upload_candidate_resume` (UploadCandidateResumeUseCase) в Container
+  - `apps/api/src/ats/modules/candidates/api/schemas.py` — 3 новые схемы: `ResumeVersionResponse`, `ResumeVersionListResponse`, `UploadResumeResponse`
+  - `apps/api/src/ats/modules/candidates/api/router.py` — 2 новых эндпоинта: `POST /candidates/{id}/resumes` (multipart upload → version + parsing + facts) + `GET /candidates/{id}/resumes` (список версий). Расширены `ALLOWED_EXTENSIONS` (.html, .htm)
+  - `apps/api/tests/test_resume_versions.py` — 35 тестов: домен (content_hash, detect_file_type, ResumeSource, ResumeVersion lifecycle, debounce), HTML extraction, use case (создание версии + фактов, дедупликация, pinned-факты, language-факты, несуществующий кандидат, неподдерживаемый формат, provenance, множественные версии), ParsedResume.languages
+- Тесты: 529 passed (+35)
+- ruff check + format: clean
+- Issue #14 закрыт
+- **E-11 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-110..114)**
 
 ### [2026-08-30] JUGO-100..105 — E-10: Кандидаты — мастер-профиль — ✅ DONE
 - Коммит: `95d9742` | Тесты: 494 (+38) | Issue #13 закрыт
@@ -73,11 +91,11 @@
   - `apps/api/src/ats/modules/candidates/domain/facts.py` — факты профиля: `FactType` (experience, skill, education, language, certification), `FactSource` (resume_version, manual, import, ai_inference), `CandidateFact` (pinned, confidence, source_ref, can_be_overwritten_by), `build_experience_fact()`, `build_skill_fact()`
   - `apps/api/src/ats/modules/candidates/domain/tags.py` — теги и blacklist: `BlacklistReason` (5 жёстких причин), `CandidateTag`, `BlacklistEntry` (только admin/head_of_recruiting)
   - `apps/api/src/ats/infra/db/models/candidates.py` — ORM: `CandidateFactORM`, `CandidateTagORM`, `CandidateBlacklistORM` + `location` в `CandidateORM`
-  - `apps/api/alembic/versions/0008_candidate_facts_tags_blacklist.py` — миграция 0008: 3 новые таблицы + колонка location + RLS-политики
-  - `apps/api/src/ats/modules/candidates/ports/candidate_repository.py` — порт расширен: CRUD + facts + tags + blacklist (15 методов)
+  - `apps/api/alembic/versions/0008_candidate_facts_tags_blacklist.py` — миграция: 3 новые таблицы + `location` колонка + RLS
+  - `apps/api/src/ats/modules/candidates/ports/candidate_repository.py` — порт расширен до 15 методов (CRUD + facts + tags + blacklist)
   - `apps/api/src/ats/infra/stubs_repositories.py` — `InMemoryCandidateRepository` реализует полный порт
-  - `apps/api/src/ats/modules/candidates/application/candidate_crud.py` — `CandidateCrudUseCase` (create/get/update/list/delete + facts + tags + blacklist) + `BulkImportCandidatesUseCase`
-  - `apps/api/src/ats/modules/candidates/api/schemas.py` — Pydantic-схемы (14 моделей для REST API)
+  - `apps/api/src/ats/modules/candidates/application/candidate_crud.py` — `CandidateCrudUseCase` + `BulkImportCandidatesUseCase`
+  - `apps/api/src/ats/modules/candidates/api/schemas.py` — 14 Pydantic-моделей для REST API
   - `apps/api/src/ats/modules/candidates/api/router.py` — REST API: 14 эндпоинтов (CRUD + facts + tags + blacklist + bulk import + upload resume)
   - `apps/api/src/ats/modules/candidates/application/__init__.py` — экспорт новых use cases
   - `apps/api/src/ats/infra/container.py` — `candidate_crud` + `bulk_import_candidates` в Container
