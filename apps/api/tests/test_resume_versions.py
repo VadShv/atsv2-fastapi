@@ -21,7 +21,6 @@ from ats.modules.candidates.application.candidate_crud import CreateCandidateInp
 from ats.modules.candidates.application.upload_candidate_resume import (
     UploadCandidateResumeInput,
 )
-from ats.modules.candidates.domain.candidate import CandidateSource
 from ats.modules.candidates.domain.facts import FactSource, FactType
 from ats.modules.candidates.domain.resume import (
     DEBOUNCE_WINDOW_SECONDS,
@@ -248,9 +247,7 @@ class TestResumeVersion:
 
 class TestHtmlExtraction:
     def test_extract_html_simple(self) -> None:
-        html = "<html><body><h1>Иван Иванов</h1><p>Python Developer</p></body></html>".encode(
-            "utf-8"
-        )
+        html = "<html><body><h1>Иван Иванов</h1><p>Python Developer</p></body></html>".encode()
         text = extract_text(html, "resume.html")
         assert "Иван Иванов" in text
         assert "Python Developer" in text
@@ -466,7 +463,7 @@ class TestUploadCandidateResumeUseCase:
             TENANT,
             UploadCandidateResumeInput(
                 candidate_id=candidate_id,
-                content="Иванов Иван Python Developer навыки: Python".encode("utf-8"),
+                content="Иванов Иван Python Developer навыки: Python".encode(),
                 filename="resume.txt",
             ),
         )

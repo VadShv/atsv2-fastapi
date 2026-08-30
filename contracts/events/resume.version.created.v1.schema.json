@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/resume.version.created.v1.schema.json",
+  "title": "ResumeVersionCreated v1",
+  "description": "Создана новая версия резюме. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["version_number"],
+  "properties": {
+    "candidate_id": {"type": "string", "format": "uuid"},
+    "version_number": {"type": "integer", "description": "Порядковый номер версии."},
+    "content_hash": {"type": ["string", "null"]},
+    "source_kind": {"type": ["string", "null"]},
+    "file_type": {"type": ["string", "null"]}
+  }
+}

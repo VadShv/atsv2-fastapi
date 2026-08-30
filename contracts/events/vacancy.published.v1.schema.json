@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/vacancy.published.v1.schema.json",
+  "title": "VacancyPublished v1",
+  "description": "Вакансия опубликована. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["vacancy_id"],
+  "properties": {
+    "vacancy_id": {"type": "string", "format": "uuid"},
+    "title": {"type": ["string", "null"]},
+    "team": {"type": ["string", "null"]}
+  }
+}

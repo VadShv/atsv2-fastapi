@@ -6,19 +6,14 @@ import pytest
 
 from ats.infra.container import build_container
 from ats.modules.candidates.domain.candidate import Candidate, CandidateSource
-from ats.modules.recruitment.application.create_application import (
-    CreateApplicationUseCase,
-)
 from ats.modules.recruitment.application.move_application import (
     MoveApplicationInput,
-    MoveApplicationUseCase,
 )
 from ats.modules.recruitment.domain.application import (
     ALLOWED_TRANSITIONS,
     Application,
     ApplicationStage,
     InvalidTransitionError,
-    TERMINAL_STAGES,
 )
 from ats.shared.ids import CandidateId, IdempotencyKey, TenantId, VacancyId
 from ats.shared.result import is_error

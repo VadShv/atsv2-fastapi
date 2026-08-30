@@ -6,6 +6,9 @@
 Гарантия доставки — at-least-once: релей публикует в стрим, затем ставит
 processed_at в той же БД-транзакции. Если падение между публикацией и коммитом —
 событие доставится повторно (обработчики обязаны быть идемпотентными).
+
+JUGO-161: метрики Prometheus — processed/failed/lag (ленивый импорт, no-op если
+prometheus_client не установлен).
 """
 
 from __future__ import annotations
@@ -19,6 +22,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ats.infra.db.models.events import OutboxMessageORM
+from ats.infra.metrics.registry import (
+    outbox_failed_total,
+    outbox_lag_seconds,
+    outbox_published_total,
+)
 from ats.shared.events import _EVENT_TYPE_REGISTRY  # noqa: F401 - регистр топиков
 
 logger = logging.getLogger(__name__)
@@ -114,6 +122,12 @@ class OutboxRelay:
             if rows:
                 oldest = min(r.occurred_at for r in rows)
                 stats.lag_seconds = (now - oldest).total_seconds()
+
+            # Метрики
+            outbox_published_total.inc(stats.processed)
+            outbox_failed_total.inc(stats.failed)
+            outbox_lag_seconds.set(stats.lag_seconds)
+
             return stats
 
     async def _publish_to_stream(self, topic: str, payload: dict) -> None:

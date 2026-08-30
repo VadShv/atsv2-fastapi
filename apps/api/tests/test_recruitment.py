@@ -7,7 +7,6 @@ import pytest
 from ats.infra.container import build_container
 from ats.modules.recruitment.application.create_vacancy import (
     CreateVacancyInput,
-    CreateVacancyUseCase,
 )
 from ats.modules.recruitment.domain.vacancy import (
     RoleDescription,

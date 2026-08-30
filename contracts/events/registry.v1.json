@@ -11,6 +11,30 @@
       "topic": "events:core",
       "aggregate": "vacancy"
     },
+    "vacancy.published": {
+      "schema_version": 1,
+      "payload_schema": "vacancy.published.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "vacancy"
+    },
+    "vacancy.closed": {
+      "schema_version": 1,
+      "payload_schema": "vacancy.closed.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "vacancy"
+    },
+    "vacancy.status.changed": {
+      "schema_version": 1,
+      "payload_schema": "vacancy.status.changed.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "vacancy"
+    },
+    "vacancy.requirements.activated": {
+      "schema_version": 1,
+      "payload_schema": "vacancy.requirements.activated.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "vacancy"
+    },
     "vacancy.screening.generated": {
       "schema_version": 1,
       "payload_schema": "vacancy.screening.generated.v1.schema.json",
@@ -23,6 +47,24 @@
       "topic": "events:core",
       "aggregate": "candidate"
     },
+    "candidate.updated": {
+      "schema_version": 1,
+      "payload_schema": "candidate.updated.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "candidate"
+    },
+    "candidate.resume.attached": {
+      "schema_version": 1,
+      "payload_schema": "candidate.resume.attached.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "candidate"
+    },
+    "resume.version.created": {
+      "schema_version": 1,
+      "payload_schema": "resume.version.created.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "resume"
+    },
     "application.created": {
       "schema_version": 1,
       "payload_schema": "application.created.v1.schema.json",
@@ -34,6 +76,42 @@
       "payload_schema": "application.stage.changed.v1.schema.json",
       "topic": "events:core",
       "aggregate": "application"
+    },
+    "application.rejected": {
+      "schema_version": 1,
+      "payload_schema": "application.rejected.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "application"
+    },
+    "application.comment.posted": {
+      "schema_version": 1,
+      "payload_schema": "application.comment.posted.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "application"
+    },
+    "application.funnel.transition": {
+      "schema_version": 1,
+      "payload_schema": "application.funnel.transition.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "application"
+    },
+    "application.hm.decision": {
+      "schema_version": 1,
+      "payload_schema": "application.hm.decision.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "application"
+    },
+    "funnel.preset.created": {
+      "schema_version": 1,
+      "payload_schema": "funnel.preset.created.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "funnel"
+    },
+    "funnel.preset.published": {
+      "schema_version": 1,
+      "payload_schema": "funnel.preset.published.v1.schema.json",
+      "topic": "events:core",
+      "aggregate": "funnel"
     },
     "ai.run.completed": {
       "schema_version": 1,

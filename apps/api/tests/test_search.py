@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import uuid
 
 import pytest
@@ -17,9 +16,9 @@ from ats.modules.search.application.search_candidates import (
 )
 from ats.modules.search.domain.models import (
     FilterOperator,
+    SearchableDocument,
     SearchFilter,
     SearchQuery,
-    SearchableDocument,
 )
 from ats.shared.ids import TenantId
 from ats.shared.result import is_error

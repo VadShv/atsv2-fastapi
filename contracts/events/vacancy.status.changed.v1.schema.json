@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/vacancy.status.changed.v1.schema.json",
+  "title": "VacancyStatusChanged v1",
+  "description": "Статус вакансии изменён. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["vacancy_id", "to_status"],
+  "properties": {
+    "vacancy_id": {"type": "string", "format": "uuid"},
+    "from_status": {"type": ["string", "null"]},
+    "to_status": {"type": "string"}
+  }
+}

@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -52,7 +52,7 @@ def _make_entry(
         ip_address="",
         user_agent="",
         trace_id=trace_id,
-        created_at=created_at or datetime.now(timezone.utc),
+        created_at=created_at or datetime.now(UTC),
     )
 
 
@@ -217,7 +217,7 @@ class TestInMemoryAuditReader:
                 entity_type="test",
                 entity_id=str(i),
                 trace_id=f"trace-{i}",
-                created_at=datetime(2026, 8, 1 + i, tzinfo=timezone.utc),
+                created_at=datetime(2026, 8, 1 + i, tzinfo=UTC),
             )
             entries.append(entry)
         return entries
@@ -276,8 +276,8 @@ class TestInMemoryAuditReader:
         result = await reader.query(
             AuditQuery(
                 tenant_id=tenant_id,
-                date_from=datetime(2026, 8, 2, tzinfo=timezone.utc),
-                date_to=datetime(2026, 8, 4, tzinfo=timezone.utc),
+                date_from=datetime(2026, 8, 2, tzinfo=UTC),
+                date_to=datetime(2026, 8, 4, tzinfo=UTC),
             )
         )
         assert len(result) == 3  # Aug 2, 3, 4

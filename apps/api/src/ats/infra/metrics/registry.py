@@ -16,6 +16,8 @@ WHITEBOX AI: метрики AI-операций (model, tokens, latency) — д�
     Outbox:
       - outbox_lag_events — Gauge (количество необработанных событий)
       - outbox_published_total — Counter
+      - outbox_failed_total — Counter (неудачные публикации в Stream)
+      - outbox_lag_seconds — Gauge (лаг: now - occurred_at самого старого)
     AI:
       - ai_requests_total{model, status} — Counter
       - ai_request_duration_seconds{model} — Histogram
@@ -80,6 +82,9 @@ arq_job_duration_seconds: Any
 outbox_lag_events: Any
 outbox_published_total: Any
 
+outbox_failed_total: Any
+outbox_lag_seconds: Any
+
 # --- AI metrics ---
 
 ai_requests_total: Any
@@ -98,6 +103,7 @@ def _init_metrics() -> None:
     global http_requests_total, http_request_duration_seconds, http_requests_in_progress
     global arq_queue_depth, arq_jobs_total, arq_job_duration_seconds
     global outbox_lag_events, outbox_published_total
+    global outbox_failed_total, outbox_lag_seconds
     global ai_requests_total, ai_request_duration_seconds, ai_tokens_total
     global search_requests_total, search_request_duration_seconds, search_results_count
 
@@ -111,6 +117,8 @@ def _init_metrics() -> None:
         arq_job_duration_seconds = no_op
         outbox_lag_events = no_op
         outbox_published_total = no_op
+        outbox_failed_total = no_op
+        outbox_lag_seconds = no_op
         ai_requests_total = no_op
         ai_request_duration_seconds = no_op
         ai_tokens_total = no_op
@@ -166,6 +174,14 @@ def _init_metrics() -> None:
     outbox_published_total = Counter(
         "ats_outbox_published_total",
         "Total outbox events published",
+    )
+    outbox_failed_total = Counter(
+        "ats_outbox_failed_total",
+        "Total outbox events failed to publish",
+    )
+    outbox_lag_seconds = Gauge(
+        "ats_outbox_lag_seconds",
+        "Outbox lag in seconds (now - oldest unprocessed occurred_at)",
     )
 
     # AI

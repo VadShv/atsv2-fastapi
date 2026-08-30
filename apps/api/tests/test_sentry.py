@@ -17,11 +17,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from ats.infra.logging.context import clear_context, set_context
 from ats.infra.sentry.alerts import _build_payload, _should_alert, send_alert
 from ats.infra.sentry.settings import settings as sentry_settings
 from ats.infra.sentry.setup import (
@@ -31,7 +28,6 @@ from ats.infra.sentry.setup import (
     set_user_context,
     setup_sentry,
 )
-
 
 # --- Настройки ---
 
@@ -241,8 +237,9 @@ class TestSentryMiddleware:
 class TestFullAppSentry:
     def test_app_starts_with_sentry(self) -> None:
         """Приложение запускается с Sentry middleware (no-op)."""
-        from ats.main import app
         from fastapi.testclient import TestClient
+
+        from ats.main import app
 
         client = TestClient(app)
         response = client.get("/health")

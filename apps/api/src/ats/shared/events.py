@@ -197,6 +197,7 @@ _PAYLOAD_FIELDS = (
     "candidate_id",
     "application_id",
     "requirement_set_id",
+    "version_id",
     "from_stage",
     "to_stage",
     "from_stage_id",
@@ -263,7 +264,12 @@ def _resolve_payload(event: DomainEvent) -> dict[str, Any]:
     for attr in _PAYLOAD_FIELDS:
         val = getattr(event, attr, None)
         if val is not None and attr not in payload:
-            payload[attr] = str(val) if isinstance(val, UUID) else val
+            if isinstance(val, UUID):
+                payload[attr] = str(val)
+            elif isinstance(val, tuple | set):
+                payload[attr] = list(val)
+            else:
+                payload[attr] = val
     return payload
 
 

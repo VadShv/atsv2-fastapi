@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/vacancy.closed.v1.schema.json",
+  "title": "VacancyClosed v1",
+  "description": "Вакансия закрыта. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["vacancy_id"],
+  "properties": {
+    "vacancy_id": {"type": "string", "format": "uuid"},
+    "hired_count": {"type": ["integer", "null"], "description": "Количество нанятых."},
+    "reason": {"type": ["string", "null"]}
+  }
+}

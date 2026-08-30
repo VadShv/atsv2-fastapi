@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from uuid import uuid4
+from datetime import UTC, datetime
 
 from ats.infra.db.mappers import orm_to_vacancy, vacancy_to_orm
 from ats.modules.recruitment.domain.vacancy import (
@@ -41,8 +40,8 @@ class TestVacancyMapper:
         assert orm.screening_criteria_provenance is not None
 
         # ORM → Домен
-        orm.created_at = datetime.now(timezone.utc)
-        orm.updated_at = datetime.now(timezone.utc)
+        orm.created_at = datetime.now(UTC)
+        orm.updated_at = datetime.now(UTC)
         restored = orm_to_vacancy(orm)
         assert restored.id == vacancy.id
         assert restored.role.title == vacancy.role.title
@@ -59,7 +58,7 @@ class TestVacancyMapper:
 
         orm = vacancy_to_orm(vacancy)
         assert orm.screening_criteria_provenance is None
-        orm.created_at = datetime.now(timezone.utc)
-        orm.updated_at = datetime.now(timezone.utc)
+        orm.created_at = datetime.now(UTC)
+        orm.updated_at = datetime.now(UTC)
         restored = orm_to_vacancy(orm)
         assert restored.screening_criteria_provenance is None

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/vacancy.requirements.activated.v1.schema.json",
+  "title": "RequirementSetActivated v1",
+  "description": "Набор требований вакансии активирован. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["requirement_set_id", "vacancy_id"],
+  "properties": {
+    "requirement_set_id": {"type": "string", "format": "uuid"},
+    "vacancy_id": {"type": "string", "format": "uuid"}
+  }
+}

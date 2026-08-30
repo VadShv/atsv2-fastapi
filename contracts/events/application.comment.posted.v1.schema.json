@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/application.comment.posted.v1.schema.json",
+  "title": "CommentPosted v1",
+  "description": "Комментарий добавлен в тред на заявке. @упоминания и наблюдатели получают SSE-уведомление. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["thread_id", "comment_id", "application_id"],
+  "properties": {
+    "thread_id": {"type": "string", "format": "uuid"},
+    "comment_id": {"type": "string", "format": "uuid"},
+    "application_id": {"type": "string", "format": "uuid"},
+    "author_id": {"type": "string", "description": "ID автора комментария."},
+    "is_private": {"type": "boolean", "description": "Приватный комментарий (виден по правам signals:read)."}
+  }
+}

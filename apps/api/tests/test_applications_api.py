@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from ats.infra.container_helpers import get_container, reset_container
 from ats.main import app
 from ats.modules.candidates.domain.candidate import Candidate, CandidateSource
-from ats.shared.ids import CandidateId, TenantId, VacancyId
+from ats.shared.ids import TenantId
 
 client = TestClient(app)
 

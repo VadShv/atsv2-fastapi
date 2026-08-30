@@ -119,10 +119,11 @@ class TestApplicationsAPI:
 
     def test_create_application_idempotent(self) -> None:
         """JUGO-142: повторный активный отклик → 409 CONFLICT."""
+        import asyncio
+
         from ats.infra.container_helpers import get_container
         from ats.modules.candidates.domain.candidate import Candidate, CandidateSource
         from ats.shared.ids import TenantId
-        import asyncio
 
         tenant = TenantId.from_string("00000000-0000-0000-0000-000000000001")
         container = get_container()

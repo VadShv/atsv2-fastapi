@@ -5,7 +5,6 @@ SECURE FIRST: проверяем защиту от brute-force и CSRF.
 
 from __future__ import annotations
 
-import pytest
 from fastapi.testclient import TestClient
 
 from ats.main import app

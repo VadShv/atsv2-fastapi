@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/application.hm.decision.v1.schema.json",
+  "title": "ApplicationHMDecision v1",
+  "description": "Зафиксировано решение нанимающего менеджера по отклику. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["application_id", "decision"],
+  "properties": {
+    "application_id": {"type": "string", "format": "uuid"},
+    "decision": {"type": "string", "description": "Решение HM (например: hire / reject / hold)."},
+    "author_id": {"type": ["string", "null"], "description": "Идентификатор пользователя HM (опционально)."},
+    "reason": {"type": ["string", "null"]}
+  }
+}

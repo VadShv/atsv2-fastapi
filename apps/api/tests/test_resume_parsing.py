@@ -26,7 +26,7 @@ def setup_function() -> None:
 
 class TestTextExtraction:
     def test_extract_txt_utf8(self) -> None:
-        content = "Иван Иванов\nPython Developer\nОпыт: 5 лет".encode("utf-8")
+        content = "Иван Иванов\nPython Developer\nОпыт: 5 лет".encode()
         text = extract_text(content, "resume.txt")
         assert "Иван Иванов" in text
         assert "Python" in text
@@ -105,7 +105,7 @@ class TestUploadResumeUseCase:
         from ats.infra.container_helpers import get_container
 
         container = get_container()
-        content = "Иванов Иван Иванович\nMiddle Python Developer".encode("utf-8")
+        content = "Иванов Иван Иванович\nMiddle Python Developer".encode()
         result = await container.upload_resume.execute(
             TENANT, content, "resume.txt", IdempotencyKey("u1")
         )

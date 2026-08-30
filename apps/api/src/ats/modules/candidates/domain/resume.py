@@ -65,6 +65,7 @@ ALLOWED_RESUME_EXTENSIONS = {".pdf", ".docx", ".html", ".htm", ".txt"}
 class ResumeVersionCreated(DomainEvent):
     """Событие: создана новая версия резюме кандидата."""
 
+    version_id: UUID = field(default_factory=uuid4)
     candidate_id: UUID = field(default_factory=uuid4)
     version_number: int = 0
     content_hash: str = ""
@@ -171,6 +172,7 @@ class ResumeVersion(AggregateRoot):
                 event_id=uuid4(),
                 occurred_at=datetime.now(UTC),
                 tenant_id=tenant_id.value,
+                version_id=version.id,
                 payload={
                     "candidate_id": str(candidate_id.value),
                     "version_number": version_number,

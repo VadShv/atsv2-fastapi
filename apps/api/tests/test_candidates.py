@@ -27,7 +27,7 @@ from ats.modules.candidates.domain.facts import (
     build_skill_fact,
 )
 from ats.modules.candidates.domain.tags import BlacklistReason
-from ats.shared.ids import CandidateId, TenantId, UserId
+from ats.shared.ids import CandidateId, TenantId
 from ats.shared.result import is_error
 
 TENANT = TenantId.from_string("00000000-0000-0000-0000-000000000001")

@@ -14,8 +14,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from ats.infra.metrics.middleware import _normalize_path, _status_group
@@ -31,7 +29,6 @@ from ats.infra.metrics.registry import (
     search_requests_total,
 )
 from ats.infra.metrics.settings import settings as metrics_settings
-
 
 # --- Настройки ---
 
@@ -269,8 +266,9 @@ class TestRegistryAvailability:
 class TestFullAppMetrics:
     def test_metrics_endpoint_in_full_app(self) -> None:
         """/metrics доступен в полном приложении через main.py."""
-        from ats.main import app
         from fastapi.testclient import TestClient
+
+        from ats.main import app
 
         client = TestClient(app)
         response = client.get("/metrics")
@@ -278,8 +276,9 @@ class TestFullAppMetrics:
 
     def test_health_request_tracked(self) -> None:
         """Запрос к /health инкрементирует HTTP-метрики."""
-        from ats.main import app
         from fastapi.testclient import TestClient
+
+        from ats.main import app
 
         client = TestClient(app)
         client.get("/health")

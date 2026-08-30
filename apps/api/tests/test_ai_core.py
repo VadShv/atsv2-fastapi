@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from ats.infra.ai.json_repair import extract_json, parse_structured, repair_json
-from ats.modules.ai_core.prompts import SCREENING_CRITERIA_V1
 from ats.modules.ai_core.prompts.registry import get_prompt
 from ats.modules.ai_core.prompts.schemas import (
-    CriterionCategory,
     ScreeningCriteriaOutput,
 )
 

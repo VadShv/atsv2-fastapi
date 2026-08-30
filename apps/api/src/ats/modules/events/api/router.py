@@ -3,6 +3,13 @@
 Стримит доменные события клиенту через Server-Sent Events.
 Поддержка: heartbeat, reconnect по Last-Event-ID, фильтрация по event_type.
 
+Два режима доставки:
+  - **stub mode** (без Redis): события берутся из ``InProcessEventBus`` через
+    ``asyncio.Queue``. Идеально для dev/тестов — публикации в шину сразу
+    попадают в SSE-стрим.
+  - **prod mode** (с Redis): события читаются из Redis Streams
+    (``events:core``) по consumer group с replay по ``Last-Event-ID``.
+
 Реализовано на голом StreamingResponse (без sse-starlette) — минимум зависимостей,
 полный контроль над форматом wire-протокола SSE.
 """
@@ -12,9 +19,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import StreamingResponse
+
+from ats.infra.container_helpers import get_container
 
 logger = logging.getLogger(__name__)
 
@@ -41,24 +52,39 @@ async def event_stream(
         types: фильтр по event_type через запятую
             (напр. "vacancy.created,application.created").
     """
-    set(t.strip() for t in types.split(",")) if types else None
+    wanted = set(t.strip() for t in types.split(",")) if types else None
 
-    async def generate():
-        while True:
-            if await request.is_disconnected():
-                logger.debug("SSE client disconnected")
-                break
-            # Heartbeat — держит соединение живым (комментарий SSE)
-            yield ": heartbeat\n\n"
-            await asyncio.sleep(HEARTBEAT_INTERVAL)
-            # TODO (Wave 1+): чтение из Redis Streams по last_id с фильтром wanted.
-            # Полная реализация — после подключения Redis-клиента в приложение
-            # (relay/consumer готовы в infra/events/, интеграция в роутер — при деплое).
+    bus = get_container().event_bus
+    queue = bus.subscribe_queue()
+    logger.info(
+        "SSE client connected (last_event_id=%s, filter=%s)",
+        last_event_id,
+        wanted or "all",
+    )
+
+    async def generate() -> AsyncGenerator[str, None]:
+        try:
+            while True:
+                if await request.is_disconnected():
+                    logger.debug("SSE client disconnected")
+                    break
+                try:
+                    envelope = await asyncio.wait_for(queue.get(), timeout=HEARTBEAT_INTERVAL)
+                except TimeoutError:
+                    # Heartbeat — держит соединение живым (комментарий SSE)
+                    yield ": heartbeat\n\n"
+                    continue
+                formatted = format_sse(envelope, wanted)
+                if formatted is not None:
+                    yield formatted
+        finally:
+            bus.unsubscribe_queue(queue)
+            logger.debug("SSE queue unsubscribed")
 
     return StreamingResponse(generate(), media_type="text/event-stream", headers=SSE_HEADERS)
 
 
-def format_sse(payload: dict, wanted: set[str] | None) -> str | None:
+def format_sse(payload: dict[str, Any], wanted: set[str] | None) -> str | None:
     """Отфильтровать и отформатировать событие для SSE. None — пропустить."""
     event_type = payload.get("event_type", "")
     if wanted and event_type not in wanted:

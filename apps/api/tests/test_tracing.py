@@ -15,8 +15,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from ats.infra.logging.context import clear_context, get_log_context, set_context
@@ -34,7 +32,6 @@ from ats.infra.tracing.propagation import (
 )
 from ats.infra.tracing.settings import settings as tracing_settings
 from ats.infra.tracing.setup import get_tracer, setup_tracing
-
 
 # --- Настройки ---
 

@@ -24,8 +24,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from ats.infra.storage.antivirus import NoOpAntivirus
 from ats.infra.storage.in_memory_storage import (
-    FileScanError,
     FileNotFoundError,
+    FileScanError,
     StorageError,
 )
 from ats.infra.storage.models import (
@@ -45,7 +45,6 @@ from ats.infra.storage.whitelist import (
     validate_extension,
     validate_size,
 )
-
 
 # ──────────────────────────────────────────────────────────────
 # Settings

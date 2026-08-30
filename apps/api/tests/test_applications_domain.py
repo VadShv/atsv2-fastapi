@@ -12,7 +12,6 @@ from ats.modules.recruitment.domain.application import (
     RiskLevel,
 )
 
-
 TENANT_RAW = "00000000-0000-0000-0000-000000000001"
 
 

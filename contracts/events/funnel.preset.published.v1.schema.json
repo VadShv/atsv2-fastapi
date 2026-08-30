@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/funnel.preset.published.v1.schema.json",
+  "title": "FunnelPresetPublished v1",
+  "description": "Пресет воронки опубликован (стал доступен для использования в вакансиях). Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["preset_id"],
+  "properties": {
+    "preset_id": {"type": "string", "format": "uuid"},
+    "actor_type": {"type": ["string", "null"], "description": "Кто опубликовал пресет (опционально)."}
+  }
+}

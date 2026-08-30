@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/funnel.preset.created.v1.schema.json",
+  "title": "FunnelPresetCreated v1",
+  "description": "Создан пресет воронки. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["preset_id"],
+  "properties": {
+    "preset_id": {"type": "string", "format": "uuid"}
+  }
+}

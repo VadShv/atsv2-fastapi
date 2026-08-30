@@ -22,10 +22,7 @@ from ats.modules.identity.domain.oidc import (
 )
 from ats.modules.identity.infra.oidc_settings import OIDCSettings
 from ats.modules.identity.infra.stub_identity_provider import StubIdentityProvider
-from ats.modules.identity.infra.runtime import get_identity_provider, get_oidc_settings
 from ats.modules.identity.ports.identity_provider import IdentityProvider
-
-from uuid import UUID
 
 client = TestClient(app)
 

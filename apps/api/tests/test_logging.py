@@ -14,8 +14,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from ats.infra.logging.context import (
@@ -25,10 +23,9 @@ from ats.infra.logging.context import (
     set_context,
     set_log_context,
 )
-from ats.infra.logging.pii_mask import mask_pii_processor, _mask_string
+from ats.infra.logging.pii_mask import _mask_string, mask_pii_processor
 from ats.infra.logging.settings import settings as log_settings
 from ats.infra.logging.setup import get_logger, setup_logging
-
 
 # --- Маскирование ПД ---
 

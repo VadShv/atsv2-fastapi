@@ -185,3 +185,59 @@ class EventConsumer:
     def stop(self) -> None:
         self._running = False
         logger.info("Consumer %s stopping", self._config.consumer_name)
+
+    async def replay(
+        self,
+        start_id: str = "0",
+        count: int = 1000,
+        event_types: list[str] | None = None,
+    ) -> ConsumerStats:
+        """Повторная обработка сообщений из стрима (replay).
+
+        Читает сообщения из Redis Stream начиная с ``start_id`` (не через
+        consumer group — обычный xrange) и прогоняет через хендлеры заново.
+        Используется для восстановления после сбоев или перерасчёта проекций.
+
+        Args:
+            start_id: Redis Stream ID для начала чтения ("0" = с начала).
+            count: максимум сообщений за один вызов.
+            event_types: опциональный фильтр по event_type.
+        """
+        stats = ConsumerStats()
+        if self._redis is None:
+            logger.warning("Replay skipped: no Redis client")
+            return stats
+        wanted = set(event_types) if event_types else None
+        logger.info(
+            "Replay started on %s from %s (count=%d, filter=%s)",
+            self._config.stream,
+            start_id,
+            count,
+            wanted or "all",
+        )
+        try:
+            messages = await self._redis.xrange(self._config.stream, min=start_id, count=count)
+        except Exception:
+            logger.exception("Replay: failed to read stream %s", self._config.stream)
+            return stats
+        for _msg_id, fields in messages:
+            import json as _json
+
+            payload = _json.loads(fields["data"]) if "data" in fields else fields
+            event_type = payload.get("event_type", "")
+            if wanted and event_type not in wanted:
+                continue
+            handlers = self._handlers.get(event_type, [])
+            if not handlers:
+                continue
+            success = await self._run_handlers(handlers, payload)
+            if success:
+                stats.processed += 1
+            else:
+                stats.failed += 1
+        logger.info(
+            "Replay finished: processed=%d failed=%d",
+            stats.processed,
+            stats.failed,
+        )
+        return stats

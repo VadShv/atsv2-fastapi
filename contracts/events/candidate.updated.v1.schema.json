@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ats-jugo.dev/contracts/events/candidate.updated.v1.schema.json",
+  "title": "CandidateUpdated v1",
+  "description": "Профиль кандидата обновлён. Дополнительные свойства допустимы (§4.3).",
+  "type": "object",
+  "required": ["candidate_id"],
+  "properties": {
+    "candidate_id": {"type": "string", "format": "uuid"},
+    "fields_changed": {"type": "array", "items": {"type": "string"}, "description": "Список изменённых полей."}
+  }
+}

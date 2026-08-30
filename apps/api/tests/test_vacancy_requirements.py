@@ -31,10 +31,10 @@ from ats.modules.recruitment.domain.requirement_set import (
     RequirementSetStatus,
 )
 from ats.modules.recruitment.domain.vacancy import (
+    VACANCY_TRANSITIONS,
     InvalidVacancyTransitionError,
     RoleDescription,
     Seniority,
-    VACANCY_TRANSITIONS,
     Vacancy,
     VacancyClosed,
     VacancyPublished,

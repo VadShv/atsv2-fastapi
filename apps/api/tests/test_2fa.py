@@ -24,9 +24,6 @@ from ats.modules.identity.domain.two_factor import (
     role_requires_2fa,
 )
 from ats.modules.identity.infra.in_memory_2fa import InMemoryTwoFactorStore
-from ats.modules.identity.infra.runtime import (
-    get_two_factor_store,
-)
 
 client = TestClient(app)
 

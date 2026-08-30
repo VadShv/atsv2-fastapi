@@ -6,6 +6,9 @@ SECURE FIRST: проверяем что ключи хранятся только
 
 from __future__ import annotations
 
+from datetime import UTC
+from uuid import UUID
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -18,9 +21,6 @@ from ats.modules.identity.domain.api_key import (
     is_api_key,
 )
 from ats.modules.identity.infra.in_memory_api_key import InMemoryApiKeyStore
-from ats.modules.identity.infra.runtime import get_api_key_store
-
-from uuid import UUID
 
 TENANT_ID = UUID("00000000-0000-0000-0000-000000000001")
 client = TestClient(app)
@@ -88,7 +88,7 @@ def test_api_key_create_active():
 
 
 def test_api_key_revoked_not_active():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     _, key_hash = generate_api_key()
     key = ApiKey(
@@ -97,20 +97,18 @@ def test_api_key_revoked_not_active():
         key_hash=key_hash,
         name="Revoked",
         scopes=frozenset(["candidate:read"]),
-        created_at=datetime.now(timezone.utc),
-        revoked_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        revoked_at=datetime.now(UTC),
     )
     assert key.is_active is False
     assert key.is_revoked is True
 
 
 def test_api_key_expired_not_active():
-    from datetime import timedelta
-
-    from datetime import datetime, timezone
+    from datetime import datetime, timedelta
 
     _, key_hash = generate_api_key()
-    past = datetime.now(timezone.utc) - timedelta(days=1)
+    past = datetime.now(UTC) - timedelta(days=1)
     key = ApiKey(
         id=UUID(int=1),
         tenant_id=TENANT_ID,

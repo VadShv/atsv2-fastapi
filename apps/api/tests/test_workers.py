@@ -10,18 +10,17 @@
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
 # Добавляем src в путь
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from ats.infra.workers.base_task import BaseTask, TaskContext, TaskResult
+from ats.infra.workers.base_task import BaseTask, TaskContext
 from ats.infra.workers.builtin_tasks import (
     EventConsumerTask,
     OutboxRelayTask,
@@ -38,7 +37,6 @@ from ats.infra.workers.worker_settings import (
     event_consumer,
     outbox_relay,
 )
-
 
 # --- BaseTask ---
 
