@@ -18,7 +18,7 @@
 | JUGO-110..114 | E-11 | Резюме — версии, парсинг | ✅ DONE | #14 (closed) |
 | JUGO-120..124 | E-12 | Вакансии и требования | ✅ DONE | #15 (closed) |
 | JUGO-130..135 | E-13 | Воронка — этапы как данные | ✅ DONE | #16 (closed) |
-| JUGO-140..144 | E-14 | Отклики Applications | ⬜ PENDING | #17 |
+| JUGO-140..144 | E-14 | Отклики Applications | ✅ DONE | #17 (closed) |
 | JUGO-160..165 | E-16 | EventBus outbox→Redis→SSE | ⬜ PENDING | #18 |
 | JUGO-170..172 | E-17 | Поиск детерминированный | ⬜ PENDING | #19 |
 | JUGO-190..194 | E-19 | Публичный API и вебхуки | ⬜ PENDING | #20 |
@@ -33,7 +33,8 @@
 | E-11 (Резюме) | 5 | 5/5 ✅ | 529 (+35) |
 | E-12 (Вакансии) | 5 | 5/5 ✅ | 585 (+56) |
 | E-13 (Воронка) | 6 | 6/6 ✅ | 653 (+68) |
-| **Итого** | **22** | **22/22 ✅** | **653** |
+| E-14 (Отклики) | 5 | 5/5 ✅ | 724 (+71) |
+| **Итого** | **27** | **27/27 ✅** | **724** |
 
 ---
 
@@ -63,6 +64,36 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-140..144 — E-14: Отклики Applications — ✅ DONE
+- Коммит: `3123c38` | Тесты: 724 (+71) | Issue #17 закрыт
+- Файлы:
+  - `modules/recruitment/domain/application.py` — расширение домена: ApplicationOrigin (INCOMING/COLD_SOURCING/IMPORT/AI_SUGGESTION), RiskLevel, поля origin/current_stage_id/stage_entered_at/screening_score/risk_level/rejection_reason_code/rejection_reason_label/internal_rejection_note/resume_id; методы reject() (с официальной причиной + internal_note), set_risk_level(); свойства is_rejected/is_active; StageTransitionRecord (переименован из StageTransition); событие ApplicationRejected
+  - `modules/recruitment/domain/comment.py` — новый домен: CommentThread (create/add_comment/add_observer/remove_observer/get_public_comments/get_all_comments), Comment (create/edit/add_attachment, @mentions auto-extract), событие CommentPosted
+  - `modules/recruitment/ports/application_repository.py` — добавлен list_by_candidate (для JUGO-142)
+  - `modules/recruitment/ports/comment_repository.py` — новый порт: save_thread/get_thread/list_by_application
+  - `modules/recruitment/application/create_application.py` — обновлён: origin+resume_id параметры, правила повторных откликов (JUGO-142: active → CONFLICT, terminal → новый)
+  - `modules/recruitment/application/reject_application.py` — новый use case: отклонение с reason_code + reason_label + internal_note
+  - `modules/recruitment/application/comment_use_case.py` — новый use case: create_thread/add_comment/list_threads/add_observer
+  - `modules/recruitment/application/application_timeline.py` — новый use case (JUGO-144): агрегация ленты (created/transition/rejection/ai_event/comment) с хронологической сортировкой
+  - `modules/recruitment/api/applications_router.py` — расширение REST API: POST /applications (origin+resume), GET /applications (filter by vacancy), GET /{id}, POST /{id}/reject, GET /{id}/timeline, POST /{id}/threads, GET /{id}/threads, POST /{id}/threads/{tid}/comments
+  - `infra/stubs_repositories.py` — InMemoryApplicationRepository.list_by_candidate + InMemoryCommentRepository
+  - `infra/db/models/applications.py` — ORM расширение (origin, current_stage_id, stage_entered_at, screening_score, risk_level, rejection fields, resume_id)
+  - `infra/db/models/comment_threads.py` — новый ORM (comment_threads table)
+  - `infra/db/models/__init__.py` — CommentThreadORM registered
+  - `alembic/versions/0012_application_enhancements_comments.py` — миграция: расширение applications + таблица comment_threads + RLS
+  - `infra/container.py` — reject_application, comment_use_case, application_timeline подключены (stub + prod)
+  - `shared/events.py` — ApplicationRejected + CommentPosted зарегистрированы в envelope registry; payload fields: origin, reason_code, reason_label, thread_id, comment_id, author_id, is_private; исправлены отступы в _EVENT_TYPE_REGISTRY
+  - `tests/test_applications_domain.py` — 17 тестов (create, reject, risk, screening_score, move_to, states)
+  - `tests/test_applications_use_cases.py` — 10 тестов (create с origin+resume, repeat rules, reject, timeline)
+  - `tests/test_applications_api.py` — 22 теста (list, get, reject, repeat rules, timeline, comments + mentions + private + attachments)
+  - `tests/test_comments_domain.py` — 22 теста (thread, mentions, privacy, attachments, edit, observers)
+  - `tests/test_api.py` — обновлён: test_create_application_idempotent → 409 CONFLICT (JUGO-142)
+  - `tests/test_pipeline.py` — обновлён: test_create_application_idempotent → conflict (JUGO-142)
+- Тесты: 724 passed (+71)
+- ruff check + format: clean
+- Issue #17 закрыт
+- **E-14 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-140..144)**
 
 ### [2026-08-30] JUGO-130..135 — E-13: Воронка — этапы как данные — ✅ DONE
 - Коммит: `e28b3b9` | Тесты: 653 (+68) | Issue #16 закрыт
