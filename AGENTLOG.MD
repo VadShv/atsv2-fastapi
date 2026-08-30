@@ -104,7 +104,7 @@
 ## История изменений
 
 ### [2026-08-30] JUGO-320..324 — E-32: AI Skills API — ✅ DONE
-- Коммит: `pending` | Тесты: 1124 (+13) | OpenAPI: 87 paths (+3), 125 schemas (+5)
+- Коммит: `be5fd05` | Тесты: 1124 (+13) | OpenAPI: 87 paths (+3), 125 schemas (+5)
 - **JUGO-320 — Skills API: список скиллов**:
   - `apps/api/src/ats/modules/ai_core/api/skills_router.py` — `GET /skills`: список доступных AI-скиллов (id, name, prompt_id, output_schema, variables)
 - **JUGO-321 — Skills API: прямой запуск скилла**:
