@@ -120,7 +120,7 @@
 ## История изменений
 
 ### [2026-08-30] JUGO-400..410 — E-40: M1 Screening — ✅ DONE
-- Коммит: (pending) | Тесты: 1210 (+66) | OpenAPI: 98 paths (+7), 138 schemas (+6)
+- Коммит: 5d8fa12 | Тесты: 1210 (+66) | OpenAPI: 98 paths (+7), 138 schemas (+6)
 - **JUGO-400 — Module skeleton**:
   - `apps/api/src/ats/modules/m1_screening/domain/screening.py` — ScreeningResult aggregate, enums, events, scoring functions
   - `apps/api/src/ats/modules/m1_screening/ports/screening_repository.py` — Protocol
