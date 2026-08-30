@@ -77,6 +77,12 @@ def get_trace_context_for_propagation() -> dict[str, str]:
 
         headers: dict[str, str] = {}
         inject(headers)
+        # Fallback: always include x-trace-id from contextvars
+        # so that restore works even without an active OTel span
+        if "x-trace-id" not in headers:
+            trace_id = get_log_context("trace_id")
+            if trace_id:
+                headers["x-trace-id"] = trace_id
         return headers
     except Exception:
         return {}

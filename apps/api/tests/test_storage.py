@@ -483,9 +483,26 @@ class TestGetStorageFactory:
 
     def test_non_stub_without_sdk_falls_back_to_in_memory(self) -> None:
         """Если S3 SDK не установлен — fallback на InMemory."""
-        from ats.infra.storage import get_storage
+        """Если S3 SDK не установлен — fallback на InMemory."""
+        import sys
+        from unittest.mock import patch
 
-        storage = get_storage(settings=StorageSettings(use_stub=False))
+        saved = sys.modules.pop("aioboto3", None)
+        try:
+            with patch.dict(sys.modules, {"aioboto3": None}):
+                from ats.infra.storage import get_storage
+
+                storage = get_storage(
+                    settings=StorageSettings(use_stub=False)
+                )
+                from ats.infra.storage.in_memory_storage import (
+                    InMemoryFileStorage,
+                )
+
+                assert isinstance(storage, InMemoryFileStorage)
+        finally:
+            if saved is not None:
+                sys.modules["aioboto3"] = saved
         from ats.infra.storage.in_memory_storage import InMemoryFileStorage
 
         assert isinstance(storage, InMemoryFileStorage)
