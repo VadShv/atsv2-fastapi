@@ -4864,6 +4864,122 @@
         }
       }
     },
+    "/api/v1/skills": {
+      "get": {
+        "tags": [
+          "skills"
+        ],
+        "summary": "Список доступных AI-скиллов",
+        "operationId": "list_skills_api_v1_skills_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/skills/{skill_id}/run": {
+      "post": {
+        "tags": [
+          "skills"
+        ],
+        "summary": "Прямой запуск AI-скилла с переменными",
+        "operationId": "run_skill_api_v1_skills__skill_id__run_post",
+        "parameters": [
+          {
+            "name": "skill_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skill Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunSkillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunSkillResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/skills/vacancies/{vacancy_id}/regenerate-criteria": {
+      "post": {
+        "tags": [
+          "skills"
+        ],
+        "summary": "Регенерировать AI-критерии скрининга для существующей вакансии",
+        "operationId": "regenerate_criteria_api_v1_skills_vacancies__vacancy_id__regenerate_criteria_post",
+        "parameters": [
+          {
+            "name": "vacancy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Vacancy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegenerateCriteriaResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -7695,6 +7811,51 @@
         ],
         "title": "RefreshResponse"
       },
+      "RegenerateCriteriaResponse": {
+        "properties": {
+          "vacancy_id": {
+            "type": "string",
+            "title": "Vacancy Id"
+          },
+          "criteria_provenance_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Criteria Provenance Id"
+          },
+          "criteria": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Criteria"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vacancy_id"
+        ],
+        "title": "RegenerateCriteriaResponse",
+        "description": "Результат регенерации критериев для вакансии."
+      },
       "RegisterContactRequest": {
         "properties": {
           "kind": {
@@ -8041,6 +8202,89 @@
         "title": "ResumeVersionResponse",
         "description": "Ответ: версия резюме кандидата."
       },
+      "RunSkillRequest": {
+        "properties": {
+          "variables": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Variables",
+            "description": "Переменные для рендера промпта скилла"
+          }
+        },
+        "type": "object",
+        "required": [
+          "variables"
+        ],
+        "title": "RunSkillRequest",
+        "description": "Запрос на запуск скилла с переменными."
+      },
+      "RunSkillResponse": {
+        "properties": {
+          "skill_id": {
+            "type": "string",
+            "title": "Skill Id"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "parsed_output": {
+            "title": "Parsed Output",
+            "description": "Структурированный результат скилла"
+          },
+          "provenance_id": {
+            "type": "string",
+            "title": "Provenance Id"
+          },
+          "latency_ms": {
+            "type": "integer",
+            "title": "Latency Ms"
+          },
+          "tokens_in": {
+            "type": "integer",
+            "title": "Tokens In"
+          },
+          "tokens_out": {
+            "type": "integer",
+            "title": "Tokens Out"
+          },
+          "cost_usd": {
+            "type": "number",
+            "title": "Cost Usd"
+          },
+          "repaired": {
+            "type": "boolean",
+            "title": "Repaired",
+            "default": false
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill_id",
+          "model",
+          "parsed_output",
+          "provenance_id",
+          "latency_ms",
+          "tokens_in",
+          "tokens_out",
+          "cost_usd"
+        ],
+        "title": "RunSkillResponse",
+        "description": "Результат запуска скилла: parsed output + provenance (whitebox)."
+      },
       "ScreeningCriteriaResponse": {
         "properties": {
           "provenance_id": {
@@ -8229,6 +8473,75 @@
           "head"
         ],
         "title": "Seniority"
+      },
+      "SkillListResponse": {
+        "properties": {
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillSummaryResponse"
+            },
+            "type": "array",
+            "title": "Skills"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skills",
+          "total"
+        ],
+        "title": "SkillListResponse",
+        "description": "Список доступных AI-скиллов."
+      },
+      "SkillSummaryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "prompt_id": {
+            "type": "string",
+            "title": "Prompt Id"
+          },
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version"
+          },
+          "output_schema": {
+            "type": "string",
+            "title": "Output Schema"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Variables"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "prompt_id",
+          "prompt_version",
+          "output_schema",
+          "variables"
+        ],
+        "title": "SkillSummaryResponse",
+        "description": "Краткое описание доступного скилла."
       },
       "StageResponse": {
         "properties": {

@@ -16,6 +16,7 @@
 | JUGO-310..314 | E-31 | Prompt Registry | 🚧 PENDING | — |
 | JUGO-310..314 | E-31 | Prompt Registry | ✅ DONE | — |
 | JUGO-320..324 | E-32 | AI Skills | 🚧 PENDING | — |
+| JUGO-320..324 | E-32 | AI Skills | ✅ DONE | — |
 | JUGO-330..334 | E-33 | Embeddings (pgvector) | 🚧 PENDING | — |
 
 ### Прогресс Волны 2
@@ -24,7 +25,8 @@
 |------|-------|--------|--------|
 | E-30 (LLM Gateway) | 6 | 6/6 ✅ | 1094 (+19) |
 | E-31 (Prompt Registry) | 5 | 5/5 ✅ | 1111 (+17) |
-| **Итого** | **11** | **11/11 ✅** | **1111** |
+| E-32 (AI Skills) | 5 | 5/5 ✅ | 1124 (+13) |
+| **Итого** | **16** | **16/16 ✅** | **1124** |
 
 **Волна 1 — Ядро ✅ ЗАВЕРШЕНА + 🔒 ГЕЙТ ПРОЙДЕН** (тег `contracts-v1.0`)
 
@@ -100,6 +102,24 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-320..324 — E-32: AI Skills API — ✅ DONE
+- Коммит: `pending` | Тесты: 1124 (+13) | OpenAPI: 87 paths (+3), 125 schemas (+5)
+- **JUGO-320 — Skills API: список скиллов**:
+  - `apps/api/src/ats/modules/ai_core/api/skills_router.py` — `GET /skills`: список доступных AI-скиллов (id, name, prompt_id, output_schema, variables)
+- **JUGO-321 — Skills API: прямой запуск скилла**:
+  - `POST /skills/{skill_id}/run` — запуск скилла с переменными, возвращает parsed_output + provenance_id (whitebox)
+  - Поддержка: `generate_screening_criteria`, `parse_resume`
+  - Ошибки скиллов (пустой текст, AI unavailable) возвращаются как `error` поле, не 500
+- **JUGO-322 — Skills API: регенерация критериев**:
+  - `POST /skills/vacancies/{vacancy_id}/regenerate-criteria` — регенерация AI-критериев для существующей вакансии
+  - Привязывает новый provenance_id к вакансии (обновляет `screening_criteria_provenance`)
+- **JUGO-323 — Интеграция skills_router в main.py**:
+  - `apps/api/src/ats/main.py` — `app.include_router(skills_router, prefix="/api/v1")`
+- **JUGO-324 — Тесты AI Skills**:
+  - `apps/api/tests/test_ai_skills.py` — 13 тестов: list (3), run (6, incl. provenance + error cases), regenerate (4, incl. provenance linkage + 404)
+- ruff check + format: clean | OpenAPI backward compatible
+- **E-32 ПОЛНОСТЬЮ ЗАВЕРШЁН: 5/5 (JUGO-320..324)**
 
 ### [2026-08-30] JUGO-310..314 — E-31: Prompt Registry API — ✅ DONE
 - Коммит: `0dc9738` | Тесты: 1111 (+17) | OpenAPI: 84 paths (+4), 120 schemas (+7)
