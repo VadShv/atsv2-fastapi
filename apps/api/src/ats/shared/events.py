@@ -95,6 +95,10 @@ class AggregateRef:
 _EVENT_TYPE_REGISTRY: dict[str, tuple[str, int, str]] = {
     "VacancyCreated": ("vacancy.created", 1, "vacancy"),
     "ScreeningCriteriaGenerated": ("vacancy.screening.generated", 1, "vacancy"),
+    "VacancyPublished": ("vacancy.published", 1, "vacancy"),
+    "VacancyClosed": ("vacancy.closed", 1, "vacancy"),
+    "VacancyStatusChanged": ("vacancy.status.changed", 1, "vacancy"),
+    "RequirementSetActivated": ("vacancy.requirements.activated", 1, "vacancy"),
     "CandidateCreated": ("candidate.created", 1, "candidate"),
     "CandidateUpdated": ("candidate.updated", 1, "candidate"),
     "ResumeAttached": ("candidate.resume.attached", 1, "candidate"),
@@ -186,10 +190,13 @@ _PAYLOAD_FIELDS = (
     "provenance_id",
     "candidate_id",
     "application_id",
+    "requirement_set_id",
     "from_stage",
     "to_stage",
     "from_stage_id",
     "to_stage_id",
+    "from_status",
+    "to_status",
     "stage",
     "source",
     "status",
@@ -204,6 +211,7 @@ _PAYLOAD_FIELDS = (
     "seniority",
     "team",
     "reason",
+    "hired_count",
 )
 
 

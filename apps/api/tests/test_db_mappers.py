@@ -28,7 +28,7 @@ class TestVacancyMapper:
         )
         vacancy = Vacancy.create(tenant_id=tenant, role=role)
         vacancy.attach_screening_criteria(ProvenanceId.generate())
-        vacancy.activate()
+        vacancy.publish()
 
         # Домен → ORM
         orm = vacancy_to_orm(vacancy)
@@ -36,7 +36,7 @@ class TestVacancyMapper:
         assert orm.tenant_id == tenant.value
         assert orm.title == "Middle Python Developer"
         assert orm.seniority == "middle"
-        assert orm.status == "active"
+        assert orm.status == "open"
         assert orm.requirements == ["Python", "FastAPI"]
         assert orm.screening_criteria_provenance is not None
 
@@ -47,7 +47,7 @@ class TestVacancyMapper:
         assert restored.id == vacancy.id
         assert restored.role.title == vacancy.role.title
         assert restored.role.seniority == Seniority.MIDDLE
-        assert restored.status == VacancyStatus.ACTIVE
+        assert restored.status == VacancyStatus.OPEN
         assert restored.screening_criteria_provenance is not None
 
     def test_roundtrip_without_criteria(self) -> None:

@@ -48,6 +48,13 @@ class InMemoryVacancyRepository(VacancyRepository):
         items = [v for k, v in self._store.items() if k.startswith(f"{tenant_id.value}:")]
         return items[offset : offset + limit]
 
+    async def delete(self, tenant_id: TenantId, vacancy_id: VacancyId) -> bool:
+        key = f"{tenant_id.value}:{vacancy_id.value}"
+        if key in self._store:
+            del self._store[key]
+            return True
+        return False
+
 
 class InMemoryProvenanceLedger(ProvenanceLedger):
     """In-memory provenance ledger. Append-only по контракту, но хранит в dict."""

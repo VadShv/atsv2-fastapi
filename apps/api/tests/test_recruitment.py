@@ -36,13 +36,13 @@ class TestVacancyAggregate:
         assert len(events) == 1
         assert events[0].__class__.__name__ == "VacancyCreated"
 
-    def test_activate_requires_description(self) -> None:
+    def test_publish_requires_description(self) -> None:
         role = RoleDescription(
             title="Dev", seniority=Seniority.JUNIOR, team="X", description=""
         )
         vacancy = Vacancy.create(tenant_id=TENANT, role=role)
         with pytest.raises(ValueError, match="role description"):
-            vacancy.activate()
+            vacancy.publish()
 
     def test_attach_screening_criteria_publishes_event(self) -> None:
         role = RoleDescription(

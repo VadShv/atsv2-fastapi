@@ -20,6 +20,9 @@ from ats.infra.stubs_repositories import (
     InMemoryApplicationRepository,
     InMemoryCandidateRepository,
 )
+from ats.infra.stubs_requirement_set_repository import (
+    InMemoryRequirementSetRepository,
+)
 from ats.infra.stubs_resume_repository import InMemoryResumeRepository
 from ats.modules.ai_core.domain.gateway import AIGateway
 from ats.modules.ai_core.ports.provenance import ProvenanceLedger
@@ -45,11 +48,18 @@ from ats.modules.recruitment.application.create_application import (
     CreateApplicationUseCase,
 )
 from ats.modules.recruitment.application.create_vacancy import CreateVacancyUseCase
+from ats.modules.recruitment.application.manage_requirement_sets import (
+    RequirementSetUseCase,
+)
 from ats.modules.recruitment.application.move_application import (
     MoveApplicationUseCase,
 )
+from ats.modules.recruitment.application.vacancy_crud import VacancyCrudUseCase
 from ats.modules.recruitment.ports.application_repository import (
     ApplicationRepository,
+)
+from ats.modules.recruitment.ports.requirement_set_repository import (
+    RequirementSetRepository,
 )
 from ats.modules.recruitment.ports.vacancy_repository import VacancyRepository
 from ats.modules.search.application.search_candidates import SearchCandidatesUseCase
@@ -64,6 +74,7 @@ class Container:
     candidate_repository: CandidateRepository
     application_repository: ApplicationRepository
     resume_repository: ResumeRepository
+    requirement_set_repository: RequirementSetRepository
     provenance_ledger: ProvenanceLedger
     ai_gateway: AIGateway
     search_engine: SearchEngine
@@ -71,6 +82,8 @@ class Container:
     audit_reader: AuditReader
     event_bus: InProcessEventBus
     create_vacancy: CreateVacancyUseCase
+    vacancy_crud: VacancyCrudUseCase
+    requirement_set_use_case: RequirementSetUseCase
     create_application: CreateApplicationUseCase
     move_application: MoveApplicationUseCase
     upload_resume: UploadResumeUseCase
@@ -89,6 +102,7 @@ def build_container() -> Container:
         candidate_repo: CandidateRepository = InMemoryCandidateRepository()
         application_repo: ApplicationRepository = InMemoryApplicationRepository()
         resume_repo: ResumeRepository = InMemoryResumeRepository()
+        req_set_repo: RequirementSetRepository = InMemoryRequirementSetRepository()
         provenance: ProvenanceLedger = InMemoryProvenanceLedger()
         gateway: AIGateway = StubAIGateway()
         search_engine: SearchEngine = InMemorySearchEngine()
@@ -104,6 +118,7 @@ def build_container() -> Container:
         candidate_repo = InMemoryCandidateRepository()  # Pg-реализация в след. фазе
         application_repo = InMemoryApplicationRepository()
         resume_repo = InMemoryResumeRepository()  # Pg-реализация в след. фазе
+        req_set_repo = InMemoryRequirementSetRepository()  # Pg-реализация в след. фазе
         provenance = PgProvenanceLedger()
         gateway = LiteLLMGateway(provenance)
         search_engine = PgVectorSearchEngine()
@@ -115,6 +130,8 @@ def build_container() -> Container:
     screening_skill = GenerateScreeningCriteria(gateway)
     parse_skill = ParseResume(gateway)
     create_vacancy = CreateVacancyUseCase(vacancy_repo, screening_skill)
+    vacancy_crud = VacancyCrudUseCase(vacancy_repo)
+    requirement_set_use_case = RequirementSetUseCase(req_set_repo, vacancy_repo)
     create_application = CreateApplicationUseCase(application_repo)
     move_application = MoveApplicationUseCase(application_repo)
     upload_resume = UploadResumeUseCase(candidate_repo, parse_skill, search_engine, gateway)
@@ -130,6 +147,7 @@ def build_container() -> Container:
         candidate_repository=candidate_repo,
         application_repository=application_repo,
         resume_repository=resume_repo,
+        requirement_set_repository=req_set_repo,
         provenance_ledger=provenance,
         ai_gateway=gateway,
         search_engine=search_engine,
@@ -137,6 +155,8 @@ def build_container() -> Container:
         audit_reader=audit_reader,
         event_bus=event_bus,
         create_vacancy=create_vacancy,
+        vacancy_crud=vacancy_crud,
+        requirement_set_use_case=requirement_set_use_case,
         create_application=create_application,
         move_application=move_application,
         upload_resume=upload_resume,
