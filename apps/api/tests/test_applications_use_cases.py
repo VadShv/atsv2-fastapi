@@ -268,9 +268,7 @@ class TestApplicationTimelineUseCase:
         )
 
         result = asyncio.run(
-            container.application_timeline.execute(
-                tenant_id=TENANT, application_id=app.id
-            )
+            container.application_timeline.execute(tenant_id=TENANT, application_id=app.id)
         )
         assert not is_error(result)
         timeline = result.value
@@ -304,9 +302,7 @@ class TestApplicationTimelineUseCase:
         )
 
         result = asyncio.run(
-            container.application_timeline.execute(
-                tenant_id=TENANT, application_id=app.id
-            )
+            container.application_timeline.execute(tenant_id=TENANT, application_id=app.id)
         )
         timeline = result.value
         event_types = [e.event_type for e in timeline.entries]
@@ -327,9 +323,7 @@ class TestApplicationTimelineUseCase:
         ).value
 
         result = asyncio.run(
-            container.application_timeline.execute(
-                tenant_id=TENANT, application_id=app.id
-            )
+            container.application_timeline.execute(tenant_id=TENANT, application_id=app.id)
         )
         timeline = result.value
         timestamps = [e.timestamp for e in timeline.sorted_entries]

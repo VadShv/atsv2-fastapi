@@ -187,8 +187,12 @@ class TestCandidateData:
         settings = SeedSettings(random_seed=42, candidates_per_tenant=10)
         data = SeedGenerator(settings).generate()
         valid_sources = {
-            "direct", "referral", "job_board",
-            "database", "agency", "linkedin",
+            "direct",
+            "referral",
+            "job_board",
+            "database",
+            "agency",
+            "linkedin",
         }
         for c in data.candidates:
             assert c.source in valid_sources
@@ -280,8 +284,14 @@ class TestApplicationIntegrity:
         settings = SeedSettings(random_seed=42, candidates_per_tenant=50)
         data = SeedGenerator(settings).generate()
         valid_stages = {
-            "new", "screening", "phone_interview", "technical_interview",
-            "final_interview", "offer", "hired", "rejected",
+            "new",
+            "screening",
+            "phone_interview",
+            "technical_interview",
+            "final_interview",
+            "offer",
+            "hired",
+            "rejected",
         }
         for app in data.applications:
             assert app.stage in valid_stages
@@ -333,8 +343,12 @@ class TestRolesAndUsers:
         for u in data.users:
             assert u.role_name
             assert u.role_name in {
-                "admin", "head_of_recruiting", "recruiter",
-                "sourcer", "hiring_manager", "viewer",
+                "admin",
+                "head_of_recruiting",
+                "recruiter",
+                "sourcer",
+                "hiring_manager",
+                "viewer",
             }
 
 

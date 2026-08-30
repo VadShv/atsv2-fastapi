@@ -59,7 +59,9 @@ def test_user_without_role_denied():
 
 def test_user_inactive_denied():
     role = Role(
-        id=UUID(int=1), tenant_id=TENANT, name="x",
+        id=UUID(int=1),
+        tenant_id=TENANT,
+        name="x",
         permissions=frozenset([Permission("vacancy:read")]),
     )
     user = User(id=UUID(int=2), tenant_id=TENANT, email="x@y.z", role=role, is_active=False)
@@ -75,8 +77,13 @@ def test_system_role_presets_exist():
     from ats.modules.identity.domain.rbac import SYSTEM_ROLE_PRESETS
 
     expected = {
-        "admin", "head_of_recruiting", "recruiter", "sourcer",
-        "hiring_manager", "viewer", "api_client",
+        "admin",
+        "head_of_recruiting",
+        "recruiter",
+        "sourcer",
+        "hiring_manager",
+        "viewer",
+        "api_client",
     }
     assert set(SYSTEM_ROLE_PRESETS.keys()) == expected
 

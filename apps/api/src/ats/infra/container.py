@@ -31,6 +31,7 @@ from ats.infra.stubs_requirement_set_repository import (
     InMemoryRequirementSetRepository,
 )
 from ats.infra.stubs_resume_repository import InMemoryResumeRepository
+from ats.infra.stubs_search import InMemorySynonymRepository
 from ats.modules.ai_core.domain.gateway import AIGateway
 from ats.modules.ai_core.ports.provenance import ProvenanceLedger
 from ats.modules.ai_core.skills.generate_screening_criteria import (
@@ -94,6 +95,7 @@ from ats.modules.recruitment.ports.requirement_set_repository import (
 from ats.modules.recruitment.ports.vacancy_repository import VacancyRepository
 from ats.modules.search.application.search_candidates import SearchCandidatesUseCase
 from ats.modules.search.ports.search_engine import SearchEngine
+from ats.modules.search.ports.synonym_repository import SynonymRepository
 
 
 @dataclass
@@ -112,6 +114,7 @@ class Container:
     provenance_ledger: ProvenanceLedger
     ai_gateway: AIGateway
     search_engine: SearchEngine
+    synonym_repository: SynonymRepository
     audit_logger: AuditLogger
     audit_reader: AuditReader
     event_bus: InProcessEventBus
@@ -151,6 +154,7 @@ def build_container() -> Container:
         provenance: ProvenanceLedger = InMemoryProvenanceLedger()
         gateway: AIGateway = StubAIGateway()
         search_engine: SearchEngine = InMemorySearchEngine()
+        synonym_repo: SynonymRepository = InMemorySynonymRepository()
     else:
         from ats.infra.ai.litellm_gateway import LiteLLMGateway
         from ats.infra.db.repositories.provenance_repository import (
@@ -172,6 +176,7 @@ def build_container() -> Container:
         provenance = PgProvenanceLedger()
         gateway = LiteLLMGateway(provenance)
         search_engine = PgVectorSearchEngine()
+        synonym_repo = InMemorySynonymRepository()  # Pg-реализация в след. фазе
 
     audit_logger: AuditLogger = InMemoryAuditLogger()
     audit_reader: AuditReader = InMemoryAuditReader()
@@ -196,7 +201,7 @@ def build_container() -> Container:
     upload_candidate_resume = UploadCandidateResumeUseCase(
         candidate_repo, resume_repo, parse_skill, search_engine, gateway
     )
-    search_candidates = SearchCandidatesUseCase(search_engine, gateway)
+    search_candidates = SearchCandidatesUseCase(search_engine, gateway, synonym_repo)
     candidate_crud = CandidateCrudUseCase(candidate_repo)
     bulk_import_candidates = BulkImportCandidatesUseCase(candidate_repo)
 
@@ -213,6 +218,7 @@ def build_container() -> Container:
         provenance_ledger=provenance,
         ai_gateway=gateway,
         search_engine=search_engine,
+        synonym_repository=synonym_repo,
         audit_logger=audit_logger,
         audit_reader=audit_reader,
         event_bus=event_bus,

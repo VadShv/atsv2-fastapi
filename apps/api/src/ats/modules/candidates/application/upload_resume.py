@@ -21,8 +21,9 @@ from ats.modules.candidates.domain.candidate import (
     Candidate,
     CandidateSource,
 )
+from ats.modules.candidates.domain.parsed_resume import ParsedResume
 from ats.modules.candidates.ports.candidate_repository import CandidateRepository
-from ats.modules.search.domain.models import SearchableDocument
+from ats.modules.search.domain.models import SearchableDocument, build_search_text
 from ats.modules.search.ports.search_engine import SearchEngine
 from ats.shared.ids import IdempotencyKey, TenantId
 from ats.shared.result import ErrorCode, Result, is_error
@@ -100,7 +101,7 @@ class UploadResumeUseCase:
         await self._candidates.save(candidate)
 
         # 5. Индексация в поисковый движок (БЫСТРЕЙШИЙ ПОИСК)
-        await self._index_candidate(tenant_id, candidate, parsed.searchable_text)
+        await self._index_candidate(tenant_id, candidate, parsed)
 
         logger.info(
             "Candidate created and indexed: %s (provenance=%s)",
@@ -114,16 +115,21 @@ class UploadResumeUseCase:
         self,
         tenant_id: TenantId,
         candidate: Candidate,
-        searchable_text: str,
+        parsed: ParsedResume,
     ) -> None:
         """Индексировать кандидата: text + embedding + metadata.
 
         Graceful degradation: если эмбеддинг недоступен, индексируем только
         текстовый поиск (BM25). Ошибка индексации не блокирует создание кандидата.
         """
-        text = searchable_text or " ".join([candidate.headline, *candidate.skills]).strip()
-        if not text:
-            text = candidate.full_name
+        companies = [exp.company for exp in parsed.experience if exp.company]
+        text = build_search_text(
+            full_name=candidate.full_name,
+            headline=candidate.headline,
+            skills=candidate.skills,
+            companies=companies,
+            resume_text=parsed.searchable_text,
+        )
 
         embedding: list[float] | None = None
         try:

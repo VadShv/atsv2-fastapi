@@ -63,6 +63,7 @@ def _now():
 
 # --- VacancyCreated ---
 
+
 def test_vacancy_created_envelope_valid():
     event = VacancyCreated(
         event_id=uuid4(),
@@ -87,6 +88,7 @@ def test_vacancy_created_envelope_valid():
 
 # --- ScreeningCriteriaGenerated ---
 
+
 def test_screening_criteria_generated_envelope_valid():
     event = ScreeningCriteriaGenerated(
         event_id=uuid4(),
@@ -107,6 +109,7 @@ def test_screening_criteria_generated_envelope_valid():
 
 
 # --- VacancyPublished ---
+
 
 def test_vacancy_published_envelope_valid():
     event = VacancyPublished(
@@ -129,6 +132,7 @@ def test_vacancy_published_envelope_valid():
 
 # --- VacancyClosed ---
 
+
 def test_vacancy_closed_envelope_valid():
     event = VacancyClosed(
         event_id=uuid4(),
@@ -148,6 +152,7 @@ def test_vacancy_closed_envelope_valid():
 
 
 # --- VacancyStatusChanged ---
+
 
 def test_vacancy_status_changed_envelope_valid():
     event = VacancyStatusChanged(
@@ -169,6 +174,7 @@ def test_vacancy_status_changed_envelope_valid():
 
 
 # --- RequirementSetActivated ---
+
 
 def test_requirement_set_activated_envelope_valid():
     event = RequirementSetActivated(
@@ -192,6 +198,7 @@ def test_requirement_set_activated_envelope_valid():
 
 # --- CandidateCreated ---
 
+
 def test_candidate_created_envelope_valid():
     event = CandidateCreated(
         event_id=uuid4(),
@@ -214,6 +221,7 @@ def test_candidate_created_envelope_valid():
 
 # --- CandidateUpdated ---
 
+
 def test_candidate_updated_envelope_valid():
     event = CandidateUpdated(
         event_id=uuid4(),
@@ -235,6 +243,7 @@ def test_candidate_updated_envelope_valid():
 
 # --- ResumeAttached ---
 
+
 def test_resume_attached_envelope_valid():
     event = ResumeAttached(
         event_id=uuid4(),
@@ -254,6 +263,7 @@ def test_resume_attached_envelope_valid():
 
 
 # --- ResumeVersionCreated ---
+
 
 def test_resume_version_created_envelope_valid():
     event = ResumeVersionCreated(
@@ -278,6 +288,7 @@ def test_resume_version_created_envelope_valid():
 
 # --- ApplicationCreated ---
 
+
 def test_application_created_envelope_valid():
     event = ApplicationCreated(
         event_id=uuid4(),
@@ -298,6 +309,7 @@ def test_application_created_envelope_valid():
 
 
 # --- StageChanged ---
+
 
 def test_stage_changed_envelope_valid():
     event = StageChanged(
@@ -324,6 +336,7 @@ def test_stage_changed_envelope_valid():
 
 # --- ApplicationRejected ---
 
+
 def test_application_rejected_envelope_valid():
     event = ApplicationRejected(
         event_id=uuid4(),
@@ -346,6 +359,7 @@ def test_application_rejected_envelope_valid():
 
 
 # --- CommentPosted ---
+
 
 def test_comment_posted_envelope_valid():
     event = CommentPosted(
@@ -370,6 +384,7 @@ def test_comment_posted_envelope_valid():
 
 # --- FunnelPresetCreated ---
 
+
 def test_funnel_preset_created_envelope_valid():
     event = FunnelPresetCreated(
         event_id=uuid4(),
@@ -390,6 +405,7 @@ def test_funnel_preset_created_envelope_valid():
 
 # --- FunnelPresetPublished ---
 
+
 def test_funnel_preset_published_envelope_valid():
     event = FunnelPresetPublished(
         event_id=uuid4(),
@@ -409,6 +425,7 @@ def test_funnel_preset_published_envelope_valid():
 
 
 # --- FunnelTransitionEvent ---
+
 
 def test_funnel_transition_envelope_valid():
     event = FunnelTransitionEvent(
@@ -435,6 +452,7 @@ def test_funnel_transition_envelope_valid():
 
 # --- HMDecisionRecorded ---
 
+
 def test_hm_decision_envelope_valid():
     event = HMDecisionRecorded(
         event_id=uuid4(),
@@ -455,6 +473,7 @@ def test_hm_decision_envelope_valid():
 
 
 # --- Реестр ---
+
 
 def test_event_registry_lists_all_known_events():
     registry = json.loads((CONTRACTS_DIR / "registry.v1.json").read_text())

@@ -94,9 +94,7 @@ class TestVacancyStateMachine:
         assert "VacancyStatusChanged" in event_types
 
     def test_publish_without_description_raises(self) -> None:
-        role = RoleDescription(
-            title="Dev", seniority=Seniority.JUNIOR, team="X", description=""
-        )
+        role = RoleDescription(title="Dev", seniority=Seniority.JUNIOR, team="X", description="")
         vacancy = Vacancy.create(tenant_id=TENANT, role=role)
         with pytest.raises(ValueError, match="role description"):
             vacancy.publish()
@@ -645,9 +643,7 @@ class TestRequirementSetUseCase:
         )
 
         # Попытка активировать критерии v1 на вакансии v2
-        result = await use_case.activate(
-            TENANT, v2.id, create_result.value.requirement_set.id
-        )
+        result = await use_case.activate(TENANT, v2.id, create_result.value.requirement_set.id)
 
         assert is_error(result)
         assert result.error.code.value == "validation"
@@ -826,9 +822,7 @@ class TestRequirementSetAPI:
         )
         set_id = create_resp.json()["id"]
 
-        resp = api_client.post(
-            f"/api/v1/vacancies/{vacancy_id}/requirements/{set_id}/activate"
-        )
+        resp = api_client.post(f"/api/v1/vacancies/{vacancy_id}/requirements/{set_id}/activate")
         assert resp.status_code == 200
         assert resp.json()["status"] == "active"
         assert resp.json()["activated_at"] is not None
@@ -860,9 +854,7 @@ class TestRequirementSetAPI:
             json={"criteria": {"summary": "active version"}, "origin": "ai"},
         )
         set_id = create_resp.json()["id"]
-        api_client.post(
-            f"/api/v1/vacancies/{vacancy_id}/requirements/{set_id}/activate"
-        )
+        api_client.post(f"/api/v1/vacancies/{vacancy_id}/requirements/{set_id}/activate")
 
         resp = api_client.get(f"/api/v1/vacancies/{vacancy_id}/requirements/active")
         assert resp.status_code == 200
@@ -885,37 +877,25 @@ class TestRequirementSetAPI:
             f"/api/v1/vacancies/{vacancy_id}/requirements",
             json={"criteria": {"v": 1}, "origin": "ai"},
         )
-        api_client.post(
-            f"/api/v1/vacancies/{vacancy_id}/requirements/{r1.json()['id']}/activate"
-        )
+        api_client.post(f"/api/v1/vacancies/{vacancy_id}/requirements/{r1.json()['id']}/activate")
 
         # v2
         r2 = api_client.post(
             f"/api/v1/vacancies/{vacancy_id}/requirements",
             json={"criteria": {"v": 2}, "origin": "manual"},
         )
-        api_client.post(
-            f"/api/v1/vacancies/{vacancy_id}/requirements/{r2.json()['id']}/activate"
-        )
+        api_client.post(f"/api/v1/vacancies/{vacancy_id}/requirements/{r2.json()['id']}/activate")
 
         # Активная — v2
-        active = api_client.get(
-            f"/api/v1/vacancies/{vacancy_id}/requirements/active"
-        )
+        active = api_client.get(f"/api/v1/vacancies/{vacancy_id}/requirements/active")
         assert active.json()["version_number"] == 2
 
         # v1 — архивная
-        versions = api_client.get(
-            f"/api/v1/vacancies/{vacancy_id}/requirements"
-        )
-        v1_item = next(
-            v for v in versions.json()["items"] if v["version_number"] == 1
-        )
+        versions = api_client.get(f"/api/v1/vacancies/{vacancy_id}/requirements")
+        v1_item = next(v for v in versions.json()["items"] if v["version_number"] == 1)
         assert v1_item["status"] == "archived"
 
-    def test_create_requirement_set_for_nonexistent_vacancy(
-        self, api_client: TestClient
-    ) -> None:
+    def test_create_requirement_set_for_nonexistent_vacancy(self, api_client: TestClient) -> None:
         resp = api_client.post(
             f"/api/v1/vacancies/{uuid4()}/requirements",
             json={"criteria": {}, "origin": "manual"},

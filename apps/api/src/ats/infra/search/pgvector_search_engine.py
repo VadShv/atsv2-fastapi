@@ -9,6 +9,11 @@ search_tsv (tsvector), embedding (halfvec), metadata (jsonb).
 
 Размерность: эмбеддинги 4096, HNSW-индекс на halfvec(4000) — pgvector лимит.
 Обрезка 4096→4000 в _vec_to_pg (потеря 2.3%, незначительно).
+
+JUGO-170: tsvector конфиг 'russian,simple' — кириллица (стемминг) + латиница.
+JUGO-171: булев парсер запросов → to_tsquery (AND/OR/NOT/фразы/скобки).
+          Plain-запросы (без операторов) → plainto_tsquery (мягкий поиск, recall).
+JUGO-172: расширение запроса синонимами перед парсингом.
 """
 
 from __future__ import annotations
@@ -30,6 +35,13 @@ from ats.modules.search.domain.models import (
     SearchQuery,
     SearchResult,
 )
+from ats.modules.search.domain.query_parser import (
+    QueryParseError,
+    expand_synonyms,
+    has_boolean_syntax,
+    parse_query,
+    to_tsquery_string,
+)
 from ats.modules.search.ports.search_engine import SearchEngine
 
 logger = logging.getLogger(__name__)
@@ -37,6 +49,9 @@ logger = logging.getLogger(__name__)
 # pgvector: halfvec поддерживает до 4000 dim с HNSW-индексом.
 # Эмбеддинги 4096 обрезаются до 4000 (потеря 2.3%, см. миграцию 0006).
 PGVECTOR_INDEX_DIM = 4000
+
+# JUGO-170: russian (стемминг кириллицы) + simple (латиница/цифры как есть)
+TSCONFIG = "russian,simple"
 
 
 class PgVectorSearchEngine(SearchEngine):
@@ -52,13 +67,13 @@ class PgVectorSearchEngine(SearchEngine):
         async with self._session() as session:
             await session.execute(
                 text(
-                    """
+                    f"""
                     INSERT INTO candidates_search
                         (tenant_id, candidate_id, search_text, search_tsv,
                          embedding, metadata)
                     VALUES
                         (:tenant_id, :candidate_id, :search_text,
-                         to_tsvector('russian', :search_text),
+                         to_tsvector('{TSCONFIG}', :search_text),
                          CAST(:embedding AS halfvec(4000)),
                          CAST(:metadata AS jsonb))
                     ON CONFLICT (tenant_id, candidate_id) DO UPDATE SET
@@ -98,9 +113,13 @@ class PgVectorSearchEngine(SearchEngine):
         bm25_w = query.bm25_weight
         vec_w = query.vector_weight if query.query_embedding else 0.0
 
+        # JUGO-171: булев парсер запросов → tsquery
+        tsquery_str, is_boolean = self._build_tsquery(query)
+
         where_clauses = ["tenant_id = CAST(:tenant_id AS uuid)"]
         params: dict[str, Any] = {
             "tenant_id": str(query.tenant_id),
+            "tsquery": tsquery_str,
             "q_text": query.query,
             "embedding": embedding_sql,
             "limit": query.limit,
@@ -110,15 +129,26 @@ class PgVectorSearchEngine(SearchEngine):
         }
         where_clauses.extend(_build_filter_sql(query.filters, params))
 
+        # Для булевых запросов: жёсткая фильтрация @@ to_tsquery
+        # Для plain-запросов: мягкий поиск через plainto_tsquery (без фильтрации)
+        if tsquery_str and is_boolean:
+            where_clauses.append("search_tsv @@ to_tsquery(:tsquery)")
+            bm25_expr = "ts_rank(search_tsv, to_tsquery(:tsquery))"
+        elif query.query.strip():
+            # Plain-запрос: ранжируем по plainto_tsquery, но не фильтруем жёстко
+            bm25_expr = f"ts_rank(search_tsv, plainto_tsquery('{TSCONFIG}', :q_text))"
+        else:
+            bm25_expr = "0.0"
+
         where_sql = " AND ".join(where_clauses)
 
         sql = f"""
             SELECT
                 candidate_id,
-                ts_rank(search_tsv, plainto_tsquery('russian', :q_text)) AS bm25_score,
+                {bm25_expr} AS bm25_score,
                 CASE WHEN :embedding IS NULL THEN 0.0
                      ELSE 1 - (embedding <=> CAST(:embedding AS halfvec(4000))) END AS vec_score,
-                (:bm25_w * ts_rank(search_tsv, plainto_tsquery('russian', :q_text))
+                (:bm25_w * {bm25_expr}
                  + :vec_w * CASE WHEN :embedding IS NULL THEN 0.0
                                  ELSE 1 - (embedding <=> CAST(:embedding AS halfvec(4000))) END
                 ) AS final_score,
@@ -136,7 +166,6 @@ class PgVectorSearchEngine(SearchEngine):
         total_sql = f"""
             SELECT count(*) FROM candidates_search WHERE {where_sql}
         """
-        # Для count-запроса убираем limit/offset из параметров — пересоздаём
         count_params = {k: v for k, v in params.items() if k not in ("limit", "offset")}
         async with self._session() as session:
             total = (await session.execute(text(total_sql), count_params)).scalar() or 0
@@ -163,6 +192,38 @@ class PgVectorSearchEngine(SearchEngine):
             took_ms=took_ms,
             query=query.query,
         )
+
+    def _build_tsquery(self, query: SearchQuery) -> tuple[str, bool]:
+        """Построить tsquery-строку из булева запроса с расширением синонимами.
+
+        Возвращает (tsquery_str, is_boolean):
+        - tsquery_str: строка для to_tsquery (пустая для plain-запросов).
+        - is_boolean: True если запрос содержит булевы операторы.
+
+        JUGO-171: булев парсер (AND/OR/NOT/фразы/скобки).
+        JUGO-172: термины расширяются синонимами перед конвертацией.
+        """
+        is_boolean = has_boolean_syntax(query.query)
+        if not is_boolean:
+            # Plain-запрос: ранжирование через plainto_tsquery в SQL (мягкий поиск)
+            return "", False
+
+        try:
+            ast = parse_query(query.query)
+        except QueryParseError as exc:
+            logger.warning("Query parse error: %s", exc)
+            return "", False
+
+        if ast is None:
+            return "", False
+
+        # JUGO-172: расширение синонимами
+        if query.synonym_map:
+            ast = expand_synonyms(ast, query.synonym_map)
+
+        tsq = to_tsquery_string(ast)
+        logger.debug("tsquery for '%s': %s", query.query, tsq)
+        return tsq, True
 
     async def _facets(self, query: SearchQuery) -> list[Facet]:
         if not query.facet_fields:

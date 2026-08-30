@@ -58,6 +58,7 @@ def _make_entry(
 
 # --- AuditEntry ---
 
+
 class TestAuditEntry:
     def test_create_entry(self) -> None:
         tenant_id = uuid4()
@@ -107,16 +108,13 @@ class TestAuditEntry:
             entry.action = "modified"  # type: ignore[misc]
 
     def test_entry_has_unique_id(self) -> None:
-        e1 = AuditEntry.create(
-            tenant_id=uuid4(), action="a", entity_type="b", entity_id="1"
-        )
-        e2 = AuditEntry.create(
-            tenant_id=uuid4(), action="a", entity_type="b", entity_id="1"
-        )
+        e1 = AuditEntry.create(tenant_id=uuid4(), action="a", entity_type="b", entity_id="1")
+        e2 = AuditEntry.create(tenant_id=uuid4(), action="a", entity_type="b", entity_id="1")
         assert e1.id != e2.id
 
 
 # --- audit() helper ---
+
 
 class TestAuditHelper:
     async def test_audit_writes_entry(self) -> None:
@@ -189,6 +187,7 @@ class TestAuditHelper:
 
 # --- AuditActions ---
 
+
 class TestAuditActions:
     def test_actions_are_strings(self) -> None:
         assert AuditActions.VACANCY_CREATE == "vacancy.create"
@@ -206,6 +205,7 @@ class TestAuditActions:
 
 
 # --- InMemoryAuditReader ---
+
 
 class TestInMemoryAuditReader:
     def _make_entries(self, tenant_id: UUID, count: int = 5) -> list[AuditEntry]:
@@ -243,9 +243,7 @@ class TestInMemoryAuditReader:
         tenant_id = uuid4()
         entries = self._make_entries(tenant_id, 5)
         reader = InMemoryAuditReader(entries)
-        result = await reader.query(
-            AuditQuery(tenant_id=tenant_id, action="action.2")
-        )
+        result = await reader.query(AuditQuery(tenant_id=tenant_id, action="action.2"))
         assert len(result) == 1
         assert result[0].action == "action.2"
 
@@ -263,9 +261,7 @@ class TestInMemoryAuditReader:
         tenant_id = uuid4()
         entries = self._make_entries(tenant_id, 5)
         reader = InMemoryAuditReader(entries)
-        result = await reader.query(
-            AuditQuery(tenant_id=tenant_id, trace_id="trace-1")
-        )
+        result = await reader.query(AuditQuery(tenant_id=tenant_id, trace_id="trace-1"))
         assert len(result) == 1
         assert result[0].trace_id == "trace-1"
 
@@ -317,13 +313,12 @@ class TestInMemoryAuditReader:
         tenant_id = uuid4()
         entries = self._make_entries(tenant_id, 5)
         reader = InMemoryAuditReader(entries)
-        count = await reader.count(
-            AuditQuery(tenant_id=tenant_id, action="action.2")
-        )
+        count = await reader.count(AuditQuery(tenant_id=tenant_id, action="action.2"))
         assert count == 1
 
 
 # --- AuditQuery defaults ---
+
 
 class TestAuditQuery:
     def test_defaults(self) -> None:
@@ -351,16 +346,13 @@ class TestAuditQuery:
 
 # --- Append-only InMemoryAuditLogger ---
 
+
 class TestAppendOnly:
     async def test_logger_only_appends(self) -> None:
         """InMemoryAuditLogger только добавляет, не изменяет."""
         logger = InMemoryAuditLogger()
-        e1 = AuditEntry.create(
-            tenant_id=uuid4(), action="a", entity_type="b", entity_id="1"
-        )
-        e2 = AuditEntry.create(
-            tenant_id=uuid4(), action="c", entity_type="d", entity_id="2"
-        )
+        e1 = AuditEntry.create(tenant_id=uuid4(), action="a", entity_type="b", entity_id="1")
+        e2 = AuditEntry.create(tenant_id=uuid4(), action="c", entity_type="d", entity_id="2")
         await logger.log(e1)
         await logger.log(e2)
         assert len(logger._entries) == 2

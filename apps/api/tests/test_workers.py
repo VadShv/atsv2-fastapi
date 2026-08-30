@@ -40,6 +40,7 @@ from ats.infra.workers.worker_settings import (
 
 # --- BaseTask ---
 
+
 class SuccessTask(BaseTask):
     name = "test_success"
 
@@ -159,6 +160,7 @@ class TestBaseTask:
 
 # --- Builtin tasks ---
 
+
 class TestOutboxRelayTask:
     @pytest.mark.asyncio
     async def test_name(self) -> None:
@@ -199,6 +201,7 @@ class TestEventConsumerTask:
 
 
 # --- WorkerSettings ---
+
 
 class TestWorkerSettings:
     def test_all_queues_registered(self) -> None:
@@ -264,6 +267,7 @@ class TestWorkerSettings:
 
 # --- Redis client ---
 
+
 class TestRedisClient:
     @pytest.mark.asyncio
     async def test_get_redis_noop_without_module(self) -> None:
@@ -291,6 +295,7 @@ class TestRedisClient:
 
 
 # --- CLI ---
+
 
 class TestCLI:
     def test_list_queues_exits_zero(self, capsys: pytest.CaptureFixture) -> None:

@@ -29,6 +29,7 @@ from ats.infra.logging.setup import get_logger, setup_logging
 
 # --- Маскирование ПД ---
 
+
 class TestPIIMasking:
     def test_mask_email(self) -> None:
         masked = _mask_string("Contact: john.doe@example.com")
@@ -54,9 +55,7 @@ class TestPIIMasking:
         original = log_settings.mask_pii
         log_settings.mask_pii = False
         try:
-            result = mask_pii_processor(
-                None, "info", {"msg": "email: test@example.com"}
-            )
+            result = mask_pii_processor(None, "info", {"msg": "email: test@example.com"})
             assert "test@example.com" in result["msg"]
         finally:
             log_settings.mask_pii = original
@@ -90,6 +89,7 @@ class TestPIIMasking:
 
 
 # --- Context variables ---
+
 
 class TestLogContext:
     def test_set_and_get(self) -> None:
@@ -126,6 +126,7 @@ class TestLogContext:
 
 # --- setup_logging ---
 
+
 class TestSetupLogging:
     def test_setup_does_not_raise(self) -> None:
         setup_logging()
@@ -143,6 +144,7 @@ class TestSetupLogging:
 
 
 # --- Middleware ---
+
 
 class TestRequestContextMiddleware:
     def test_middleware_sets_request_id(self) -> None:
@@ -242,6 +244,7 @@ class TestRequestContextMiddleware:
 
 
 # --- Настройки ---
+
 
 class TestLogSettings:
     def test_defaults(self) -> None:

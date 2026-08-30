@@ -102,9 +102,7 @@ class TestApplicationsAPI:
         for stage in ["interview", "offer", "hired"]:
             r = client.post(f"/api/v1/applications/{app_id}/move", json={"to_stage": stage})
             assert r.status_code == 200
-        final = client.post(
-            f"/api/v1/applications/{app_id}/move", json={"to_stage": "hired"}
-        )
+        final = client.post(f"/api/v1/applications/{app_id}/move", json={"to_stage": "hired"})
         assert final.json()["stage"] == "hired"
         assert final.json()["is_terminal"] is True
 

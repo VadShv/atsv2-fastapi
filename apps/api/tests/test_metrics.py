@@ -32,6 +32,7 @@ from ats.infra.metrics.settings import settings as metrics_settings
 
 # --- Настройки ---
 
+
 class TestMetricsSettings:
     def test_defaults(self) -> None:
         assert metrics_settings.enabled is True
@@ -47,6 +48,7 @@ class TestMetricsSettings:
 
 
 # --- No-op fallback ---
+
 
 class TestNoOpMetrics:
     def test_is_metrics_enabled_returns_bool(self) -> None:
@@ -74,6 +76,7 @@ class TestNoOpMetrics:
 
 # --- Path normalization ---
 
+
 class TestPathNormalization:
     def test_normal_path_unchanged(self) -> None:
         assert _normalize_path("/api/v1/vacancies") == "/api/v1/vacancies"
@@ -98,6 +101,7 @@ class TestPathNormalization:
 
 # --- Status group ---
 
+
 class TestStatusGroup:
     def test_2xx(self) -> None:
         assert _status_group(200) == "2xx"
@@ -116,6 +120,7 @@ class TestStatusGroup:
 
 
 # --- MetricsMiddleware ---
+
 
 class TestMetricsMiddleware:
     def test_middleware_does_not_raise(self) -> None:
@@ -177,6 +182,7 @@ class TestMetricsMiddleware:
 
 # --- /metrics endpoint ---
 
+
 class TestMetricsEndpoint:
     def test_metrics_endpoint_returns_response(self) -> None:
         """/metrics endpoint возвращает ответ."""
@@ -217,6 +223,7 @@ class TestMetricsEndpoint:
 
 
 # --- Registry доступность ---
+
 
 class TestRegistryAvailability:
     def test_all_http_metrics_available(self) -> None:
@@ -262,6 +269,7 @@ class TestRegistryAvailability:
 
 
 # --- Интеграция с полным app ---
+
 
 class TestFullAppMetrics:
     def test_metrics_endpoint_in_full_app(self) -> None:

@@ -3,6 +3,11 @@
 БЫСТРЕЙШИЙ ПОИСК: гибридный BM25 ⊕ vector ⊕ фильтры → re-rank + фасеты.
 Реализует тот же SearchEngine-порт, что и pgvector-адаптер, но хранит в памяти.
 Используется в dev-режиме и в тестах без Postgres.
+
+JUGO-171: булев парсер запросов (AND/OR/NOT/фразы/скобки) — фильтрация + BM25.
+          Plain-запросы (без операторов) не фильтруют жёстко — только скорят
+          по BM25 для максимального recall + семантического векторного поиска.
+JUGO-172: расширение запроса синонимами перед парсингом.
 """
 
 from __future__ import annotations
@@ -22,6 +27,14 @@ from ats.modules.search.domain.models import (
     SearchHit,
     SearchQuery,
     SearchResult,
+)
+from ats.modules.search.domain.query_parser import (
+    QueryParseError,
+    evaluate,
+    expand_synonyms,
+    extract_terms,
+    has_boolean_syntax,
+    parse_query,
 )
 from ats.modules.search.ports.search_engine import SearchEngine
 
@@ -56,11 +69,19 @@ class InMemorySearchEngine(SearchEngine):
         if not tenant_docs:
             return SearchResult(hits=[], total=0, query=query.query)
 
-        q_tokens = _tokenize(query.query)
+        # JUGO-171: булев парсер запросов
+        ast, is_boolean = self._parse_query(query)
+        q_tokens = extract_terms(ast) if ast else _tokenize(query.query)
+
         q_vec = query.query_embedding
 
         # --- Фильтрация по metadata ---
         filtered = [d for d in tenant_docs if _matches_filters(d, query.filters)]
+
+        # JUGO-171: жёсткая булева фильтрация только для запросов с операторами.
+        # Plain-запросы не фильтруют — только скорят (recall + vector semantic).
+        if is_boolean and ast is not None:
+            filtered = [d for d in filtered if self._matches_bool(d, ast)]
 
         if not filtered:
             return SearchResult(hits=[], total=0, query=query.query)
@@ -114,6 +135,37 @@ class InMemorySearchEngine(SearchEngine):
             took_ms=took_ms,
             query=query.query,
         )
+
+    def _parse_query(self, query: SearchQuery) -> tuple[object | None, bool]:
+        """Распарсить булев запрос с расширением синонимами.
+
+        Возвращает (AST, is_boolean):
+        - AST: дерево запроса или None (пустой/нераспарсенный запрос).
+        - is_boolean: True если запрос содержит булевы операторы (жёсткая фильтрация).
+
+        При ошибке парсинга логирует и возвращает (None, False) (fallback на plain).
+        """
+        try:
+            ast = parse_query(query.query)
+        except QueryParseError:
+            # Fallback: plain tokenization без булевой логики
+            return None, False
+
+        if ast is None:
+            return None, False
+
+        # JUGO-172: расширение синонимами
+        if query.synonym_map:
+            ast = expand_synonyms(ast, query.synonym_map)
+
+        is_bool = has_boolean_syntax(query.query)
+        return ast, is_bool
+
+    def _matches_bool(self, doc: SearchableDocument, ast) -> bool:
+        """Проверить соответствие документа булевому AST."""
+        tokens = _tokenize(doc.text)
+        token_set = set(tokens)
+        return evaluate(ast, tokens, token_set)
 
     def _bm25(self, docs: list[SearchableDocument], q_tokens: list[str]) -> dict[UUID, float]:
         """BM25 по Okapi. Классическая формула ранжирования."""

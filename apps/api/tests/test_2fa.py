@@ -344,9 +344,7 @@ async def test_store_backup_code_invalid():
     )
     await store.verify_and_enable(UUID(ADMIN_USER_ID), totp_code(result.secret))
 
-    assert await store.verify_backup_code(
-        UUID(ADMIN_USER_ID), "invalid-code"
-    ) is False
+    assert await store.verify_backup_code(UUID(ADMIN_USER_ID), "invalid-code") is False
 
 
 @pytest.mark.asyncio
@@ -440,9 +438,7 @@ def test_api_2fa_disable_with_valid_code():
     secret = resp.json()["secret"]
     client.post("/api/v1/auth/2fa/enable", json={"code": totp_code(secret)})
 
-    resp = client.post(
-        "/api/v1/auth/2fa/disable", json={"code": totp_code(secret)}
-    )
+    resp = client.post("/api/v1/auth/2fa/disable", json={"code": totp_code(secret)})
     assert resp.status_code == 200
     assert resp.json()["enabled"] is False
 
@@ -453,7 +449,5 @@ def test_api_2fa_disable_with_wrong_code():
     secret = resp.json()["secret"]
     client.post("/api/v1/auth/2fa/enable", json={"code": totp_code(secret)})
 
-    resp = client.post(
-        "/api/v1/auth/2fa/disable", json={"code": "000000"}
-    )
+    resp = client.post("/api/v1/auth/2fa/disable", json={"code": "000000"})
     assert resp.status_code == 400

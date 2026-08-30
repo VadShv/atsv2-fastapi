@@ -285,9 +285,7 @@ class TestUploadCandidateResumeUseCase:
         assert not is_error(result)
         return result.value.id
 
-    async def test_upload_resume_creates_version_and_facts(
-        self, container, candidate_id
-    ) -> None:
+    async def test_upload_resume_creates_version_and_facts(self, container, candidate_id) -> None:
         resume_text = (
             "Иванов Иван Иванович\n"
             "Middle Python Developer\n"
@@ -314,9 +312,7 @@ class TestUploadCandidateResumeUseCase:
         assert res.deduplicated is False
         assert res.parsed is not None
 
-    async def test_upload_resume_deduplicates_same_content(
-        self, container, candidate_id
-    ) -> None:
+    async def test_upload_resume_deduplicates_same_content(self, container, candidate_id) -> None:
         content = b"resume content for dedup test"
 
         # Первая загрузка
@@ -396,19 +392,13 @@ class TestUploadCandidateResumeUseCase:
         assert not is_error(result)
 
         facts = await container.candidate_repository.list_facts(TENANT, candidate_id)
-        python_facts = [
-            f
-            for f in facts
-            if f.content.get("skill_name") == "Python"
-        ]
+        python_facts = [f for f in facts if f.content.get("skill_name") == "Python"]
         # Python не должен продублироваться — закреплённый факт защищён
         assert len(python_facts) == 1
         assert python_facts[0].pinned is True
         assert python_facts[0].source == FactSource.MANUAL
 
-    async def test_upload_resume_creates_language_facts(
-        self, container, candidate_id
-    ) -> None:
+    async def test_upload_resume_creates_language_facts(self, container, candidate_id) -> None:
         # Stub возвращает languages в распарсенном резюме
         resume_text = "Иванов Иван\nPython Developer\nНавыки: Python\n"
         result = await container.upload_candidate_resume.execute(
@@ -422,18 +412,14 @@ class TestUploadCandidateResumeUseCase:
         assert not is_error(result)
 
         facts = await container.candidate_repository.list_facts(TENANT, candidate_id)
-        language_facts = [
-            f for f in facts if f.fact_type == FactType.LANGUAGE
-        ]
+        language_facts = [f for f in facts if f.fact_type == FactType.LANGUAGE]
         # Stub возвращает Русский + Английский
         assert len(language_facts) == 2
         lang_names = {f.content.get("language") for f in language_facts}
         assert "Русский" in lang_names
         assert "Английский" in lang_names
 
-    async def test_upload_resume_nonexistent_candidate_returns_error(
-        self, container
-    ) -> None:
+    async def test_upload_resume_nonexistent_candidate_returns_error(self, container) -> None:
         result = await container.upload_candidate_resume.execute(
             TENANT,
             UploadCandidateResumeInput(
@@ -473,9 +459,7 @@ class TestUploadCandidateResumeUseCase:
         assert candidate is not None
         assert candidate.resume_provenance is not None
 
-    async def test_upload_resume_creates_multiple_versions(
-        self, container, candidate_id
-    ) -> None:
+    async def test_upload_resume_creates_multiple_versions(self, container, candidate_id) -> None:
         # Первое резюме
         await container.upload_candidate_resume.execute(
             TENANT,

@@ -35,6 +35,7 @@ from ats.infra.tracing.setup import get_tracer, setup_tracing
 
 # --- Настройки ---
 
+
 class TestTracingSettings:
     def test_defaults(self) -> None:
         assert tracing_settings.enabled is False
@@ -51,6 +52,7 @@ class TestTracingSettings:
 
 
 # --- No-op fallback ---
+
 
 class TestNoOpFallback:
     def test_setup_tracing_does_not_raise_without_otel(self) -> None:
@@ -79,6 +81,7 @@ class TestNoOpFallback:
 
 
 # --- Context functions ---
+
 
 class TestTracingContext:
     def test_get_current_trace_id_from_contextvars(self) -> None:
@@ -130,6 +133,7 @@ class TestTracingContext:
 
 
 # --- Propagation ---
+
 
 class TestTracePropagation:
     def test_capture_trace_context(self) -> None:
@@ -183,6 +187,7 @@ class TestTracePropagation:
 
 
 # --- TracingMiddleware ---
+
 
 class TestTracingMiddleware:
     def test_middleware_does_not_raise(self) -> None:
@@ -271,6 +276,7 @@ class TestTracingMiddleware:
 
 # --- BaseTask trace integration ---
 
+
 class TestBaseTaskTraceIntegration:
     async def test_base_task_pops_trace_ctx(self) -> None:
         """BaseTask извлекает trace_ctx из params и восстанавливает trace_id."""
@@ -280,9 +286,7 @@ class TestBaseTaskTraceIntegration:
             name = "test_task"
             captured_trace_id: str | None = None
 
-            async def execute(
-                self, ctx: Any, **params: Any
-            ) -> dict[str, Any] | None:
+            async def execute(self, ctx: Any, **params: Any) -> dict[str, Any] | None:
                 self.captured_trace_id = ctx.trace_id
                 return {"ok": True}
 
@@ -304,9 +308,7 @@ class TestBaseTaskTraceIntegration:
         class TestTask(BaseTask):
             name = "test_task_no_trace"
 
-            async def execute(
-                self, ctx: Any, **params: Any
-            ) -> dict[str, Any] | None:
+            async def execute(self, ctx: Any, **params: Any) -> dict[str, Any] | None:
                 return {"ok": True}
 
         task = TestTask()
@@ -321,9 +323,7 @@ class TestBaseTaskTraceIntegration:
         class TestTask(BaseTask):
             name = "test_task_params"
 
-            async def execute(
-                self, ctx: Any, **params: Any
-            ) -> dict[str, Any] | None:
+            async def execute(self, ctx: Any, **params: Any) -> dict[str, Any] | None:
                 # trace_ctx не должен быть в params
                 assert "trace_ctx" not in params
                 return {"params": list(params.keys())}
@@ -339,6 +339,7 @@ class TestBaseTaskTraceIntegration:
 
 
 # --- Интеграция: trace_id в логах и аудите ---
+
 
 class TestTraceIdIntegration:
     def test_trace_id_available_after_context_set(self) -> None:

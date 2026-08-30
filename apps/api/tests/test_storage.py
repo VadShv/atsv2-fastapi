@@ -94,12 +94,16 @@ class TestFileMetadata:
         tenant_a = uuid4()
         tenant_b = uuid4()
         meta_a = FileMetadata.create(
-            tenant_id=tenant_a, filename="f.pdf",
-            content_type="application/pdf", size_bytes=10,
+            tenant_id=tenant_a,
+            filename="f.pdf",
+            content_type="application/pdf",
+            size_bytes=10,
         )
         meta_b = FileMetadata.create(
-            tenant_id=tenant_b, filename="f.pdf",
-            content_type="application/pdf", size_bytes=10,
+            tenant_id=tenant_b,
+            filename="f.pdf",
+            content_type="application/pdf",
+            size_bytes=10,
         )
         assert meta_a.key != meta_b.key
         assert str(tenant_a) in meta_a.key
@@ -121,8 +125,10 @@ class TestFileMetadata:
 
     def test_create_empty_filename_uses_default(self) -> None:
         meta = FileMetadata.create(
-            tenant_id=uuid4(), filename="  ",
-            content_type="application/pdf", size_bytes=10,
+            tenant_id=uuid4(),
+            filename="  ",
+            content_type="application/pdf",
+            size_bytes=10,
         )
         assert meta.filename.strip() or "file" in meta.key
 
@@ -334,8 +340,10 @@ class TestInMemoryFileStorage:
     async def test_download_not_found(self) -> None:
         storage = self._make_storage()
         meta = FileMetadata.create(
-            tenant_id=uuid4(), filename="x.pdf",
-            content_type="application/pdf", size_bytes=1,
+            tenant_id=uuid4(),
+            filename="x.pdf",
+            content_type="application/pdf",
+            size_bytes=1,
         )
         with pytest.raises(FileNotFoundError):
             await storage.download(meta)
@@ -409,20 +417,26 @@ class TestInMemoryFileStorage:
         tenant_a = uuid4()
         tenant_b = uuid4()
         await storage.upload(
-            tenant_id=tenant_a, content=b"a",
-            filename="f.pdf", content_type="application/pdf",
+            tenant_id=tenant_a,
+            content=b"a",
+            filename="f.pdf",
+            content_type="application/pdf",
         )
         await storage.upload(
-            tenant_id=tenant_b, content=b"b",
-            filename="f.pdf", content_type="application/pdf",
+            tenant_id=tenant_b,
+            content=b"b",
+            filename="f.pdf",
+            content_type="application/pdf",
         )
         assert storage.get_stored_count() == 2
 
     async def test_clear(self) -> None:
         storage = self._make_storage()
         await storage.upload(
-            tenant_id=uuid4(), content=b"a",
-            filename="f.pdf", content_type="application/pdf",
+            tenant_id=uuid4(),
+            content=b"a",
+            filename="f.pdf",
+            content_type="application/pdf",
         )
         assert storage.get_stored_count() == 1
         storage.clear()
@@ -432,15 +446,19 @@ class TestInMemoryFileStorage:
         """JPG загружается только для AVATAR категории."""
         storage = self._make_storage()
         result = await storage.upload(
-            tenant_id=uuid4(), content=b"\xff\xd8\xff\xe0",
-            filename="avatar.jpg", content_type="image/jpeg",
+            tenant_id=uuid4(),
+            content=b"\xff\xd8\xff\xe0",
+            filename="avatar.jpg",
+            content_type="image/jpeg",
             category=FileCategory.AVATAR,
         )
         assert result.metadata.content_type == "image/jpeg"
         with pytest.raises(FileValidationError):
             await storage.upload(
-                tenant_id=uuid4(), content=b"\xff\xd8\xff\xe0",
-                filename="photo.jpg", content_type="image/jpeg",
+                tenant_id=uuid4(),
+                content=b"\xff\xd8\xff\xe0",
+                filename="photo.jpg",
+                content_type="image/jpeg",
                 category=FileCategory.RESUME,
             )
 
@@ -491,9 +509,7 @@ class TestGetStorageFactory:
             with patch.dict(sys.modules, {"aioboto3": None}):
                 from ats.infra.storage import get_storage
 
-                storage = get_storage(
-                    settings=StorageSettings(use_stub=False)
-                )
+                storage = get_storage(settings=StorageSettings(use_stub=False))
                 from ats.infra.storage.in_memory_storage import (
                     InMemoryFileStorage,
                 )

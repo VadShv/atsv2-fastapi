@@ -31,6 +31,7 @@ from ats.infra.sentry.setup import (
 
 # --- Настройки ---
 
+
 class TestSentrySettings:
     def test_defaults(self) -> None:
         assert sentry_settings.dsn == ""
@@ -47,6 +48,7 @@ class TestSentrySettings:
 
 
 # --- No-op fallback ---
+
 
 class TestNoOpSentry:
     def test_setup_sentry_does_not_raise_without_dsn(self) -> None:
@@ -72,6 +74,7 @@ class TestNoOpSentry:
 
 
 # --- Alerts ---
+
 
 class TestAlerts:
     async def test_send_alert_no_webhook(self) -> None:
@@ -193,6 +196,7 @@ class TestBuildPayload:
 
 # --- SentryMiddleware ---
 
+
 class TestSentryMiddleware:
     def test_middleware_passes_normal_requests(self) -> None:
         """Middleware пропускает нормальные запросы без исключений."""
@@ -233,6 +237,7 @@ class TestSentryMiddleware:
 
 
 # --- Интеграция с полным app ---
+
 
 class TestFullAppSentry:
     def test_app_starts_with_sentry(self) -> None:

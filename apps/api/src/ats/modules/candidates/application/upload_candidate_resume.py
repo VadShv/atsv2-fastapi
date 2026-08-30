@@ -43,7 +43,7 @@ from ats.modules.candidates.domain.resume import (
 )
 from ats.modules.candidates.ports.candidate_repository import CandidateRepository
 from ats.modules.candidates.ports.resume_repository import ResumeRepository
-from ats.modules.search.domain.models import SearchableDocument
+from ats.modules.search.domain.models import SearchableDocument, build_search_text
 from ats.modules.search.ports.search_engine import SearchEngine
 from ats.shared.ids import CandidateId, TenantId
 from ats.shared.result import ErrorCode, Result, is_error
@@ -234,7 +234,7 @@ class UploadCandidateResumeUseCase:
         )
 
         # 11. Переиндексация кандидата (БЫСТРЕЙШИЙ ПОИСК)
-        await self._reindex_candidate(tenant_id, candidate, parsed.searchable_text)
+        await self._reindex_candidate(tenant_id, candidate, parsed)
 
         logger.info(
             "Resume uploaded to candidate %s: version=%d facts=%d",
@@ -359,15 +359,20 @@ class UploadCandidateResumeUseCase:
         self,
         tenant_id: TenantId,
         candidate: Candidate,
-        searchable_text: str,
+        parsed: ParsedResume,
     ) -> None:
         """Переиндексировать кандидата: text + embedding + metadata.
 
         Graceful degradation: ошибка индексации не блокирует загрузку резюме.
         """
-        text = searchable_text or " ".join([candidate.headline, *candidate.skills]).strip()
-        if not text:
-            text = candidate.full_name
+        companies = [exp.company for exp in parsed.experience if exp.company]
+        text = build_search_text(
+            full_name=candidate.full_name,
+            headline=candidate.headline,
+            skills=candidate.skills,
+            companies=companies,
+            resume_text=parsed.searchable_text,
+        )
 
         embedding: list[float] | None = None
         try:

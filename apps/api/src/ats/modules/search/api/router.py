@@ -1,4 +1,8 @@
-"""API-слой search: HTTP-эндпоинт гибридного поиска кандидатов."""
+"""API-слой search: HTTP-эндпоинты гибридного поиска + CRUD синонимов.
+
+JUGO-171: булев парсер запросов (ошибки возвращают 400 с подсказкой).
+JUGO-172: CRUD синонимов для расширения запросов.
+"""
 
 from __future__ import annotations
 
@@ -10,12 +14,18 @@ from pydantic import BaseModel, Field
 from ats.infra.container_helpers import get_container
 from ats.modules.search.application.search_candidates import SearchCandidatesInput
 from ats.modules.search.domain.models import FilterOperator, SearchFilter
+from ats.modules.search.domain.synonym import SynonymEntry
 from ats.shared.ids import TenantId
 from ats.shared.result import is_error
 
 router = APIRouter(prefix="/search", tags=["search"])
 
 _DEFAULT_TENANT = TenantId.from_string("00000000-0000-0000-0000-000000000001")
+
+
+# ---------------------------------------------------------------------------
+# Поиск кандидатов
+# ---------------------------------------------------------------------------
 
 
 class FilterRequest(BaseModel):
@@ -129,3 +139,92 @@ async def search_candidates(request: SearchRequest) -> SearchResponse:
         took_ms=sr.took_ms,
         query=sr.query,
     )
+
+
+# ---------------------------------------------------------------------------
+# CRUD синонимов (JUGO-172)
+# ---------------------------------------------------------------------------
+
+
+class SynonymCreateRequest(BaseModel):
+    """Создание записи синонимов."""
+
+    term: str = Field(min_length=1, max_length=255, description="Термин для расширения")
+    synonyms: list[str] = Field(default_factory=list, description="Список синонимов термина")
+
+
+class SynonymResponse(BaseModel):
+    """Ответ с записью синонимов."""
+
+    id: UUID
+    term: str
+    synonyms: list[str] = Field(default_factory=list)
+
+
+def _to_synonym_response(entry: SynonymEntry) -> SynonymResponse:
+    return SynonymResponse(
+        id=entry.id,
+        term=entry.term,
+        synonyms=entry.synonyms,
+    )
+
+
+@router.get(
+    "/synonyms",
+    response_model=list[SynonymResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Получить все синонимы тенанта",
+)
+async def list_synonyms() -> list[SynonymResponse]:
+    container = get_container()
+    entries = await container.synonym_repository.list_all(_DEFAULT_TENANT)
+    return [_to_synonym_response(e) for e in entries]
+
+
+@router.post(
+    "/synonyms",
+    response_model=SynonymResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать или обновить запись синонимов (upsert по term)",
+)
+async def create_synonym(request: SynonymCreateRequest) -> SynonymResponse:
+    container = get_container()
+    entry = SynonymEntry(
+        tenant_id=_DEFAULT_TENANT.value,
+        term=request.term,
+        synonyms=request.synonyms,
+    )
+    saved = await container.synonym_repository.save(entry)
+    return _to_synonym_response(saved)
+
+
+@router.get(
+    "/synonyms/{entry_id}",
+    response_model=SynonymResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Получить запись синонимов по ID",
+)
+async def get_synonym(entry_id: str) -> SynonymResponse:
+    container = get_container()
+    entry = await container.synonym_repository.get(_DEFAULT_TENANT, entry_id)
+    if entry is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись синонимов не найдена",
+        )
+    return _to_synonym_response(entry)
+
+
+@router.delete(
+    "/synonyms/{entry_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить запись синонимов",
+)
+async def delete_synonym(entry_id: str) -> None:
+    container = get_container()
+    deleted = await container.synonym_repository.delete(_DEFAULT_TENANT, entry_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Запись синонимов не найдена",
+        )

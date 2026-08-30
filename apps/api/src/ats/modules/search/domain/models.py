@@ -67,6 +67,8 @@ class SearchQuery(BaseModel):
     vector_weight: float = Field(default=0.6, ge=0.0, le=1.0)
     # Поля, по которым считать фасеты (напр. ["skills", "source"])
     facet_fields: list[str] = Field(default_factory=list)
+    # JUGO-172: карта синонимов {term_lower: [synonyms]} для расширения запроса
+    synonym_map: dict[str, list[str]] = Field(default_factory=dict)
 
 
 class FacetValue(BaseModel):
@@ -98,3 +100,38 @@ class SearchResult(BaseModel):
     facets: list[Facet] = Field(default_factory=list)
     took_ms: int = 0
     query: str = ""
+
+
+def build_search_text(
+    full_name: str,
+    headline: str = "",
+    skills: list[str] | None = None,
+    companies: list[str] | None = None,
+    resume_text: str = "",
+) -> str:
+    """Собрать агрегированный текст для индексации (JUGO-170).
+
+    Агрегат: ФИО + заголовок + компании + навыки + текст резюме.
+    Дубликаты и пустые части удаляются. Порядок — от наиболее значимых полей
+    (ФИО, заголовок) к менее значимым (текст резюме), что повышает вес при
+    ранжировании BM25 (ts_rank учитывает позицию).
+    """
+    parts: list[str] = []
+    seen: set[str] = set()
+
+    def _add(value: str) -> None:
+        cleaned = (value or "").strip()
+        key = cleaned.lower()
+        if cleaned and key not in seen:
+            seen.add(key)
+            parts.append(cleaned)
+
+    _add(full_name)
+    _add(headline)
+    for company in companies or []:
+        _add(company)
+    for skill in skills or []:
+        _add(skill)
+    _add(resume_text)
+
+    return " ".join(parts)

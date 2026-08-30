@@ -276,9 +276,7 @@ class TestCandidateCrudUseCase:
     @pytest.mark.asyncio
     async def test_update_candidate(self) -> None:
         crud = build_container().candidate_crud
-        created = await crud.create(
-            TENANT, CreateCandidateInput(full_name="Старое Имя")
-        )
+        created = await crud.create(TENANT, CreateCandidateInput(full_name="Старое Имя"))
         result = await crud.update(
             TENANT,
             created.value.id,

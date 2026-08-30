@@ -57,20 +57,14 @@ class TestBM25Search:
     @pytest.mark.asyncio
     async def test_bm25_finds_matching_document(self) -> None:
         engine = InMemorySearchEngine()
-        await engine.index(
-            _doc("11111111-0000-0000-0000-000000000001", "Python FastAPI developer")
-        )
-        await engine.index(
-            _doc("22222222-0000-0000-0000-000000000002", "Java Spring developer")
-        )
+        await engine.index(_doc("11111111-0000-0000-0000-000000000001", "Python FastAPI developer"))
+        await engine.index(_doc("22222222-0000-0000-0000-000000000002", "Java Spring developer"))
 
         result = await engine.search(
             SearchQuery(tenant_id=TENANT.value, query="Python FastAPI", limit=10)
         )
         assert result.total == 2
-        assert result.hits[0].document_id == uuid.UUID(
-            "11111111-0000-0000-0000-000000000001"
-        )
+        assert result.hits[0].document_id == uuid.UUID("11111111-0000-0000-0000-000000000001")
         assert result.hits[0].bm25_score > 0
         assert result.hits[0].score == result.hits[0].bm25_score  # vector_weight=0
 
@@ -79,9 +73,7 @@ class TestBM25Search:
         engine = InMemorySearchEngine()
         await engine.index(_doc("11111111-0000-0000-0000-000000000001", "Python dev"))
 
-        result = await engine.search(
-            SearchQuery(tenant_id=TENANT.value, query="", limit=10)
-        )
+        result = await engine.search(SearchQuery(tenant_id=TENANT.value, query="", limit=10))
         assert result.total == 1
         assert result.hits[0].score == 0.0
 
@@ -94,13 +86,9 @@ class TestBM25Search:
                 "Python Python Python Python developer",
             )
         )
-        await engine.index(
-            _doc("22222222-0000-0000-0000-000000000002", "Python developer")
-        )
+        await engine.index(_doc("22222222-0000-0000-0000-000000000002", "Python developer"))
 
-        result = await engine.search(
-            SearchQuery(tenant_id=TENANT.value, query="Python", limit=10)
-        )
+        result = await engine.search(SearchQuery(tenant_id=TENANT.value, query="Python", limit=10))
         assert result.hits[0].bm25_score >= result.hits[1].bm25_score
 
 
@@ -113,9 +101,7 @@ class TestHybridSearch:
         doc = _doc("11111111-0000-0000-0000-000000000001", "бэкенд разработчик питон")
         doc.embedding = [1.0, 0.0, 0.0]
         await engine.index(doc)
-        await engine.index(
-            _doc("22222222-0000-0000-0000-000000000002", "дизайнер интерфейсов")
-        )
+        await engine.index(_doc("22222222-0000-0000-0000-000000000002", "дизайнер интерфейсов"))
 
         result = await engine.search(
             SearchQuery(
@@ -128,9 +114,7 @@ class TestHybridSearch:
             )
         )
         assert result.hits[0].vector_score > 0
-        assert result.hits[0].document_id == uuid.UUID(
-            "11111111-0000-0000-0000-000000000001"
-        )
+        assert result.hits[0].document_id == uuid.UUID("11111111-0000-0000-0000-000000000001")
 
     @pytest.mark.asyncio
     async def test_hybrid_score_is_weighted_sum(self) -> None:
@@ -317,9 +301,7 @@ class TestTenantIsolation:
             )
         )
 
-        result = await engine.search(
-            SearchQuery(tenant_id=TENANT.value, query="Python", limit=10)
-        )
+        result = await engine.search(SearchQuery(tenant_id=TENANT.value, query="Python", limit=10))
         assert result.total == 1
 
 
@@ -331,9 +313,7 @@ class TestRemoveDocument:
         await engine.index(_doc(str(doc_id), "Python developer"))
         await engine.remove(TENANT.value, doc_id)
 
-        result = await engine.search(
-            SearchQuery(tenant_id=TENANT.value, query="Python", limit=10)
-        )
+        result = await engine.search(SearchQuery(tenant_id=TENANT.value, query="Python", limit=10))
         assert result.total == 0
 
 
@@ -360,9 +340,7 @@ class TestSearchCandidatesUseCase:
         assert not is_error(result)
         sr = result.value
         assert sr.total == 1
-        assert sr.hits[0].document_id == uuid.UUID(
-            "11111111-0000-0000-0000-000000000001"
-        )
+        assert sr.hits[0].document_id == uuid.UUID("11111111-0000-0000-0000-000000000001")
 
     @pytest.mark.asyncio
     async def test_search_empty_query_returns_error(self) -> None:
@@ -438,9 +416,7 @@ class TestSearchAPI:
                 "/api/v1/search/candidates",
                 json={
                     "query": "developer",
-                    "filters": [
-                        {"field": "skills", "values": ["Python"], "operator": "any"}
-                    ],
+                    "filters": [{"field": "skills", "values": ["Python"], "operator": "any"}],
                 },
             )
         assert resp.status_code == 200
@@ -452,9 +428,7 @@ class TestSearchAPI:
     async def test_search_empty_query_returns_400(self) -> None:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as ac:
-            resp = await ac.post(
-                "/api/v1/search/candidates", json={"query": "   "}
-            )
+            resp = await ac.post("/api/v1/search/candidates", json={"query": "   "})
         assert resp.status_code == 400
 
     @pytest.mark.asyncio
@@ -483,9 +457,7 @@ class TestEndToEndIndexingViaUpload:
     """Сквозной тест: загрузка резюме → индексация → поиск находит кандидата."""
 
     def test_upload_then_search_finds_candidate(self) -> None:
-        resume_text = (
-            "Иванов Иван\nMiddle Python Developer\nPython, FastAPI, PostgreSQL, Docker"
-        )
+        resume_text = "Иванов Иван\nMiddle Python Developer\nPython, FastAPI, PostgreSQL, Docker"
         upload_resp = client.post(
             "/api/v1/candidates/upload-resume",
             files={"file": ("resume.txt", resume_text.encode("utf-8"), "text/plain")},
