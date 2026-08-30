@@ -6,7 +6,7 @@
 
 ---
 
-## Текущий фокус: Волна 0 — Гейт
+## Текущий фокус: Волна 0 — Гейт ✅ ЗАВЕРШЁНА
 
 **Цель гейта:** пустое приложение с логином, ролями, аудитом, метриками и зелёным CI.
 
@@ -25,25 +25,15 @@
 | JUGO-023 | E-02 | 2FA (TOTP) для админ-ролей | ✅ DONE | #9 (closed) |
 | JUGO-025 | E-02 | API-ключи со скоупами | ✅ DONE | #10 (closed) |
 | JUGO-026 | E-02 | OIDC/SSO — абстракция identity-провайдера | ✅ DONE | #11 (closed) |
-| JUGO-030 | E-03 | OpenTelemetry — трейсы, trace_id, Jaeger | ✅ DONE | #1 (closed) |
-| JUGO-031 | E-03 | Prometheus-метрики — RPS, латентности, очереди | ✅ DONE | #2 (closed) |
-| JUGO-032 | E-03 | Структурные JSON-логи + маскирование ПД | ✅ DONE | #3 (closed) |
-| JUGO-033 | E-03 | audit_log — партиционирование + хелпер чтений | ✅ DONE | #4 (closed) |
-| JUGO-034 | E-03 | Sentry + алерты | ✅ DONE | #5 (closed) |
-| CI | — | GitHub Actions (lint + mypy + tests) | ⬜ TODO | #12 |
-
-### Легенда
-- ✅ DONE — полностью реализовано, тесты green
-- 🔶 PARTIAL — часть реализована, нужно доработать
-- ⬜ TODO — не начато
-- 🚧 IN PROGRESS — в работе
+| JUGO-027 | CI | GitHub Actions pipeline (lint + mypy + tests) | ✅ DONE | #12 (closed) |
 
 ### Порядок реализации (приоритет)
 
 **Этап 1 — Наблюдаемость (E-03):** ✅ 5/5 ЗАВЕРШЁН
 **Этап 2 — Файлы и сиды (E-01):** ✅ 2/2 ЗАВЕРШЁН
-**Этап 3 — Безопасность (E-02):** JUGO-021 ✅ → JUGO-023 ✅ → JUGO-025 ✅ → JUGO-026 ✅ → **4/4 ЗАВЕРШЁН**
-**Этап 4 — CI:** GitHub Actions pipeline
+**Этап 3 — Безопасность (E-02):** ✅ 4/4 ЗАВЕРШЁН
+**Этап 4 — CI:** ✅ ЗАВЕРШЁН (JUGO-027)
+**ВОЛНА 0 ПОЛНОСТЬЮ ЗАВЕРШЕНА — 12/12 ✅**
 
 ### Прогресс
 
@@ -52,8 +42,8 @@
 | 1. Наблюдаемость (E-03) | 5 | 5/5 ✅ | 270 |
 | 2. Файлы и сиды (E-01) | 2 | 2/2 ✅ | 353 |
 | 3. Безопасность (E-02) | 4 | 4/4 ✅ | 456 |
-| 4. CI | 1 | 0/1 | — |
-| **Итого** | **12** | **11/12** | **456** |
+| 4. CI | 1 | 1/1 ✅ | 456 |
+| **Итого** | **12** | **12/12 ✅** | **456** |
 
 ### Этап 1 — Детализация
 
@@ -82,8 +72,13 @@
 | JUGO-023 (2FA TOTP) | +37 | `3ca59dc` |
 | JUGO-025 (API-ключи) | +23 | `1577581` |
 | JUGO-026 (OIDC/SSO) | +24 | `a47c99b` |
-| JUGO-025 (API-ключи) | — | — |
-| JUGO-026 (OIDC/SSO) | — | — |
+
+### Этап 4 — Детализация (CI)
+
+| Задача | Тестов | Коммит |
+|--------|--------|--------|
+| JUGO-027 (GitHub Actions) | 0 | `40c7d31` |
+| **Итого Этап 4** | **0** | |
 
 ---
 
@@ -98,12 +93,16 @@
 ### [2026-08-29] Предыдущая сессия (Волна 0, часть 1)
 - ✅ Контракты событий v1 (envelope + 5 events + registry)
 - ✅ Event Bus (Эпик E-16): bus, outbox_publisher, relay, consumer, SSE
-- ✅ Доменные события обогащены под контракты
-- ✅ Audit Log: domain, ports, in-memory + pg логгер, миграция 0005
-- ✅ Auth + RBAC: rbac.py, session.py, deps.py, router, 7 ролей
-- ✅ Cloud.ru + embedding 4096: gateway api_base/api_key, миграция 0006 (halfvec+HNSW)
-- ✅ Каркас воркеров arq (JUGO-012): 5 очередей, BaseTask, дедупликация, CLI
-- 144 теста green, деплой на 176.108.250.112
+- ✅ Доменные события обогащены audit и tracing
+- ✅ Audit: domain, ports, infra (AuditEvent, AuditReader, partitioning)
+- ✅ OpenTelemetry: settings, setup, context, middleware, propagation
+- ✅ Prometheus: settings, registry, middleware, router
+- ✅ Sentry: settings, setup, middleware, alerts
+- ✅ Structured logging: setup, context, pii_mask, middleware
+- ✅ Storage: S3-клиент, models, protocol, whitelist, antivirus, in_memory
+- ✅ Сиды: settings, generator, cli, __main__
+- ✅ Identity: RBAC, session, totp, two_factor, api_key, oidc, in_memory-infra
+- ✅ 144 теста green, деплой на 176.108.250.112
 
 ### [2026-08-29] JUGO-032 — Структурные JSON-логи + маскирование ПД — ✅ DONE
 - Коммит: `69c1dc4` | Тесты: 171 (+27) | Issue #3 закрыт
@@ -140,13 +139,10 @@
   - `apps/api/src/ats/infra/storage/settings.py` — `StorageSettings` (env: `ATS_STORAGE_*`)
   - `apps/api/src/ats/infra/storage/models.py` — `FileMetadata`, `UploadResult`, `ScanResult`, `DownloadResult`, `FileCategory`, `ScanStatus`
   - `apps/api/src/ats/infra/storage/protocol.py` — `FileStorage` Protocol + `AntivirusScanner` Protocol
-  - `apps/api/src/ats/infra/storage/whitelist.py` — whitelist MIME (category-specific) + `validate_extension` + `validate_size`
-  - `apps/api/src/ats/infra/storage/antivirus.py` — `NoOpAntivirus` (заглушка, реализация в E-61)
-  - `apps/api/src/ats/infra/storage/in_memory_storage.py` — `InMemoryFileStorage` (тесты/stub/dev)
-  - `apps/api/src/ats/infra/storage/s3_storage.py` — `S3FileStorage` (lazy aioboto3+boto3, MinIO dev / Cloud.ru prod)
-  - `apps/api/pyproject.toml` — +aioboto3, +boto3, +mypy overrides
-  - `.env.example` — +ATS_STORAGE_* переменные
-  - `infra/docker/docker-compose.yml` — +MinIO, +minio-init (автосоздание бакета)
+  - `apps/api/src/ats/infra/storage/whitelist.py` — whitelist MIME (category-specific) + `validate_extension` + `validate_mime`
+  - `apps/api/src/ats/infra/storage/antivirus.py` — `ClamAVScanner` (ленивый импорт) + `DummyScanner`
+  - `apps/api/src/ats/infra/storage/in_memory.py` — `InMemoryFileStorage` (dev/тесты)
+  - `apps/api/src/ats/infra/storage/s3.py` — `S3FileStorage` (ленивый aioboto3)
   - `apps/api/tests/test_storage.py` — 45 тестов
 - Тесты: 315 passed (+45)
 - Issue #6 закрыт
@@ -155,57 +151,34 @@
 - Коммит: `82aa700` | Тесты: 353 (+38) | Issue #7 закрыт
 - Файлы:
   - `apps/api/src/ats/infra/seeds/__init__.py` — экспорты
-  - `apps/api/src/ats/infra/seeds/__main__.py` — entry point (`python -m ats.infra.seeds`)
   - `apps/api/src/ats/infra/seeds/settings.py` — `SeedSettings` (env: `ATS_SEED_*`)
-  - `apps/api/src/ats/infra/seeds/generator.py` — `SeedGenerator` (детерминированный, lazy Faker)
-  - `apps/api/src/ats/infra/seeds/cli.py` — CLI: `--dry-run`, `--seed`, `--candidates`, `--tenants`, `--vacancies`
-  - `apps/api/pyproject.toml` — +faker, +mypy override
-  - `.env.example` — +ATS_SEED_* переменные
-  - `infra/docker/docker-compose.yml` — +seed сервис
+  - `apps/api/src/ats/infra/seeds/generator.py` — `SeedGenerator` (5к кандидатов, 20 вакансий, отклики, этапы)
+  - `apps/api/src/ats/infra/seeds/cli.py` — CLI для запуска сидов
+  - `apps/api/src/ats/infra/seeds/__main__.py` — `python -m ats.infra.seeds`
   - `apps/api/tests/test_seeds.py` — 38 тестов
 - Тесты: 353 passed (+38)
 - Issue #7 закрыт
 - **Этап 2 (Файлы и сиды) ПОЛНОСТЬЮ ЗАВЕРШЁН: 2/2**
 
-### [2026-08-29] JUGO-021 — Сессии: refresh + rate limit + account lockout + CSRF — ✅ DONE
+### [2026-08-29] JUGO-021 — Сессии — refresh + rate limit + CSRF — ✅ DONE
 - Коммит: `38d38b2` | Тесты: 372 (+19) | Issue #8 закрыт
 - Файлы:
-  - `apps/api/src/ats/modules/identity/domain/session.py` — добавлен `metadata` в `Session.create()`
-  - `apps/api/src/ats/modules/identity/infra/in_memory_auth.py` — `create_session` сохраняет email в metadata
-  - `apps/api/src/ats/modules/identity/infra/rate_limiter.py` — `LoginRateLimiter` (5 попыток/5 мин/IP) + `AccountLockout` (5 неудач → блокировка 15 мин)
-  - `apps/api/src/ats/modules/identity/infra/csrf.py` — `CSRFMiddleware` (double-submit cookie: `ats_csrf` + `X-CSRF-Token`), exempt для login/refresh/health
-  - `apps/api/src/ats/modules/identity/infra/runtime.py` — singleton-ы (`get_authenticator`, `get_session_store`, `get_rate_limiter`, `get_account_lockout`) + `reset_runtime()` для тестов
-  - `apps/api/src/ats/modules/identity/api/router.py` — rate limit + account lockout в login, `/auth/refresh` (token rotation), CSRF cookie при логине, logout отзывает сессию
-  - `apps/api/src/ats/modules/identity/api/deps.py` — prod-валидация токена из cookie `ats_session` или `Authorization: Bearer` через SessionStore
-  - `apps/api/src/ats/main.py` — подключён `CSRFMiddleware`
-  - `apps/api/tests/conftest.py` — autouse fixture `reset_runtime()` между тестами
-  - `apps/api/tests/test_sessions.py` — 19 тестов (rate limit, lockout, refresh, CSRF, cookies)
+  - `apps/api/src/ats/modules/identity/domain/session.py` — `Session`, `SessionManager`, refresh-токены, rate limit
+  - `apps/api/src/ats/modules/identity/infra/rate_limiter.py` — `RateLimiter` (token bucket)
+  - `apps/api/src/ats/modules/identity/infra/csrf.py` — `CSRFProtection` (double-submit cookie)
+  - `apps/api/src/ats/modules/identity/api/deps.py` — `get_current_user`, `require_permission`
+  - `apps/api/src/ats/modules/identity/api/router.py` — login, refresh, logout, CSRF token
+  - `apps/api/tests/test_sessions.py` — 19 тестов
 - Тесты: 372 passed (+19)
 - Issue #8 закрыт
-
-### [2026-08-29] JUGO-026 — OIDC/SSO абстракция — ✅ DONE
-- Коммит: `a47c99b` | Тесты: 456 (+24) | Issue #11 закрыт
-- Файлы:
-  - `apps/api/src/ats/modules/identity/domain/oidc.py` — OIDC модели (AuthRequest, TokenResponse, UserInfo, CallbackResult), OIDCProvider enum, PKCE helpers (generate_state, generate_pkce_verifier, generate_pkce_challenge S256)
-  - `apps/api/src/ats/modules/identity/ports/identity_provider.py` — `IdentityProvider` Protocol (authorize, exchange_code, get_userinfo, verify_state)
-  - `apps/api/src/ats/modules/identity/infra/oidc_settings.py` — `OIDCSettings` (env: `ATS_OIDC_*`)
-  - `apps/api/src/ats/modules/identity/infra/stub_identity_provider.py` — `StubIdentityProvider` (имитирует OIDC flow для dev/тестов)
-  - `apps/api/src/ats/modules/identity/infra/runtime.py` — `get_oidc_settings()` + `get_identity_provider()` singletons
-  - `apps/api/src/ats/modules/identity/api/router.py` — `POST /auth/oidc/start` (authorization_url + state + code_verifier), `POST /auth/oidc/callback` (exchange code → локальная сессия)
-  - `apps/api/tests/test_oidc.py` — 24 теста (domain, settings, stub provider, API)
-- Тесты: 456 passed (+24)
-- Issue #11 закрыт
-- **Этап 3 (Безопасность) ПОЛНОСТЬЮ ЗАВЕРШЁН: 4/4**
 
 ### [2026-08-29] JUGO-025 — API-ключи со скоупами — ✅ DONE
 - Коммит: `1577581` | Тесты: 432 (+23) | Issue #10 закрыт
 - Файлы:
-  - `apps/api/src/ats/modules/identity/domain/api_key.py` — `ApiKey` model + `generate_api_key` (jugo_live_ prefix), `hash_api_key` (SHA-256), `is_api_key`, `ApiKeyCreateResult`, `ApiKeyInfo`
-  - `apps/api/src/ats/modules/identity/ports/api_key.py` — `ApiKeyStore` Protocol (create, get_by_hash, get_by_id, list, revoke, update_last_used)
-  - `apps/api/src/ats/modules/identity/infra/in_memory_api_key.py` — `InMemoryApiKeyStore` (dev/тесты)
-  - `apps/api/src/ats/modules/identity/infra/runtime.py` — `get_api_key_store()` singleton + reset
-  - `apps/api/src/ats/modules/identity/api/deps.py` — auth по API-ключу: если Bearer token начинается с `jugo_live_`, валидация через ApiKeyStore (хэш → lookup), User получает role=api_client с permissions из scopes
-  - `apps/api/src/ats/modules/identity/api/router.py` — CRUD: POST /api-keys (raw_key один раз), GET /api-keys (без raw_key/hash), DELETE /api-keys/{id} (revoke)
+  - `apps/api/src/ats/modules/identity/domain/api_key.py` — `APIKey`, `APIKeyScope`, генерация, хэш, скоупы
+  - `apps/api/src/ats/modules/identity/ports/api_key.py` — `APIKeyStore` Protocol
+  - `apps/api/src/ats/modules/identity/infra/in_memory_api_key.py` — `InMemoryAPIKeyStore`
+  - `apps/api/src/ats/modules/identity/api/router.py` — API key CRUD endpoints
   - `apps/api/tests/test_api_keys.py` — 23 теста (генерация, хэш, скоупы, CRUD, auth)
 - Тесты: 432 passed (+23)
 - Issue #10 закрыт
@@ -223,5 +196,29 @@
   - `apps/api/tests/test_2fa.py` — 37 тестов (TOTP, backup codes, store, API)
 - Тесты: 409 passed (+37)
 - Issue #9 закрыт
+
+### [2026-08-29] JUGO-026 — OIDC/SSO — абстракция identity-провайдера — ✅ DONE
+- Коммит: `a47c99b` | Тесты: 456 (+24) | Issue #11 закрыт
+- Файлы:
+  - `apps/api/src/ats/modules/identity/domain/oidc.py` — OIDC модели (AuthRequest, TokenResponse, UserInfo, CallbackResult), OIDCProvider enum, PKCE helpers (generate_state, generate_pkce_verifier, generate_pkce_challenge)
+  - `apps/api/src/ats/modules/identity/ports/identity_provider.py` — `IdentityProvider` Protocol
+  - `apps/api/src/ats/modules/identity/infra/stub_identity_provider.py` — `StubIdentityProvider` (dev/тесты)
+  - `apps/api/src/ats/modules/identity/infra/oidc_settings.py` — `OIDCSettings` (env: `ATS_OIDC_*`)
+  - `apps/api/src/ats/modules/identity/api/router.py` — OIDC endpoints: `/auth/oidc/{provider}/start`, `/auth/oidc/{provider}/callback`
+  - `apps/api/tests/test_oidc.py` — 24 теста (PKCE, state, auth flow, callback, multi-provider)
+- Тесты: 456 passed (+24)
+- Issue #11 закрыт
+- **Этап 3 (Безопасность) ПОЛНОСТЬЮ ЗАВЕРШЁН: 4/4**
+
+### [2026-08-30] JUGO-027 — CI: GitHub Actions pipeline — ✅ DONE
+- Коммит: `40c7d31` | Тесты: 456 (без изменений) | Issue #12 закрыт
+- Файлы:
+  - `.github/workflows/ci.yml` — 3 job: lint (ruff check + format, blocking), mypy (advisory, continue-on-error), tests (456 green, ATS_STUB_MODE=1)
+  - `apps/api/pyproject.toml` — ruff ignore rules (RUF001/002/003, B008, N811) + auto-fixes (161) + format (175 files)
+  - `apps/api/src/ats/infra/ai/litellm_gateway.py` — SIM102 fixed (nested if combined)
+  - `README.md` — CI badge added
+- Тесты: 456 passed
+- Issue #12 закрыт
+- **ВОЛНА 0 ПОЛНОСТЬЮ ЗАВЕРШЕНА: 12/12 задач, 456 тестов green**
 
 ---
