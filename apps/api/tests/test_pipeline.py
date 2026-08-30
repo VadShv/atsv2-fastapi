@@ -21,6 +21,7 @@ from ats.modules.recruitment.domain.application import (
     TERMINAL_STAGES,
 )
 from ats.shared.ids import CandidateId, IdempotencyKey, TenantId, VacancyId
+from ats.shared.result import is_error
 
 TENANT = TenantId.from_string("00000000-0000-0000-0000-000000000001")
 
@@ -160,8 +161,6 @@ class TestMoveApplicationUseCase:
 
     @pytest.mark.asyncio
     async def test_invalid_transition_returns_conflict(self) -> None:
-        from ats.shared.result import is_error
-
         container = build_container()
         app_result = await container.create_application.execute(
             TENANT,
@@ -182,7 +181,6 @@ class TestMoveApplicationUseCase:
 
     @pytest.mark.asyncio
     async def test_not_found(self) -> None:
-        from ats.shared.result import is_error
         from uuid import uuid4
 
         container = build_container()
@@ -198,6 +196,7 @@ class TestMoveApplicationUseCase:
 
     @pytest.mark.asyncio
     async def test_create_application_idempotent(self) -> None:
+        """JUGO-142: повторный активный отклик → CONFLICT."""
         container = build_container()
         candidate = Candidate.create(
             tenant_id=TENANT,
@@ -213,4 +212,7 @@ class TestMoveApplicationUseCase:
         r2 = await container.create_application.execute(
             TENANT, candidate.id, vid, IdempotencyKey("k4")
         )
-        assert r1.value.id == r2.value.id  # та же заявка
+        assert not is_error(r1)
+        # JUGO-142: повторный активный отклик → CONFLICT
+        assert is_error(r2)
+        assert r2.error.code.value == "conflict"

@@ -25,6 +25,7 @@ from ats.infra.stubs_funnel_repositories import (
 from ats.infra.stubs_repositories import (
     InMemoryApplicationRepository,
     InMemoryCandidateRepository,
+    InMemoryCommentRepository,
 )
 from ats.infra.stubs_requirement_set_repository import (
     InMemoryRequirementSetRepository,
@@ -65,6 +66,10 @@ from ats.modules.funnel.ports.funnel_transition_repository import (
     HMDecisionRepository,
     StageTransitionRepository,
 )
+from ats.modules.recruitment.application.application_timeline import (
+    ApplicationTimelineUseCase,
+)
+from ats.modules.recruitment.application.comment_use_case import CommentUseCase
 from ats.modules.recruitment.application.create_application import (
     CreateApplicationUseCase,
 )
@@ -75,10 +80,14 @@ from ats.modules.recruitment.application.manage_requirement_sets import (
 from ats.modules.recruitment.application.move_application import (
     MoveApplicationUseCase,
 )
+from ats.modules.recruitment.application.reject_application import (
+    RejectApplicationUseCase,
+)
 from ats.modules.recruitment.application.vacancy_crud import VacancyCrudUseCase
 from ats.modules.recruitment.ports.application_repository import (
     ApplicationRepository,
 )
+from ats.modules.recruitment.ports.comment_repository import CommentRepository
 from ats.modules.recruitment.ports.requirement_set_repository import (
     RequirementSetRepository,
 )
@@ -114,6 +123,9 @@ class Container:
     hm_decision_use_case: HMDecisionUseCase
     create_application: CreateApplicationUseCase
     move_application: MoveApplicationUseCase
+    reject_application: RejectApplicationUseCase
+    comment_use_case: CommentUseCase
+    application_timeline: ApplicationTimelineUseCase
     upload_resume: UploadResumeUseCase
     upload_candidate_resume: UploadCandidateResumeUseCase
     search_candidates: SearchCandidatesUseCase
@@ -129,6 +141,7 @@ def build_container() -> Container:
         vacancy_repo: VacancyRepository = InMemoryVacancyRepository()
         candidate_repo: CandidateRepository = InMemoryCandidateRepository()
         application_repo: ApplicationRepository = InMemoryApplicationRepository()
+        comment_repo: CommentRepository = InMemoryCommentRepository()
         resume_repo: ResumeRepository = InMemoryResumeRepository()
         req_set_repo: RequirementSetRepository = InMemoryRequirementSetRepository()
         funnel_preset_repo: FunnelPresetRepository = InMemoryFunnelPresetRepository()
@@ -149,6 +162,7 @@ def build_container() -> Container:
         vacancy_repo = PgVacancyRepository()
         candidate_repo = InMemoryCandidateRepository()  # Pg-реализация в след. фазе
         application_repo = InMemoryApplicationRepository()
+        comment_repo = InMemoryCommentRepository()  # Pg-реализация в след. фазе
         resume_repo = InMemoryResumeRepository()  # Pg-реализация в след. фазе
         req_set_repo = InMemoryRequirementSetRepository()  # Pg-реализация в след. фазе
         funnel_preset_repo = InMemoryFunnelPresetRepository()
@@ -175,6 +189,9 @@ def build_container() -> Container:
     hm_decision_use_case = HMDecisionUseCase(hm_decision_repo)
     create_application = CreateApplicationUseCase(application_repo)
     move_application = MoveApplicationUseCase(application_repo)
+    reject_application = RejectApplicationUseCase(application_repo)
+    comment_use_case = CommentUseCase(comment_repo, application_repo)
+    application_timeline = ApplicationTimelineUseCase(application_repo, comment_repo)
     upload_resume = UploadResumeUseCase(candidate_repo, parse_skill, search_engine, gateway)
     upload_candidate_resume = UploadCandidateResumeUseCase(
         candidate_repo, resume_repo, parse_skill, search_engine, gateway
@@ -207,6 +224,9 @@ def build_container() -> Container:
         hm_decision_use_case=hm_decision_use_case,
         create_application=create_application,
         move_application=move_application,
+        reject_application=reject_application,
+        comment_use_case=comment_use_case,
+        application_timeline=application_timeline,
         upload_resume=upload_resume,
         upload_candidate_resume=upload_candidate_resume,
         search_candidates=search_candidates,

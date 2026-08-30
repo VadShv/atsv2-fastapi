@@ -105,6 +105,8 @@ _EVENT_TYPE_REGISTRY: dict[str, tuple[str, int, str]] = {
     "ResumeVersionCreated": ("resume.version.created", 1, "resume"),
     "ApplicationCreated": ("application.created", 1, "application"),
     "StageChanged": ("application.stage.changed", 1, "application"),
+    "ApplicationRejected": ("application.rejected", 1, "application"),
+    "CommentPosted": ("application.comment.posted", 1, "application"),
     "FunnelPresetCreated": ("funnel.preset.created", 1, "funnel"),
     "FunnelPresetPublished": ("funnel.preset.published", 1, "funnel"),
     "FunnelTransitionEvent": ("application.funnel.transition", 1, "application"),
@@ -128,9 +130,9 @@ def _resolve_event_type(event: DomainEvent) -> tuple[str, int, str]:
 class EventEnvelope:
     """Единый конверт события для outbox и Redis Streams (контракт §4.3).
 
-    Сериализуется в JSON для записи в outbox.events_payload и публикации в стрим.
-    Доменные dataclass-события остаются типизированными в коде; конверт —
-    транспортный формат на границе модулей.
+    Сериализуется в JSON для записи в outbox (той же транзакцией, что и агрегат)
+    и для отправки в Redis Streams. Поля dataclass-событий типизированы в коде;
+    конверт — транспортный формат на границе модулей.
     """
 
     event_id: UUID
@@ -220,6 +222,13 @@ _PAYLOAD_FIELDS = (
     "actor_type",
     "decision",
     "stage_id",
+    "origin",
+    "reason_code",
+    "reason_label",
+    "thread_id",
+    "comment_id",
+    "author_id",
+    "is_private",
 )
 
 

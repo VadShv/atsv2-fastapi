@@ -118,6 +118,7 @@ class TestApplicationsAPI:
         assert resp.status_code == 404
 
     def test_create_application_idempotent(self) -> None:
+        """JUGO-142: повторный активный отклик → 409 CONFLICT."""
         from ats.infra.container_helpers import get_container
         from ats.modules.candidates.domain.candidate import Candidate, CandidateSource
         from ats.shared.ids import TenantId
@@ -150,4 +151,6 @@ class TestApplicationsAPI:
             "/api/v1/applications",
             json={"candidate_id": str(candidate.id.value), "vacancy_id": vacancy_id},
         )
-        assert r1.json()["id"] == r2.json()["id"]
+        assert r1.status_code == 201
+        # JUGO-142: повторный активный отклик → 409 CONFLICT
+        assert r2.status_code == 409

@@ -19,6 +19,12 @@ class ApplicationRepository(Protocol):
         self, tenant_id: TenantId, vacancy_id: VacancyId
     ) -> list[Application]: ...
 
+    async def list_by_candidate(
+        self, tenant_id: TenantId, candidate_id: CandidateId
+    ) -> list[Application]:
+        """Все заявки кандидата — для проверки повторных откликов (JUGO-142)."""
+        ...
+
     async def find_by_candidate_and_vacancy(
         self, tenant_id: TenantId, candidate_id: CandidateId, vacancy_id: VacancyId
     ) -> Application | None: ...

@@ -13,7 +13,9 @@ from ats.modules.candidates.domain.facts import CandidateFact, FactId
 from ats.modules.candidates.domain.tags import BlacklistEntry, BlacklistReason, CandidateTag, TagId
 from ats.modules.candidates.ports.candidate_repository import CandidateRepository
 from ats.modules.recruitment.domain.application import Application
+from ats.modules.recruitment.domain.comment import CommentThread
 from ats.modules.recruitment.ports.application_repository import ApplicationRepository
+from ats.modules.recruitment.ports.comment_repository import CommentRepository
 from ats.shared.ids import CandidateId, TenantId, UserId, VacancyId
 
 
@@ -127,6 +129,7 @@ __all__ = [
     "FactId",
     "InMemoryApplicationRepository",
     "InMemoryCandidateRepository",
+    "InMemoryCommentRepository",
     "TagId",
     "UserId",
 ]
@@ -165,3 +168,39 @@ class InMemoryApplicationRepository(ApplicationRepository):
             ):
                 return v
         return None
+
+    async def list_by_candidate(
+        self, tenant_id: TenantId, candidate_id: CandidateId
+    ) -> list[Application]:
+        prefix = f"{tenant_id.value}:"
+        return [
+            v
+            for k, v in self._store.items()
+            if k.startswith(prefix) and v.candidate_id == candidate_id
+        ]
+
+
+class InMemoryCommentRepository(CommentRepository):
+    """In-memory реализация репозитория тредов комментариев (JUGO-143)."""
+
+    def __init__(self) -> None:
+        self._threads: dict[str, CommentThread] = {}
+
+    async def save_thread(self, thread: CommentThread) -> UUID:
+        key = f"{thread.tenant_id.value}:{thread.id}"
+        self._threads[key] = thread
+        return thread.id
+
+    async def get_thread(self, tenant_id: TenantId, thread_id: UUID) -> CommentThread | None:
+        key = f"{tenant_id.value}:{thread_id}"
+        return self._threads.get(key)
+
+    async def list_by_application(
+        self, tenant_id: TenantId, application_id: UUID
+    ) -> list[CommentThread]:
+        prefix = f"{tenant_id.value}:"
+        return [
+            t
+            for k, t in self._threads.items()
+            if k.startswith(prefix) and t.application_id == application_id
+        ]
