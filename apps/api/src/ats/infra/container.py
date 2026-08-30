@@ -30,6 +30,10 @@ from ats.modules.audit.infra.in_memory_audit_logger import InMemoryAuditLogger
 from ats.modules.audit.infra.in_memory_audit_reader import InMemoryAuditReader
 from ats.modules.audit.ports.audit_logger import AuditLogger
 from ats.modules.audit.ports.audit_reader import AuditReader
+from ats.modules.candidates.application.candidate_crud import (
+    BulkImportCandidatesUseCase,
+    CandidateCrudUseCase,
+)
 from ats.modules.candidates.application.upload_resume import UploadResumeUseCase
 from ats.modules.candidates.ports.candidate_repository import CandidateRepository
 from ats.modules.recruitment.application.create_application import (
@@ -65,6 +69,8 @@ class Container:
     move_application: MoveApplicationUseCase
     upload_resume: UploadResumeUseCase
     search_candidates: SearchCandidatesUseCase
+    candidate_crud: CandidateCrudUseCase
+    bulk_import_candidates: BulkImportCandidatesUseCase
 
 
 def build_container() -> Container:
@@ -104,6 +110,8 @@ def build_container() -> Container:
     move_application = MoveApplicationUseCase(application_repo)
     upload_resume = UploadResumeUseCase(candidate_repo, parse_skill, search_engine, gateway)
     search_candidates = SearchCandidatesUseCase(search_engine, gateway)
+    candidate_crud = CandidateCrudUseCase(candidate_repo)
+    bulk_import_candidates = BulkImportCandidatesUseCase(candidate_repo)
 
     return Container(
         vacancy_repository=vacancy_repo,
@@ -120,4 +128,6 @@ def build_container() -> Container:
         move_application=move_application,
         upload_resume=upload_resume,
         search_candidates=search_candidates,
+        candidate_crud=candidate_crud,
+        bulk_import_candidates=bulk_import_candidates,
     )

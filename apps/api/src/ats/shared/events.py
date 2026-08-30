@@ -96,6 +96,8 @@ _EVENT_TYPE_REGISTRY: dict[str, tuple[str, int, str]] = {
     "VacancyCreated": ("vacancy.created", 1, "vacancy"),
     "ScreeningCriteriaGenerated": ("vacancy.screening.generated", 1, "vacancy"),
     "CandidateCreated": ("candidate.created", 1, "candidate"),
+    "CandidateUpdated": ("candidate.updated", 1, "candidate"),
+    "ResumeAttached": ("candidate.resume.attached", 1, "candidate"),
     "ApplicationCreated": ("application.created", 1, "application"),
     "StageChanged": ("application.stage.changed", 1, "application"),
 }
@@ -192,6 +194,7 @@ _PAYLOAD_FIELDS = (
     "status",
     "resume_provenance_id",
     "full_name",
+    "fields_changed",
     "title",
     "seniority",
     "team",
