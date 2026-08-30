@@ -18,6 +18,7 @@ from ats.infra.middleware import (
 )
 from ats.infra.sentry import SentryMiddleware, setup_sentry
 from ats.infra.tracing import TracingMiddleware, setup_tracing
+from ats.modules.candidates.api.dedup_router import router as dedup_router
 from ats.modules.candidates.api.router import router as candidates_router
 from ats.modules.events.api.router import router as events_router
 from ats.modules.funnel.api.router import router as funnel_router
@@ -95,6 +96,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(recruitment_router, prefix="/api/v1")
     app.include_router(applications_router, prefix="/api/v1")
+    app.include_router(dedup_router, prefix="/api/v1")
     app.include_router(candidates_router, prefix="/api/v1")
     app.include_router(search_router, prefix="/api/v1")
     app.include_router(events_router, prefix="/api/v1")

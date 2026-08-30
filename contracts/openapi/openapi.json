@@ -1723,6 +1723,399 @@
         }
       }
     },
+    "/api/v1/candidates/contacts/check": {
+      "get": {
+        "tags": [
+          "dedup"
+        ],
+        "summary": "Check Contact",
+        "description": "Проверить, существует ли уже контакт (при создании/импорте).",
+        "operationId": "check_contact_api_v1_candidates_contacts_check_get",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Value"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactCheckResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/duplicates": {
+      "get": {
+        "tags": [
+          "dedup"
+        ],
+        "summary": "Find All Duplicates",
+        "description": "Фоновый поиск всех дублей в тенанте.",
+        "operationId": "find_all_duplicates_api_v1_candidates_duplicates_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/merge": {
+      "post": {
+        "tags": [
+          "dedup"
+        ],
+        "summary": "Merge Candidates",
+        "description": "Объединить двух кандидатов.",
+        "operationId": "merge_candidates_api_v1_candidates_merge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/merge/{merge_log_id}/rollback": {
+      "post": {
+        "tags": [
+          "dedup"
+        ],
+        "summary": "Rollback Merge",
+        "description": "Откатить мердж (в пределах 30 дней).",
+        "operationId": "rollback_merge_api_v1_candidates_merge__merge_log_id__rollback_post",
+        "parameters": [
+          {
+            "name": "merge_log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Merge Log Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeLogResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/{candidate_id}/contacts": {
+      "post": {
+        "tags": [
+          "dedup"
+        ],
+        "summary": "Register Contact",
+        "description": "Зарегистрировать контакт кандидата (HMAC-хэш для дедупа).",
+        "operationId": "register_contact_api_v1_candidates__candidate_id__contacts_post",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Candidate Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterContactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Register Contact Api V1 Candidates  Candidate Id  Contacts Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/{candidate_id}/duplicates": {
+      "get": {
+        "tags": [
+          "dedup"
+        ],
+        "summary": "Find Duplicates",
+        "description": "Найти дубли кандидата (exact + fuzzy).",
+        "operationId": "find_duplicates_api_v1_candidates__candidate_id__duplicates_get",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/{candidate_id}/merge-logs": {
+      "get": {
+        "tags": [
+          "dedup"
+        ],
+        "summary": "List Merge Logs",
+        "description": "История мерджей кандидата.",
+        "operationId": "list_merge_logs_api_v1_candidates__candidate_id__merge_logs_get",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Candidate Id"
+            }
+          },
+          {
+            "name": "include_rolled_back",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Rolled Back"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MergeLogResponse"
+                  },
+                  "title": "Response List Merge Logs Api V1 Candidates  Candidate Id  Merge Logs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/candidates/{candidate_id}/auto-merge": {
+      "post": {
+        "tags": [
+          "dedup"
+        ],
+        "summary": "Auto Merge",
+        "description": "Автомердж точных дублей (требует фича-флаг ATS_DEDUP_AUTO_MERGE=1).",
+        "operationId": "auto_merge_api_v1_candidates__candidate_id__auto_merge_post",
+        "parameters": [
+          {
+            "name": "candidate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Candidate Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Auto Merge Api V1 Candidates  Candidate Id  Auto Merge Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/candidates": {
       "post": {
         "tags": [
@@ -5092,6 +5485,26 @@
         ],
         "title": "CommentThreadResponse"
       },
+      "ContactCheckResponse": {
+        "properties": {
+          "exists": {
+            "type": "boolean",
+            "title": "Exists"
+          },
+          "candidate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Candidate Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exists"
+        ],
+        "title": "ContactCheckResponse"
+      },
       "CreateApplicationRequest": {
         "properties": {
           "candidate_id": {
@@ -5502,6 +5915,63 @@
           "created_at"
         ],
         "title": "DeliveryResponse"
+      },
+      "DuplicateListResponse": {
+        "properties": {
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/DuplicateMatchResponse"
+            },
+            "type": "array",
+            "title": "Matches"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "matches",
+          "total"
+        ],
+        "title": "DuplicateListResponse"
+      },
+      "DuplicateMatchResponse": {
+        "properties": {
+          "survivor_id": {
+            "type": "string",
+            "title": "Survivor Id"
+          },
+          "duplicate_id": {
+            "type": "string",
+            "title": "Duplicate Id"
+          },
+          "confidence": {
+            "type": "string",
+            "title": "Confidence"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "matched_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "survivor_id",
+          "duplicate_id",
+          "confidence",
+          "score",
+          "matched_fields"
+        ],
+        "title": "DuplicateMatchResponse"
       },
       "FacetResponse": {
         "properties": {
@@ -6058,6 +6528,128 @@
         ],
         "title": "MeResponse"
       },
+      "MergeLogResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "survivor_id": {
+            "type": "string",
+            "title": "Survivor Id"
+          },
+          "absorbed_id": {
+            "type": "string",
+            "title": "Absorbed Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "merged_at": {
+            "type": "string",
+            "title": "Merged At"
+          },
+          "rolled_back_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rolled Back At"
+          },
+          "rollbackable": {
+            "type": "boolean",
+            "title": "Rollbackable"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "survivor_id",
+          "absorbed_id",
+          "status",
+          "merged_at",
+          "rollbackable"
+        ],
+        "title": "MergeLogResponse"
+      },
+      "MergeRequest": {
+        "properties": {
+          "survivor_id": {
+            "type": "string",
+            "title": "Survivor Id",
+            "description": "ID кандидата-наследника"
+          },
+          "absorbed_id": {
+            "type": "string",
+            "title": "Absorbed Id",
+            "description": "ID поглощаемого кандидата"
+          }
+        },
+        "type": "object",
+        "required": [
+          "survivor_id",
+          "absorbed_id"
+        ],
+        "title": "MergeRequest"
+      },
+      "MergeResponse": {
+        "properties": {
+          "merge_log_id": {
+            "type": "string",
+            "title": "Merge Log Id"
+          },
+          "survivor_id": {
+            "type": "string",
+            "title": "Survivor Id"
+          },
+          "absorbed_id": {
+            "type": "string",
+            "title": "Absorbed Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "transferred_applications": {
+            "type": "integer",
+            "title": "Transferred Applications"
+          },
+          "transferred_facts": {
+            "type": "integer",
+            "title": "Transferred Facts"
+          },
+          "transferred_contact_hashes": {
+            "type": "integer",
+            "title": "Transferred Contact Hashes"
+          },
+          "transferred_tags": {
+            "type": "integer",
+            "title": "Transferred Tags"
+          },
+          "rollbackable_until": {
+            "type": "string",
+            "title": "Rollbackable Until"
+          }
+        },
+        "type": "object",
+        "required": [
+          "merge_log_id",
+          "survivor_id",
+          "absorbed_id",
+          "status",
+          "transferred_applications",
+          "transferred_facts",
+          "transferred_contact_hashes",
+          "transferred_tags",
+          "rollbackable_until"
+        ],
+        "title": "MergeResponse"
+      },
       "MoveApplicationRequest": {
         "properties": {
           "to_stage": {
@@ -6268,6 +6860,31 @@
           "expires_at"
         ],
         "title": "RefreshResponse"
+      },
+      "RegisterContactRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "phone|email|telegram|linkedin|github|other"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "Значение контакта (шифруется, хранится хэш)"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "value"
+        ],
+        "title": "RegisterContactRequest"
       },
       "RejectApplicationRequest": {
         "properties": {

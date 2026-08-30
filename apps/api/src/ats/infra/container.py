@@ -16,6 +16,7 @@ from ats.infra.stubs import (
     InMemoryVacancyRepository,
     StubAIGateway,
 )
+from ats.infra.stubs_dedup import InMemoryDedupRepository
 from ats.infra.stubs_funnel_repositories import (
     InMemoryFunnelPresetRepository,
     InMemoryFunnelSnapshotRepository,
@@ -54,11 +55,13 @@ from ats.modules.candidates.application.candidate_crud import (
     BulkImportCandidatesUseCase,
     CandidateCrudUseCase,
 )
+from ats.modules.candidates.application.dedup_use_cases import DedupUseCase
 from ats.modules.candidates.application.upload_candidate_resume import (
     UploadCandidateResumeUseCase,
 )
 from ats.modules.candidates.application.upload_resume import UploadResumeUseCase
 from ats.modules.candidates.ports.candidate_repository import CandidateRepository
+from ats.modules.candidates.ports.dedup_repository import DedupRepository
 from ats.modules.candidates.ports.resume_repository import ResumeRepository
 from ats.modules.funnel.application.funnel_use_cases import (
     FunnelPresetUseCase,
@@ -162,6 +165,8 @@ class Container:
     search_candidates: SearchCandidatesUseCase
     candidate_crud: CandidateCrudUseCase
     bulk_import_candidates: BulkImportCandidatesUseCase
+    dedup_repository: DedupRepository
+    dedup_use_case: DedupUseCase
     legal_entity_repository: LegalEntityRepository
     org_unit_repository: OrgUnitRepository
     legal_entity_use_case: LegalEntityUseCase
@@ -191,6 +196,7 @@ def build_container() -> Container:
         webhook_deliv_repo: WebhookDeliveryRepository = InMemoryWebhookDeliveryRepository()
         legal_entity_repo: LegalEntityRepository = InMemoryLegalEntityRepository()
         org_unit_repo: OrgUnitRepository = InMemoryOrgUnitRepository()
+        dedup_repo: DedupRepository = InMemoryDedupRepository()
     else:
         from ats.infra.ai.litellm_gateway import LiteLLMGateway
         from ats.infra.db.repositories.provenance_repository import (
@@ -217,6 +223,7 @@ def build_container() -> Container:
         webhook_deliv_repo: WebhookDeliveryRepository = InMemoryWebhookDeliveryRepository()
         legal_entity_repo = InMemoryLegalEntityRepository()  # Pg-реализация в след. фазе
         org_unit_repo = InMemoryOrgUnitRepository()  # Pg-реализация в след. фазе
+        dedup_repo = InMemoryDedupRepository()  # Pg-реализация в след. фазе
 
     audit_logger: AuditLogger = InMemoryAuditLogger()
     audit_reader: AuditReader = InMemoryAuditReader()
@@ -244,6 +251,8 @@ def build_container() -> Container:
     search_candidates = SearchCandidatesUseCase(search_engine, gateway, synonym_repo)
     candidate_crud = CandidateCrudUseCase(candidate_repo)
     bulk_import_candidates = BulkImportCandidatesUseCase(candidate_repo)
+
+    dedup_use_case = DedupUseCase(candidate_repo, dedup_repo, application_repo)
 
     webhook_management = WebhookManagementUseCase(webhook_sub_repo, webhook_deliv_repo)
     webhook_dispatcher = WebhookDispatcher(webhook_sub_repo, webhook_deliv_repo, webhook_management)
@@ -288,6 +297,8 @@ def build_container() -> Container:
         search_candidates=search_candidates,
         candidate_crud=candidate_crud,
         bulk_import_candidates=bulk_import_candidates,
+        dedup_repository=dedup_repo,
+        dedup_use_case=dedup_use_case,
         legal_entity_repository=legal_entity_repo,
         org_unit_repository=org_unit_repo,
         legal_entity_use_case=legal_entity_use_case,
