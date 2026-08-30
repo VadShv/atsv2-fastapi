@@ -61,7 +61,7 @@ class TracingMiddleware(BaseHTTPMiddleware):
             span.set_attribute("http.method", method)
             span.set_attribute("http.url", str(request.url))
             span.set_attribute("http.scheme", request.url.scheme)
-            span.set_attribute("http.host", request.url.host or "")
+            span.set_attribute("http.host", request.url.hostname or "")
             span.set_attribute("http.target", path)
             span.set_attribute("http.flavor", f"{request.url.scheme.upper()}")
 
