@@ -6,7 +6,12 @@
 
 ---
 
-## Текущий фокус: Волна 1 — Ядро ✅ ЗАВЕРШЕНА
+## Текущий фокус: Волна 2 — AI Platform 🚧 ОЖИДАЕТ СТАРТА
+
+**Волна 1 — Ядро ✅ ЗАВЕРШЕНА + 🔒 ГЕЙТ ПРОЙДЕН** (тег `contracts-v1.0`)
+
+**Цель Волны 2:** AI Platform — LLM Gateway (Cloud.ru), Prompt Registry, AI Skills, Embeddings (4096→halfvec(4000)+HNSW).
+Эпики: E-30 (LLM Gateway), E-31 (Prompt Registry), E-32 (AI Skills), E-33 (Embeddings).
 
 **Цель волны:** ядро ATS — кандидаты, резюме, вакансии, воронка, отклики, поиск, события, API.
 
@@ -41,12 +46,13 @@
 | E-20 (Оргструктура) | 3 | 3/3 ✅ | 993 (+66) |
 | **Итого Волна 1** | **47** | **47/47 ✅** | **1066** |
 
-### 🔒 Гейт Волны 1
+### 🔒 Гейт Волны 1 — ✅ ПРОЙДЕН
 
-**Статус:** 🚧 ОЖИДАЕТСЯ
-- E2E «ручной цикл найма» (создать вакансию → создать кандидата → подать отклик → пройти воронку → нанять) — зелёный
-- Контракты v1 замораживаются тегом `contracts-v1.0`
-- После прохождения гейта — старт Волны 2 (AI Platform)
+**Статус:** ✅ ЗАВЕРШЕН (коммит `9c6016f`, тег `contracts-v1.0`)
+- E2E «ручной цикл найма» (создать вакансию → кандидат → отклик → воронка → найм) — 9 тестов зелёные
+- Контракты v1 заморожены тегом `contracts-v1.0` (76 paths, 109 schemas, backward compatible)
+- Баг-фикс: `MoveApplicationUseCase` инкрементирует `vacancy.hired_count` при переходе на HIRED (JUGO-124)
+- **Волна 1: 47/47 эпиков ✅, 1075 тестов green, ruff clean**
 
 ---
 
@@ -76,6 +82,21 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] 🔒 Гейт Волны 1 — E2E цикл найма + заморозка контрактов — ✅ DONE
+- Коммит: `9c6016f` | Тесты: 1075 (+9 E2E) | Тег: `contracts-v1.0`
+- **E2E тест «ручной цикл найма»** (`apps/api/tests/test_e2e_hiring_cycle.py` — 9 тестов):
+  - `TestHiringHappyPath` — полный цикл: вакансия (draft→open) → кандидат → отклик → воронка (NEW→SCREENING→INTERVIEW→OFFER→HIRED) → hired_count=1 → закрытие вакансии; AI-критерии при создании; timeline с переходами
+  - `TestRejectionPath` — отказ с официальной причиной + возврат из rejected в new
+  - `TestVacancyLifecycle` — draft→open→on_hold→open→closed; cancel draft; references endpoint
+  - `TestMultipleCandidates` — 2 кандидата на 1 вакансию: один нанят, другой отклонён
+  - `TestApplicationIdempotency` — повторный активный отклик → 409 конфликт (JUGO-142)
+- **Баг-фикс JUGO-124**: `MoveApplicationUseCase` теперь инкрементирует `vacancy.hired_count` при переходе заявки на HIRED
+  - `apps/api/src/ats/modules/recruitment/application/move_application.py` — добавлен `VacancyRepository`, вызов `vacancy.increment_hired()`
+  - `apps/api/src/ats/infra/container.py` — `MoveApplicationUseCase(application_repo, vacancy_repo)`
+- **Заморозка контрактов**: тег `contracts-v1.0` (76 paths, 109 schemas, OpenAPI backward compat green)
+- ruff check + format: clean
+- **ВОЛНА 1 ПОЛНОСТЬЮ ЗАВЕРШЕНА + ГЕЙТ ПРОЙДЕН: 47/47 эпиков, 1075 тестов green ✅**
 
 ### [2026-08-30] JUGO-150..155 — E-15: Дедупликация кандидатов — ✅ DONE
 - Коммит: `5b49422` | Тесты: 1066 (+73) | Issue #22 закрыт | OpenAPI: 76 paths (+8), 109 schemas (+7)
