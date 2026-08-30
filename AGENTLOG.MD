@@ -22,7 +22,7 @@
 | JUGO-160..165 | E-16 | EventBus outbox→Redis→SSE | ✅ DONE | #18 (closed) |
 | JUGO-170..172 | E-17 | Поиск детерминированный | ✅ DONE | #19 (closed) |
 | JUGO-190..194 | E-19 | Публичный API и вебхуки | ✅ DONE | #20 (closed) |
-| JUGO-200..202 | E-20 | Оргструктура | ⬜ PENDING | #21 |
+| JUGO-200..202 | E-20 | Оргструктура | ✅ DONE | #21 (closed) |
 | JUGO-150..155 | E-15 | Дедупликация кандидатов | ⬜ PENDING | #22 |
 
 ### Прогресс Волны 1
@@ -37,7 +37,8 @@
 | E-16 (EventBus) | 6 | 6/6 ✅ | 745 (+21) |
 | E-17 (Поиск) | 3 | 3/3 ✅ | 844 (+99) |
 | E-19 (API/Вебхуки) | 5 | 5/5 ✅ | 927 (+83) |
-| **Итого с E-19** | **41** | **41/41 ✅** | **927** |
+| E-20 (Оргструктура) | 3 | 3/3 ✅ | 993 (+66) |
+| **Итого с E-20** | **44** | **44/44 ✅** | **993** |
 
 ---
 
@@ -67,6 +68,25 @@
 ---
 
 ## История изменений
+
+### [2026-08-30] JUGO-200..202 — E-20: Оргструктура — ✅ DONE
+- Коммит: `141be5b` | Тесты: 993 (+66) | Issue #21 закрыт
+- **JUGO-200 — Домен оргструктуры + миграция**:
+  - `apps/api/src/ats/modules/organization/domain/org_structure.py` — `LegalEntity`, `OrgUnit` (ltree path, защита от циклов, архивирование вместо удаления)
+  - `apps/api/alembic/versions/0014_organization_legal_entities_org_units.py` — таблицы `legal_entities`, `org_units` + расширение `ltree` + GIST-индекс на path + RLS + триггеры updated_at
+  - Привязка вакансии: `vacancies.legal_entity_id` + `vacancies.org_unit_id` (nullable FK, ondelete SET NULL)
+  - `apps/api/src/ats/infra/stubs_org.py` — `InMemoryLegalEntityRepository`, `InMemoryOrgUnitRepository`
+  - `apps/api/src/ats/modules/organization/ports/org_repository.py` — `LegalEntityRepository`, `OrgUnitRepository` Protocols
+  - `apps/api/src/ats/modules/organization/application/org_use_cases.py` — CRUD LegalEntity + OrgUnit, tree operations (move с обновлением путей потомков, archive с проверкой активных детей, cross-legal-entity guard)
+  - `apps/api/src/ats/modules/organization/api/router.py` — 12 endpoints: GET/POST /org/legal-entities, GET/PATCH/DELETE /org/legal-entities/{id}, GET /org/legal-entities/{id}/units, POST /org/units, GET/PATCH/DELETE /org/units/{id}, GET /org/units/{id}/children, GET /org/units/{id}/subtree, POST /org/units/{id}/move
+- **JUGO-202 — Скоупы видимости по подразделениям**:
+  - `apps/api/src/ats/modules/organization/application/visibility.py` — `VisibilityFilter`, `resolve_visibility()` (OWN/DEPARTMENT/ALL), `can_see_org_unit()`
+  - DEPARTMENT scope: видит своё подразделение + всех потомков (через `get_subtree`)
+- Тесты: 66 новых (домен, use cases, API, visibility)
+- ruff check + format: clean
+- OpenAPI: 68 paths (+8), 102 schemas (+7), backward compatible
+- Issue #21 закрыт
+- **E-20 ПОЛНОСТЬЮ ЗАВЕРШЁН: 3/3 (JUGO-200..202)**
 
 ### [2026-08-30] JUGO-190..194 — E-19: Публичный API и вебхуки — ✅ DONE
 - Коммит: `6704424` | Тесты: 927 (+83) | Issue #20 закрыт
